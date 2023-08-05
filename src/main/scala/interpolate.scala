@@ -7,7 +7,7 @@ def fill(tokenized: Tokenized, settings: Settings) =
       case Fragment.Str(content) => sb.append(content)
       case Fragment.Inject(interp) =>
         interp match
-          case Interpolation.Variable(name) =>
+          case Interpolation.Variable(name, formats) =>
             settings.values.get(name) match
               case None =>
                 Err.raise(
@@ -17,7 +17,8 @@ def fill(tokenized: Tokenized, settings: Settings) =
                 )
               case Some(value) =>
                 value match
-                  case PropertyValue.Str(value) => sb.append(value)
+                  case PropertyValue.Str(value) =>
+                    sb.append(applyFormats(value, formats))
 
           case Interpolation.Comment =>
 
