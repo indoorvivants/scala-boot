@@ -1,8 +1,12 @@
 package scalaboot
 
 case class Context(
-    text: String
-)
+    source: Source
+):
+  lazy val text = source match
+    case Source.Str(txt) => txt
+    case Source.File(path) =>
+      os.read(path)
 
 opaque type Pos = Int
 object Pos:
@@ -23,6 +27,10 @@ opaque type Back = Int
 object Back:
   inline def apply(inline i: Int): Back = i
   extension (c: Back) inline def toInt: Int = c
+
+enum Source:
+  case Str(text: String)
+  case File(path: os.Path)
 
 class UnsafeCursor:
   private var _char: Char = 0

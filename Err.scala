@@ -9,9 +9,18 @@ class Err(msg: String)
 
 object Err:
 
-  def apply(msg: String) = new Err(msg)
-  def raise(msg: String) = throw apply(msg)
-  def render(msg: String) =
+  def apply(msg: String): Err = new Err(msg)
+  def raise(msg: String): Nothing = throw apply(msg)
+  def raise(msg: String, source: Source): Nothing =
+    val withContext = source match
+      case Source.Str(text) => ""
+      case Source.File(path) =>
+        msg + s"\n  at [$path]"
+
+    throw apply(withContext)
+  def assert(cond: Boolean, msg: String): Unit =
+    if !cond then Err.raise(msg)
+  def render(msg: String): String =
 
     val maxLineLength = msg.linesIterator.map(_.length).max
     val header = "-" * maxLineLength

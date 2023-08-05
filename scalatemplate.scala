@@ -21,7 +21,7 @@ enum PropertyValue:
       case Str(value) if truths(value.toLowerCase()) => true
       case _                                         => false
 
-case class Tokenized(tokens: Vector[Token])
+case class Tokenized(tokens: Vector[Token], source: Source)
 case class Props(properties: Map[String, Tokenized])
 case class Settings(values: Map[String, PropertyValue])
 
@@ -34,7 +34,11 @@ def fill(tokenized: Tokenized, settings: Settings) =
         interp match
           case Interpolation.Variable(name) =>
             settings.values.get(name) match
-              case None => Err.raise(s"Unknown variable [$name] in interpolation")
+              case None =>
+                Err.raise(
+                  s"Unknown variable [$name] in interpolation",
+                  tokenized.source
+                )
               case Some(value) =>
                 value match
                   case PropertyValue.Str(value) => sb.append(value)
@@ -45,10 +49,61 @@ def fill(tokenized: Tokenized, settings: Settings) =
   sb.toString()
 end fill
 
-def tokenize(s: String): Tokenized =
+def fillFile(
+    file: os.Path,
+    destination: os.Path,
+    settings: Settings,
+    overwrite: Boolean = false
+) =
+  Err.assert(file.toIO.isFile(), s"File [$file] doesn't exist")
+  if !overwrite && destination.toIO.exists() then
+    Err.assert(
+      destination.toIO.isFile(),
+      s"File [$file] exists and cannot be overwritten"
+    )
+  scribe.info(s"Filling file [$file]")
+  val tokenized = tokenize(Source.File(file))
+  val filled = fill(tokenized, settings)
+
+  os.makeDir.all(destination / os.up)
+
+  if overwrite then os.write.over(destination, filled)
+  else os.write(destination, filled)
+end fillFile
+
+def fillDirectory(
+    input: os.Path,
+    output: os.Path,
+    settings: Settings,
+    overwrite: Boolean = false
+): Unit =
+  Err.assert(input.toIO.exists(), s"Directory [$input] doesn't exist")
+  Err.assert(input.toIO.isDirectory(), s"Path [$input] is not a directory")
+
+  os.walk.stream(input, maxDepth = 1).foreach { path =>
+    if path == input / "default.properties" then
+      scribe.info(
+        s"Skipping [$path] (default.properties is a reserved filename in scala-boot)"
+      )
+    else if path.toIO.isDirectory() then
+      // TODO: handle conditional names and such
+      fillDirectory(
+        path,
+        output / (path.relativeTo(input)),
+        settings,
+        overwrite
+      )
+    else fillFile(path, output / (path.relativeTo(input)), settings, overwrite)
+  }
+end fillDirectory
+
+private def prepare(destination: os.Path) =
+  os.makeDir.all(destination)
+
+def tokenize(s: Source): Tokenized =
   val b = Vector.newBuilder[Token]
-  parse(using Context(text = s))(b.addOne)
-  Tokenized(b.result())
+  parse(using Context(source = s))(b.addOne)
+  Tokenized(b.result(), s)
 
 def readProperties(file: os.Path) =
   val props = java.util.Properties()
@@ -57,7 +112,7 @@ def readProperties(file: os.Path) =
   val propsBuilder = Map.newBuilder[String, Tokenized]
   val names = props.stringPropertyNames()
   names.forEach { name =>
-    propsBuilder.addOne(name -> tokenize(props.getProperty(name)))
+    propsBuilder.addOne(name -> tokenize(Source.Str(props.getProperty(name))))
   }
   Props(propsBuilder.result())
 end readProperties
@@ -73,7 +128,7 @@ def makeDefaults(props: Props) =
       iterations: Int
   ): (Map[String, PropertyValue], Int) =
     rem match
-      case (cur @ (name, Tokenized(tokens))) :: next =>
+      case (cur @ (name, Tokenized(tokens, source))) :: next =>
         tokens match
           case Vector(Token.StringFragment(single)) =>
             val newAcc = acc.updated(
