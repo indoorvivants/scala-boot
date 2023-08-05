@@ -4,6 +4,11 @@ case class Context(
     text: String
 )
 
+opaque type Pos = Int
+object Pos:
+  inline def apply(inline i: Int): Pos = i
+  extension (c: Pos) inline def toInt: Int = c
+
 opaque type Continue = Int
 object Continue:
   inline def apply(inline i: Int): Continue = i
@@ -29,6 +34,7 @@ class UnsafeCursor:
   inline def continue: Continue = Continue(_idx)
   inline def prevChar(): Opt[Char] = _prevChar()
   inline def nextChar(): Opt[Char] = _nextChar()
+  inline def pos: Pos = Pos(_idx)
   override def toString(): String =
     inline def red(c: String) = s"${Console.RED}$c${Console.RESET}"
     inline def sanitised(c: Opt[Char]) =
@@ -109,7 +115,7 @@ def traverse(continue: Opt[Continue] = Opt.empty)(
       i = p
     else
       raise(
-        manip.inst,
+        manip.inst.pos,
         s"Attempt to move cursor to position [$p] outside of range [$start - $finish]"
       )
 
@@ -134,8 +140,8 @@ def traverse(continue: Opt[Continue] = Opt.empty)(
   Skip(i - start - 1)
 end traverse
 
-def raise(curs: UnsafeCursor, msg: String)(using ctx: Context) =
-  val idx = curs.continue.toInt
+def raise(curs: Pos, msg: String)(using ctx: Context) =
+  val idx = curs.toInt
   val contextSize = 15
   val left = ctx.text.slice((idx - contextSize).max(0), idx)
   val right =

@@ -1,5 +1,6 @@
 package scalaboot
 import scala.reflect.TypeTest
+
 opaque type Opt[+A] = A | Null
 object Opt:
   val empty: Opt[Nothing] = null
