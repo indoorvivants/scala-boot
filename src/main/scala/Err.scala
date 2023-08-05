@@ -13,7 +13,7 @@ object Err:
   def raise(msg: String): Nothing = throw apply(msg)
   def raise(msg: String, source: Source, pos: Option[Pos] = None): Nothing =
     val withContext = source match
-      case Source.Str(text) => ""
+      case Source.Str(text) => msg
       case Source.File(path, origin) =>
         val lineAndCol =
           pos.map { p =>
@@ -43,11 +43,13 @@ object Err:
 
     throw apply(withContext)
   end raise
+
   def assert(cond: Boolean, msg: => String): Unit =
     if !cond then Err.raise(msg)
+
   def render(msg: String): String =
 
-    val maxLineLength = msg.linesIterator.map(_.length).max
+    val maxLineLength = msg.linesIterator.map(_.length).maxOption.getOrElse(0)
     val header = "-" * maxLineLength
     val fireMsg = msg.linesIterator.map(_.trim).map("🔥 " + _).mkString("\n")
     val newMsg = header + "\n" + fireMsg + "\n" + header

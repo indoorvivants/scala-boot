@@ -9,7 +9,7 @@ def clone(local: os.Path, remote: String) =
     val repo = alloc[Ptr[git_repository]]()
     val opts = alloc[git_clone_options]()
 
-    inline def doOrError(inline f: Int, prefix: String) =
+    inline def doOrError(inline f: Int, inline prefix: String) =
       Err.assert(
         f == 0,
         prefix + ": " + fromCString((!git_error_last()).message)
