@@ -44,3 +44,14 @@ nativeConfig ~= { config =>
         .getOrElse(config.mode)
     )
 }
+
+lazy val writeCompileCommands = taskKey[Unit]("")
+
+writeCompileCommands := {
+  val dest = (ThisBuild / baseDirectory).value / "compile_flags.txt"
+  val flags = nativeConfig.value.compileOptions
+
+  IO.writeLines(dest, flags)
+
+  sLog.value.info(s"Compile flags were written to $dest")
+}

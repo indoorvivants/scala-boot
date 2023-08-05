@@ -23,3 +23,4 @@ local-bindgen
 bin
 worktree-main
 test-out
+compile_flags.txt

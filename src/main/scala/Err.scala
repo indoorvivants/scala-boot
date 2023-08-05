@@ -14,7 +14,7 @@ object Err:
   def raise(msg: String, source: Source, pos: Option[Pos] = None): Nothing =
     val withContext = source match
       case Source.Str(text) => ""
-      case Source.File(path) =>
+      case Source.File(path, origin) =>
         val lineAndCol =
           pos.map { p =>
 
@@ -31,8 +31,12 @@ object Err:
 
               i += 1
               stop = i >= p.toInt || i >= contents.length
+            val remote = origin match
+              case FileOrigin.Local => ""
+              case FileOrigin.FromURL(base, relative) =>
+                s"\n $base/$relative"
 
-            s"\n line $line column $col"
+            s"\n line $line column $col$remote"
           }
 
         msg + s"\n  at [$path]" + lineAndCol.getOrElse("")
@@ -47,7 +51,7 @@ object Err:
     val header = "-" * maxLineLength
     val fireMsg = msg.linesIterator.map(_.trim).map("🔥 " + _).mkString("\n")
     val newMsg = header + "\n" + fireMsg + "\n" + header
-    redLines("\n " + newMsg)
+    redLines("\n" + newMsg)
 
   def redLines(s: String) =
     if !colors then s
@@ -56,5 +60,5 @@ object Err:
   private lazy val colors = true
 
   def _blue(s: String) = if !colors then s else CYAN + s + RESET
-  def _red(s: String) = if !colors then s else RED + s + RESET
+  def _red(s: String) = s // if !colors then s else RED + s + RESET
 end Err

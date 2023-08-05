@@ -26,7 +26,13 @@ def init(name: String, dest: os.Path) =
     )
     val props = readProperties(g8Sources / "default.properties")
     val defaults = makeDefaults(props)
-    val results = fillDirectory(g8Sources, dest, defaults, overwrite = true)
+    val results = fillDirectory(
+      g8Sources,
+      dest,
+      defaults,
+      overwrite = true,
+      makeOrigin = rp => FileOrigin.FromURL(githubAddress + "/blob/main/src/main/g8", rp)
+    )
     println("✅ " + Console.BOLD + dest + Console.RESET)
     results.toVector.sorted.foreach { p =>
       println("- " + Console.GREEN + p.relativeTo(dest) + Console.RESET)

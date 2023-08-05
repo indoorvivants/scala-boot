@@ -26,19 +26,19 @@ def fill(tokenized: Tokenized, settings: Settings) =
 end fill
 
 def fillFile(
-    file: os.Path,
+    file: Source.File,
     destination: os.Path,
     settings: Settings,
     overwrite: Boolean = false
 ): os.Path =
-  Err.assert(file.toIO.isFile(), s"File [$file] doesn't exist")
+  Err.assert(file.path.toIO.isFile(), s"File [$file] doesn't exist")
   if !overwrite && destination.toIO.exists() then
     Err.assert(
       destination.toIO.isFile(),
       s"File [$file] exists and cannot be overwritten"
     )
   scribe.debug(s"Filling file [$destination] using [$file] as template")
-  val tokenized = tokenize(Source.File(file))
+  val tokenized = tokenize(file)
   val filled = fill(tokenized, settings)
 
   os.makeDir.all(destination / os.up)
@@ -53,6 +53,7 @@ def fillDirectory(
     input: os.Path,
     output: os.Path,
     settings: Settings,
+    makeOrigin: os.RelPath => FileOrigin,
     overwrite: Boolean = false
 ): Set[os.Path] =
   Err.assert(input.toIO.exists(), s"Directory [$input] doesn't exist")
@@ -72,11 +73,18 @@ def fillDirectory(
           path,
           output / (path.relativeTo(input)),
           settings,
+          makeOrigin = makeOrigin,
           overwrite
         )
     else
+      val rp = path.relativeTo(input)
       processed +=
-        fillFile(path, output / (path.relativeTo(input)), settings, overwrite)
+        fillFile(
+          Source.File(path, makeOrigin(rp)),
+          output / rp,
+          settings,
+          overwrite
+        )
   }
 
   processed.toSet

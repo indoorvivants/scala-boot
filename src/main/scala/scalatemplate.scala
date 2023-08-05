@@ -27,9 +27,6 @@ case class Tokenized(tokens: Vector[Token], source: Source)
 case class Props(properties: Map[String, Tokenized])
 case class Settings(values: Map[String, PropertyValue])
 
-private def prepare(destination: os.Path) =
-  os.makeDir.all(destination)
-
 def tokenize(s: Source): Tokenized =
   val b = Vector.newBuilder[Token]
   parse(using Context(source = s))(b.addOne)

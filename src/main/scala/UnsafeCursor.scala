@@ -5,7 +5,7 @@ case class Context(
 ):
   lazy val text = source match
     case Source.Str(txt) => txt
-    case Source.File(path) =>
+    case Source.File(path, _) =>
       os.read(path)
 
 opaque type Pos = Int
@@ -28,9 +28,13 @@ object Back:
   inline def apply(inline i: Int): Back = i
   extension (c: Back) inline def toInt: Int = c
 
+enum FileOrigin:
+  case Local
+  case FromURL(base: String, relative: os.RelPath)
+
 enum Source:
   case Str(text: String)
-  case File(path: os.Path)
+  case File(path: os.Path, origin: FileOrigin = FileOrigin.Local)
 
 class UnsafeCursor:
   private var _char: Char = 0
@@ -164,7 +168,11 @@ def raise(curs: Pos, msg: String)(using ctx: Context) =
   val midLine = " " * (left.length() + newLinesOnTheLeft) + "^"
   val bottomLine = msg
 
-  throw RuntimeException(List("", topLine, midLine, bottomLine).mkString("\n"))
+  Err.raise(
+    List("", topLine, midLine, bottomLine).mkString("\n"),
+    ctx.source,
+    Some(curs)
+  )
 end raise
 
 inline def traverseStr(inline f: (UnsafeCursor, Move) => Unit)(using
