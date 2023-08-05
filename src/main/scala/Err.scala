@@ -11,14 +11,35 @@ object Err:
 
   def apply(msg: String): Err = new Err(msg)
   def raise(msg: String): Nothing = throw apply(msg)
-  def raise(msg: String, source: Source): Nothing =
+  def raise(msg: String, source: Source, pos: Option[Pos] = None): Nothing =
     val withContext = source match
       case Source.Str(text) => ""
       case Source.File(path) =>
-        msg + s"\n  at [$path]"
+        val lineAndCol =
+          pos.map { p =>
+
+            var line = 0
+            var col = 0
+            val contents = os.read(path)
+
+            var stop = false
+            var i = 0
+            while !stop do
+              contents(i) match
+                case '\n' => line += 1; col = 0
+                case _    => col += 1
+
+              i += 1
+              stop = i >= p.toInt || i >= contents.length
+
+            s"\n line $line column $col"
+          }
+
+        msg + s"\n  at [$path]" + lineAndCol.getOrElse("")
 
     throw apply(withContext)
-  def assert(cond: Boolean, msg: String): Unit =
+  end raise
+  def assert(cond: Boolean, msg: => String): Unit =
     if !cond then Err.raise(msg)
   def render(msg: String): String =
 

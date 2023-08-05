@@ -8,8 +8,10 @@ enum Interpolation:
   case Variable(name: String)
   case Comment
 
-enum Token:
-  case StringFragment(content: String)
+case class Token(fragment: Fragment, pos: Pos)
+
+enum Fragment:
+  case Str(content: String)
   case Inject(Interpolation: Interpolation)
 
 enum PropertyValue:
@@ -28,16 +30,17 @@ case class Settings(values: Map[String, PropertyValue])
 def fill(tokenized: Tokenized, settings: Settings) =
   val sb = new java.lang.StringBuilder
   tokenized.tokens.foreach { tok =>
-    tok match
-      case Token.StringFragment(content) => sb.append(content)
-      case Token.Inject(interp) =>
+    tok.fragment match
+      case Fragment.Str(content) => sb.append(content)
+      case Fragment.Inject(interp) =>
         interp match
           case Interpolation.Variable(name) =>
             settings.values.get(name) match
               case None =>
                 Err.raise(
                   s"Unknown variable [$name] in interpolation",
-                  tokenized.source
+                  tokenized.source,
+                  Some(tok.pos)
                 )
               case Some(value) =>
                 value match
@@ -61,7 +64,7 @@ def fillFile(
       destination.toIO.isFile(),
       s"File [$file] exists and cannot be overwritten"
     )
-  scribe.info(s"Filling file [$file]")
+  scribe.info(s"Filling file [$destination] using [$file] as template")
   val tokenized = tokenize(Source.File(file))
   val filled = fill(tokenized, settings)
 
@@ -81,6 +84,7 @@ def fillDirectory(
   Err.assert(input.toIO.isDirectory(), s"Path [$input] is not a directory")
 
   os.walk.stream(input, maxDepth = 1).foreach { path =>
+    println(path)
     if path == input / "default.properties" then
       scribe.info(
         s"Skipping [$path] (default.properties is a reserved filename in scala-boot)"
@@ -130,7 +134,7 @@ def makeDefaults(props: Props) =
     rem match
       case (cur @ (name, Tokenized(tokens, source))) :: next =>
         tokens match
-          case Vector(Token.StringFragment(single)) =>
+          case Vector(Token(Fragment.Str(single), _)) =>
             val newAcc = acc.updated(
               name,
               PropertyValue.Str(single)
@@ -139,7 +143,7 @@ def makeDefaults(props: Props) =
             go(next, newAcc, Nil, iterations + 1)
           case other =>
             val hasUnresolved = tokens.exists {
-              case Token.Inject(Interpolation.Variable(interp))
+              case Token(Fragment.Inject(Interpolation.Variable(interp)), _)
                   if !acc.contains(interp) =>
                 if props.properties.contains(interp) then true
                 else
@@ -158,12 +162,12 @@ def makeDefaults(props: Props) =
             else
               val sb = new StringBuilder
               tokens.foreach { tok =>
-                tok match
-                  case Token.StringFragment(content) => sb.append(content)
-                  case Token.Inject(Interpolation.Variable(interp)) =>
+                tok.fragment match
+                  case Fragment.Str(content) => sb.append(content)
+                  case Fragment.Inject(Interpolation.Variable(interp)) =>
                     acc(interp) match
                       case PropertyValue.Str(value) => sb.append(value)
-                  case Token.Inject(Interpolation.Comment) =>
+                  case Fragment.Inject(Interpolation.Comment) =>
 
               }
               go(
@@ -187,10 +191,10 @@ end makeDefaults
 def parse(using Context)(tok: Token => Unit): Unit =
   val currentFragment = new java.lang.StringBuilder
 
-  inline def sendStringAndRest() =
+  inline def sendStringAndRest(pos: Pos) =
     val last = currentFragment.toString()
 
-    if last.nonEmpty then tok(Token.StringFragment(last))
+    if last.nonEmpty then tok(Token(Fragment.Str(last), pos))
     currentFragment.setLength(0)
 
   val skipped = traverseStr { (curs, move) =>
@@ -200,9 +204,10 @@ def parse(using Context)(tok: Token => Unit): Unit =
         move.skipOne()
 
         collectInterpolation(curs.continue).fold { case (interp, skip) =>
+          sendStringAndRest(curs.pos)
+          val interpStart = curs.pos
           move.skipAhead(skip)
-          sendStringAndRest()
-          tok(Token.Inject(interp))
+          tok(Token(Fragment.Inject(interp), interpStart))
         } {
           move.goBackOne()
           raise(curs.pos, "Failed to capture interpolation")
@@ -213,7 +218,7 @@ def parse(using Context)(tok: Token => Unit): Unit =
 
   }
 
-  sendStringAndRest()
+  sendStringAndRest(Pos(skipped.toInt))
 
 end parse
 
