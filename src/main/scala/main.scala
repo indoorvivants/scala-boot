@@ -52,7 +52,11 @@ def init(name: String, dest: os.Path) =
     )
     val props = readProperties(g8Sources / "default.properties")
     val defaults = makeDefaults(props)
-    fillDirectory(g8Sources, dest, defaults, overwrite = true)
+    val results = fillDirectory(g8Sources, dest, defaults, overwrite = true)
+    println("✅ " + Console.BOLD + dest + Console.RESET)
+    results.toVector.sorted.foreach { p =>
+      println("- " + Console.GREEN + p.relativeTo(dest) + Console.RESET)
+    }
   catch
     case exc =>
       os.remove.all(clone_dest)
@@ -60,6 +64,12 @@ def init(name: String, dest: os.Path) =
   end try
 end init
 
-@main def scalaboot =
-  init("scala-native/scala-native.g8", os.pwd / "test-out")
+@main def scalaboot(repo: String, out: String) =
+  val path =
+    try os.Path(out)
+    catch
+      case exc =>
+        os.pwd / out
+
+  init(repo, path)
 end scalaboot

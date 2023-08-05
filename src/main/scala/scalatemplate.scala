@@ -57,14 +57,14 @@ def fillFile(
     destination: os.Path,
     settings: Settings,
     overwrite: Boolean = false
-) =
+): os.Path =
   Err.assert(file.toIO.isFile(), s"File [$file] doesn't exist")
   if !overwrite && destination.toIO.exists() then
     Err.assert(
       destination.toIO.isFile(),
       s"File [$file] exists and cannot be overwritten"
     )
-  scribe.info(s"Filling file [$destination] using [$file] as template")
+  scribe.debug(s"Filling file [$destination] using [$file] as template")
   val tokenized = tokenize(Source.File(file))
   val filled = fill(tokenized, settings)
 
@@ -72,6 +72,8 @@ def fillFile(
 
   if overwrite then os.write.over(destination, filled)
   else os.write(destination, filled)
+
+  destination
 end fillFile
 
 def fillDirectory(
@@ -79,26 +81,32 @@ def fillDirectory(
     output: os.Path,
     settings: Settings,
     overwrite: Boolean = false
-): Unit =
+): Set[os.Path] =
   Err.assert(input.toIO.exists(), s"Directory [$input] doesn't exist")
   Err.assert(input.toIO.isDirectory(), s"Path [$input] is not a directory")
 
+  val processed = collection.mutable.Set.empty[os.Path]
+
   os.walk.stream(input, maxDepth = 1).foreach { path =>
-    println(path)
     if path == input / "default.properties" then
-      scribe.info(
+      scribe.debug(
         s"Skipping [$path] (default.properties is a reserved filename in scala-boot)"
       )
     else if path.toIO.isDirectory() then
       // TODO: handle conditional names and such
-      fillDirectory(
-        path,
-        output / (path.relativeTo(input)),
-        settings,
-        overwrite
-      )
-    else fillFile(path, output / (path.relativeTo(input)), settings, overwrite)
+      processed ++=
+        fillDirectory(
+          path,
+          output / (path.relativeTo(input)),
+          settings,
+          overwrite
+        )
+    else
+      processed +=
+        fillFile(path, output / (path.relativeTo(input)), settings, overwrite)
   }
+
+  processed.toSet
 end fillDirectory
 
 private def prepare(destination: os.Path) =

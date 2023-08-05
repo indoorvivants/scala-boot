@@ -1,3 +1,4 @@
+import scala.scalanative.build.Mode
 import bindgen.plugin.BindgenMode
 scalaVersion := "3.3.0"
 
@@ -33,4 +34,13 @@ bindgenMode := BindgenMode.Manual(
   (Compile / resourceDirectory).value / "scala-native"
 )
 
-nativeConfig ~= (_.withIncrementalCompilation(true))
+nativeConfig ~= { config =>
+  config
+    .withIncrementalCompilation(true)
+    .withMode(
+      sys.env
+        .get("SCALABOOT_RELEASE")
+        .map(_ => Mode.releaseFast)
+        .getOrElse(config.mode)
+    )
+}
