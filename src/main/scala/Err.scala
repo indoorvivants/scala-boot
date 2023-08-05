@@ -54,7 +54,6 @@ object Err:
     else s.linesIterator.map(_red).mkString(System.lineSeparator())
 
   private lazy val colors = true
-  // System.console() != null && System.getenv().get("TERM") != null
 
   def _blue(s: String) = if !colors then s else CYAN + s + RESET
   def _red(s: String) = if !colors then s else RED + s + RESET

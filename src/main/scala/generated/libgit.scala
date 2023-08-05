@@ -893,6 +893,7 @@ object enumerations:
     val GIT_EMISMATCH = define(-33)
     val GIT_EINDEXDIRTY = define(-34)
     val GIT_EAPPLYFAIL = define(-35)
+    val GIT_EOWNER = define(-36)
     inline def getName(inline value: git_error_code): Option[String] =
       inline value match
         case GIT_OK => Some("GIT_OK")
@@ -925,6 +926,7 @@ object enumerations:
         case GIT_EMISMATCH => Some("GIT_EMISMATCH")
         case GIT_EINDEXDIRTY => Some("GIT_EINDEXDIRTY")
         case GIT_EAPPLYFAIL => Some("GIT_EAPPLYFAIL")
+        case GIT_EOWNER => Some("GIT_EOWNER")
         case _ => None
     extension (a: git_error_code)
       inline def &(b: git_error_code): git_error_code = a & b
@@ -973,7 +975,7 @@ object enumerations:
     val GIT_ERROR_FILESYSTEM = define(30)
     val GIT_ERROR_PATCH = define(31)
     val GIT_ERROR_WORKTREE = define(32)
-    val GIT_ERROR_SHA1 = define(33)
+    val GIT_ERROR_SHA = define(33)
     val GIT_ERROR_HTTP = define(34)
     val GIT_ERROR_INTERNAL = define(35)
     inline def getName(inline value: git_error_t): Option[String] =
@@ -1011,7 +1013,7 @@ object enumerations:
         case GIT_ERROR_FILESYSTEM => Some("GIT_ERROR_FILESYSTEM")
         case GIT_ERROR_PATCH => Some("GIT_ERROR_PATCH")
         case GIT_ERROR_WORKTREE => Some("GIT_ERROR_WORKTREE")
-        case GIT_ERROR_SHA1 => Some("GIT_ERROR_SHA1")
+        case GIT_ERROR_SHA => Some("GIT_ERROR_SHA")
         case GIT_ERROR_HTTP => Some("GIT_ERROR_HTTP")
         case GIT_ERROR_INTERNAL => Some("GIT_ERROR_INTERNAL")
         case _ => None
@@ -1316,6 +1318,10 @@ object enumerations:
     val GIT_OPT_SET_ODB_LOOSE_PRIORITY = define(32)
     val GIT_OPT_GET_EXTENSIONS = define(33)
     val GIT_OPT_SET_EXTENSIONS = define(34)
+    val GIT_OPT_GET_OWNER_VALIDATION = define(35)
+    val GIT_OPT_SET_OWNER_VALIDATION = define(36)
+    val GIT_OPT_GET_HOMEDIR = define(37)
+    val GIT_OPT_SET_HOMEDIR = define(38)
     inline def getName(inline value: git_libgit2_opt_t): Option[String] =
       inline value match
         case GIT_OPT_GET_MWINDOW_SIZE => Some("GIT_OPT_GET_MWINDOW_SIZE")
@@ -1353,6 +1359,10 @@ object enumerations:
         case GIT_OPT_SET_ODB_LOOSE_PRIORITY => Some("GIT_OPT_SET_ODB_LOOSE_PRIORITY")
         case GIT_OPT_GET_EXTENSIONS => Some("GIT_OPT_GET_EXTENSIONS")
         case GIT_OPT_SET_EXTENSIONS => Some("GIT_OPT_SET_EXTENSIONS")
+        case GIT_OPT_GET_OWNER_VALIDATION => Some("GIT_OPT_GET_OWNER_VALIDATION")
+        case GIT_OPT_SET_OWNER_VALIDATION => Some("GIT_OPT_SET_OWNER_VALIDATION")
+        case GIT_OPT_GET_HOMEDIR => Some("GIT_OPT_GET_HOMEDIR")
+        case GIT_OPT_SET_HOMEDIR => Some("GIT_OPT_SET_HOMEDIR")
         case _ => None
     extension (a: git_libgit2_opt_t)
       inline def &(b: git_libgit2_opt_t): git_libgit2_opt_t = a & b
@@ -1534,6 +1544,23 @@ object enumerations:
       inline def is(b: git_object_t): Boolean = (a & b) == b
 
   /**
+   * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/libgit2_arm64-osx/include/git2/odb_backend.h
+  */
+  opaque type git_odb_backend_loose_flag_t = CUnsignedInt
+  object git_odb_backend_loose_flag_t extends CEnumU[git_odb_backend_loose_flag_t]:
+    given _tag: Tag[git_odb_backend_loose_flag_t] = Tag.UInt
+    inline def define(inline a: Long): git_odb_backend_loose_flag_t = a.toUInt
+    val GIT_ODB_BACKEND_LOOSE_FSYNC = define(1)
+    inline def getName(inline value: git_odb_backend_loose_flag_t): Option[String] =
+      inline value match
+        case GIT_ODB_BACKEND_LOOSE_FSYNC => Some("GIT_ODB_BACKEND_LOOSE_FSYNC")
+        case _ => None
+    extension (a: git_odb_backend_loose_flag_t)
+      inline def &(b: git_odb_backend_loose_flag_t): git_odb_backend_loose_flag_t = a & b
+      inline def |(b: git_odb_backend_loose_flag_t): git_odb_backend_loose_flag_t = a | b
+      inline def is(b: git_odb_backend_loose_flag_t): Boolean = (a & b) == b
+
+  /**
    * Flags controlling the behavior of ODB lookup operations
   
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/libgit2_arm64-osx/include/git2/odb.h
@@ -1574,6 +1601,25 @@ object enumerations:
       inline def &(b: git_odb_stream_t): git_odb_stream_t = a & b
       inline def |(b: git_odb_stream_t): git_odb_stream_t = a | b
       inline def is(b: git_odb_stream_t): Boolean = (a & b) == b
+
+  /**
+   * The type of object id.
+  
+   * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/libgit2_arm64-osx/include/git2/oid.h
+  */
+  opaque type git_oid_t = CUnsignedInt
+  object git_oid_t extends CEnumU[git_oid_t]:
+    given _tag: Tag[git_oid_t] = Tag.UInt
+    inline def define(inline a: Long): git_oid_t = a.toUInt
+    val GIT_OID_SHA1 = define(1)
+    inline def getName(inline value: git_oid_t): Option[String] =
+      inline value match
+        case GIT_OID_SHA1 => Some("GIT_OID_SHA1")
+        case _ => None
+    extension (a: git_oid_t)
+      inline def &(b: git_oid_t): git_oid_t = a & b
+      inline def |(b: git_oid_t): git_oid_t = a | b
+      inline def is(b: git_oid_t): Boolean = (a & b) == b
 
   /**
    * Stages that are reported by the packbuilder progress callback.
@@ -2128,12 +2174,14 @@ object enumerations:
     val GIT_STASH_KEEP_INDEX = define(1)
     val GIT_STASH_INCLUDE_UNTRACKED = define(2)
     val GIT_STASH_INCLUDE_IGNORED = define(4)
+    val GIT_STASH_KEEP_ALL = define(8)
     inline def getName(inline value: git_stash_flags): Option[String] =
       inline value match
         case GIT_STASH_DEFAULT => Some("GIT_STASH_DEFAULT")
         case GIT_STASH_KEEP_INDEX => Some("GIT_STASH_KEEP_INDEX")
         case GIT_STASH_INCLUDE_UNTRACKED => Some("GIT_STASH_INCLUDE_UNTRACKED")
         case GIT_STASH_INCLUDE_IGNORED => Some("GIT_STASH_INCLUDE_IGNORED")
+        case GIT_STASH_KEEP_ALL => Some("GIT_STASH_KEEP_ALL")
         case _ => None
     extension (a: git_stash_flags)
       inline def &(b: git_stash_flags): git_stash_flags = a & b
@@ -5085,6 +5133,58 @@ object structs:
     given _tag: Tag[git_odb_backend] = Tag.materializeCStruct0Tag
 
   /**
+   * Options for configuring a loose object backend.
+  
+   * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/libgit2_arm64-osx/include/git2/odb_backend.h
+  */
+  opaque type git_odb_backend_loose_options = CStruct6[CUnsignedInt, uint32_t, CInt, CUnsignedInt, CUnsignedInt, git_oid_t]
+  object git_odb_backend_loose_options:
+    given _tag: Tag[git_odb_backend_loose_options] = Tag.materializeCStruct6Tag[CUnsignedInt, uint32_t, CInt, CUnsignedInt, CUnsignedInt, git_oid_t]
+    def apply()(using Zone): Ptr[git_odb_backend_loose_options] = scala.scalanative.unsafe.alloc[git_odb_backend_loose_options](1)
+    def apply(version : CUnsignedInt, flags : uint32_t, compression_level : CInt, dir_mode : CUnsignedInt, file_mode : CUnsignedInt, oid_type : git_oid_t)(using Zone): Ptr[git_odb_backend_loose_options] = 
+      val ____ptr = apply()
+      (!____ptr).version = version
+      (!____ptr).flags = flags
+      (!____ptr).compression_level = compression_level
+      (!____ptr).dir_mode = dir_mode
+      (!____ptr).file_mode = file_mode
+      (!____ptr).oid_type = oid_type
+      ____ptr
+    extension (struct: git_odb_backend_loose_options)
+      def version : CUnsignedInt = struct._1
+      def version_=(value: CUnsignedInt): Unit = !struct.at1 = value
+      def flags : uint32_t = struct._2
+      def flags_=(value: uint32_t): Unit = !struct.at2 = value
+      def compression_level : CInt = struct._3
+      def compression_level_=(value: CInt): Unit = !struct.at3 = value
+      def dir_mode : CUnsignedInt = struct._4
+      def dir_mode_=(value: CUnsignedInt): Unit = !struct.at4 = value
+      def file_mode : CUnsignedInt = struct._5
+      def file_mode_=(value: CUnsignedInt): Unit = !struct.at5 = value
+      def oid_type : git_oid_t = struct._6
+      def oid_type_=(value: git_oid_t): Unit = !struct.at6 = value
+
+  /**
+   * Options for configuring a packfile object backend.
+  
+   * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/libgit2_arm64-osx/include/git2/odb_backend.h
+  */
+  opaque type git_odb_backend_pack_options = CStruct2[CUnsignedInt, git_oid_t]
+  object git_odb_backend_pack_options:
+    given _tag: Tag[git_odb_backend_pack_options] = Tag.materializeCStruct2Tag[CUnsignedInt, git_oid_t]
+    def apply()(using Zone): Ptr[git_odb_backend_pack_options] = scala.scalanative.unsafe.alloc[git_odb_backend_pack_options](1)
+    def apply(version : CUnsignedInt, oid_type : git_oid_t)(using Zone): Ptr[git_odb_backend_pack_options] = 
+      val ____ptr = apply()
+      (!____ptr).version = version
+      (!____ptr).oid_type = oid_type
+      ____ptr
+    extension (struct: git_odb_backend_pack_options)
+      def version : CUnsignedInt = struct._1
+      def version_=(value: CUnsignedInt): Unit = !struct.at1 = value
+      def oid_type : git_oid_t = struct._2
+      def oid_type_=(value: git_oid_t): Unit = !struct.at2 = value
+
+  /**
    * The information about object IDs to query in `git_odb_expand_ids`, which will be populated upon return.
   
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/libgit2_arm64-osx/include/git2/odb.h
@@ -5113,6 +5213,26 @@ object structs:
   opaque type git_odb_object = CStruct0
   object git_odb_object:
     given _tag: Tag[git_odb_object] = Tag.materializeCStruct0Tag
+
+  /**
+   * Options for configuring a loose object backend.
+  
+   * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/libgit2_arm64-osx/include/git2/odb.h
+  */
+  opaque type git_odb_options = CStruct2[CUnsignedInt, git_oid_t]
+  object git_odb_options:
+    given _tag: Tag[git_odb_options] = Tag.materializeCStruct2Tag[CUnsignedInt, git_oid_t]
+    def apply()(using Zone): Ptr[git_odb_options] = scala.scalanative.unsafe.alloc[git_odb_options](1)
+    def apply(version : CUnsignedInt, oid_type : git_oid_t)(using Zone): Ptr[git_odb_options] = 
+      val ____ptr = apply()
+      (!____ptr).version = version
+      (!____ptr).oid_type = oid_type
+      ____ptr
+    extension (struct: git_odb_options)
+      def version : CUnsignedInt = struct._1
+      def version_=(value: CUnsignedInt): Unit = !struct.at1 = value
+      def oid_type : git_oid_t = struct._2
+      def oid_type_=(value: git_oid_t): Unit = !struct.at2 = value
 
   /**
    * A stream to read/write from a backend.
@@ -5775,6 +5895,35 @@ object structs:
       def progress_cb_=(value: git_stash_apply_progress_cb): Unit = !struct.at4 = value
       def progress_payload : Ptr[Byte] = struct._5
       def progress_payload_=(value: Ptr[Byte]): Unit = !struct.at5 = value
+
+  /**
+   * Stash save options structure
+  
+   * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/libgit2_arm64-osx/include/git2/stash.h
+  */
+  opaque type git_stash_save_options = CStruct5[CUnsignedInt, uint32_t, Ptr[git_signature], CString, git_strarray]
+  object git_stash_save_options:
+    given _tag: Tag[git_stash_save_options] = Tag.materializeCStruct5Tag[CUnsignedInt, uint32_t, Ptr[git_signature], CString, git_strarray]
+    def apply()(using Zone): Ptr[git_stash_save_options] = scala.scalanative.unsafe.alloc[git_stash_save_options](1)
+    def apply(version : CUnsignedInt, flags : uint32_t, stasher : Ptr[git_signature], message : CString, paths : git_strarray)(using Zone): Ptr[git_stash_save_options] = 
+      val ____ptr = apply()
+      (!____ptr).version = version
+      (!____ptr).flags = flags
+      (!____ptr).stasher = stasher
+      (!____ptr).message = message
+      (!____ptr).paths = paths
+      ____ptr
+    extension (struct: git_stash_save_options)
+      def version : CUnsignedInt = struct._1
+      def version_=(value: CUnsignedInt): Unit = !struct.at1 = value
+      def flags : uint32_t = struct._2
+      def flags_=(value: uint32_t): Unit = !struct.at2 = value
+      def stasher : Ptr[git_signature] = struct._3
+      def stasher_=(value: Ptr[git_signature]): Unit = !struct.at3 = value
+      def message : CString = struct._4
+      def message_=(value: CString): Unit = !struct.at4 = value
+      def paths : git_strarray = struct._5
+      def paths_=(value: git_strarray): Unit = !struct.at5 = value
 
   /**
    * A status entry, providing the differences between the file as it exists in HEAD and the index, and providing the differences between the index and the working directory.
@@ -7652,6 +7801,13 @@ private[libgit] object extern_functions:
   def git_error_last(): Ptr[git_error] = extern
 
   /**
+   * Set the error message string for this thread, using `printf`-style formatting.
+  
+   * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/libgit2_arm64-osx/include/git2/errors.h
+  */
+  def git_error_set(error_class : CInt, fmt : CString, rest: Any*): Unit = extern
+
+  /**
    * Set the error message to a special value for memory allocation failure.
   
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/libgit2_arm64-osx/include/git2/errors.h
@@ -7659,7 +7815,7 @@ private[libgit] object extern_functions:
   def git_error_set_oom(): Unit = extern
 
   /**
-   * Set the error message string for this thread.
+   * Set the error message string for this thread. This function is like `git_error_set` but takes a static string instead of a `printf`-style format.
   
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/libgit2_arm64-osx/include/git2/errors.h
   */
@@ -8185,6 +8341,13 @@ private[libgit] object extern_functions:
   def git_libgit2_opts(option : CInt, rest: Any*): CInt = extern
 
   /**
+   * Return the prerelease state of the libgit2 library currently being used. For nightly builds during active development, this will be "alpha". Releases may have a "beta" or release candidate ("rc1", "rc2", etc) prerelease. For a final release, this function returns NULL.
+  
+   * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/libgit2_arm64-osx/include/git2/common.h
+  */
+  def git_libgit2_prerelease(): CString = extern
+
+  /**
    * Shutdown the global state
   
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/libgit2_arm64-osx/include/git2/global.h
@@ -8582,7 +8745,7 @@ private[libgit] object extern_functions:
   
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/libgit2_arm64-osx/include/git2/object.h
   */
-  def git_object_rawcontent_is_valid(valid : Ptr[CInt], buf : CString, len : size_t, `type` : git_object_t): CInt = extern
+  def git_object_rawcontent_is_valid(valid : Ptr[CInt], buf : CString, len : size_t, object_type : git_object_t): CInt = extern
 
   /**
    * Get a short abbreviated OID string for the object
@@ -8641,22 +8804,16 @@ private[libgit] object extern_functions:
   def git_odb_add_disk_alternate(odb : Ptr[git_odb], path : CString): CInt = extern
 
   /**
-   * Create a backend for loose objects
-  
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/libgit2_arm64-osx/include/git2/odb_backend.h
   */
   def git_odb_backend_loose(out : Ptr[Ptr[git_odb_backend]], objects_dir : CString, compression_level : CInt, do_fsync : CInt, dir_mode : CUnsignedInt, file_mode : CUnsignedInt): CInt = extern
 
   /**
-   * Create a backend out of a single packfile
-  
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/libgit2_arm64-osx/include/git2/odb_backend.h
   */
   def git_odb_backend_one_pack(out : Ptr[Ptr[git_odb_backend]], index_file : CString): CInt = extern
 
   /**
-   * Create a backend for the packfiles.
-  
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/libgit2_arm64-osx/include/git2/odb_backend.h
   */
   def git_odb_backend_pack(out : Ptr[Ptr[git_odb_backend]], objects_dir : CString): CInt = extern
@@ -8711,22 +8868,16 @@ private[libgit] object extern_functions:
   def git_odb_get_backend(out : Ptr[Ptr[git_odb_backend]], odb : Ptr[git_odb], pos : size_t): CInt = extern
 
   /**
-   * Determine the object-ID (sha1 hash) of a data buffer
-  
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/libgit2_arm64-osx/include/git2/odb.h
   */
   def git_odb_hash(out : Ptr[git_oid], data : Ptr[Byte], len : size_t, `type` : git_object_t): CInt = extern
 
   /**
-   * Read a file from disk and fill a git_oid with the object id that the file would have if it were written to the Object Database as an object of the given type (w/o applying filters). Similar functionality to git.git's `git hash-object` without the `-w` flag, however, with the --no-filters flag. If you need filters, see git_repository_hashfile.
-  
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/libgit2_arm64-osx/include/git2/odb.h
   */
   def git_odb_hashfile(out : Ptr[git_oid], path : CString, `type` : git_object_t): CInt = extern
 
   /**
-   * Create a new object database with no backends.
-  
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/libgit2_arm64-osx/include/git2/odb.h
   */
   def git_odb_new(out : Ptr[Ptr[git_odb]]): CInt = extern
@@ -8781,8 +8932,6 @@ private[libgit] object extern_functions:
   def git_odb_object_type(`object` : Ptr[git_odb_object]): git_object_t = extern
 
   /**
-   * Create a new object database and automatically add the two default backends:
-  
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/libgit2_arm64-osx/include/git2/odb.h
   */
   def git_odb_open(out : Ptr[Ptr[git_odb]], objects_dir : CString): CInt = extern
@@ -8914,29 +9063,21 @@ private[libgit] object extern_functions:
   def git_oid_fmt(out : CString, id : Ptr[git_oid]): CInt = extern
 
   /**
-   * Copy an already raw oid into a git_oid structure.
-  
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/libgit2_arm64-osx/include/git2/oid.h
   */
   def git_oid_fromraw(out : Ptr[git_oid], raw : Ptr[CUnsignedChar]): CInt = extern
 
   /**
-   * Parse a hex formatted object id into a git_oid.
-  
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/libgit2_arm64-osx/include/git2/oid.h
   */
   def git_oid_fromstr(out : Ptr[git_oid], str : CString): CInt = extern
 
   /**
-   * Parse N characters of a hex formatted object id into a git_oid.
-  
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/libgit2_arm64-osx/include/git2/oid.h
   */
   def git_oid_fromstrn(out : Ptr[git_oid], str : CString, length : size_t): CInt = extern
 
   /**
-   * Parse a hex formatted null-terminated string into a git_oid.
-  
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/libgit2_arm64-osx/include/git2/oid.h
   */
   def git_oid_fromstrp(out : Ptr[git_oid], str : CString): CInt = extern
@@ -8949,8 +9090,6 @@ private[libgit] object extern_functions:
   def git_oid_is_zero(id : Ptr[git_oid]): CInt = extern
 
   /**
-   * These types are retained for backward compatibility. The newer versions of these values should be preferred in all new code.
-  
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/libgit2_arm64-osx/include/git2/deprecated.h
   */
   def git_oid_iszero(id : Ptr[git_oid]): CInt = extern
@@ -10514,6 +10653,13 @@ private[libgit] object extern_functions:
   def git_repository_odb(out : Ptr[Ptr[git_odb]], repo : Ptr[git_repository]): CInt = extern
 
   /**
+   * Gets the object type used by this repository.
+  
+   * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/libgit2_arm64-osx/include/git2/repository.h
+  */
+  def git_repository_oid_type(repo : Ptr[git_repository]): git_oid_t = extern
+
+  /**
    * Open a git repository.
   
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/libgit2_arm64-osx/include/git2/repository.h
@@ -10900,6 +11046,20 @@ private[libgit] object extern_functions:
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/libgit2_arm64-osx/include/git2/stash.h
   */
   def git_stash_save(out : Ptr[git_oid], repo : Ptr[git_repository], stasher : Ptr[git_signature], message : CString, flags : uint32_t): CInt = extern
+
+  /**
+   * Initialize git_stash_save_options structure
+  
+   * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/libgit2_arm64-osx/include/git2/stash.h
+  */
+  def git_stash_save_options_init(opts : Ptr[git_stash_save_options], version : CUnsignedInt): CInt = extern
+
+  /**
+   * Save the local modifications to a new stash, with options.
+  
+   * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/libgit2_arm64-osx/include/git2/stash.h
+  */
+  def git_stash_save_with_opts(out : Ptr[git_oid], repo : Ptr[git_repository], opts : Ptr[git_stash_save_options]): CInt = extern
 
   /**
    * Get a pointer to one of the entries in the status list.
@@ -11883,8 +12043,10 @@ object all:
   export _root_.libgit.enumerations.git_merge_flag_t
   export _root_.libgit.enumerations.git_merge_preference_t
   export _root_.libgit.enumerations.git_object_t
+  export _root_.libgit.enumerations.git_odb_backend_loose_flag_t
   export _root_.libgit.enumerations.git_odb_lookup_flags_t
   export _root_.libgit.enumerations.git_odb_stream_t
+  export _root_.libgit.enumerations.git_oid_t
   export _root_.libgit.enumerations.git_packbuilder_stage_t
   export _root_.libgit.enumerations.git_pathspec_flag_t
   export _root_.libgit.enumerations.git_proxy_t
@@ -12077,8 +12239,11 @@ object all:
   export _root_.libgit.structs.git_object
   export _root_.libgit.structs.git_odb
   export _root_.libgit.structs.git_odb_backend
+  export _root_.libgit.structs.git_odb_backend_loose_options
+  export _root_.libgit.structs.git_odb_backend_pack_options
   export _root_.libgit.structs.git_odb_expand_id
   export _root_.libgit.structs.git_odb_object
+  export _root_.libgit.structs.git_odb_options
   export _root_.libgit.structs.git_odb_stream
   export _root_.libgit.structs.git_odb_writepack
   export _root_.libgit.structs.git_oid
@@ -12114,6 +12279,7 @@ object all:
   export _root_.libgit.structs.git_revwalk
   export _root_.libgit.structs.git_signature
   export _root_.libgit.structs.git_stash_apply_options
+  export _root_.libgit.structs.git_stash_save_options
   export _root_.libgit.structs.git_status_entry
   export _root_.libgit.structs.git_status_list
   export _root_.libgit.structs.git_status_options
@@ -12366,6 +12532,7 @@ object all:
   export _root_.libgit.functions.git_email_create_from_diff
   export _root_.libgit.functions.git_error_clear
   export _root_.libgit.functions.git_error_last
+  export _root_.libgit.functions.git_error_set
   export _root_.libgit.functions.git_error_set_oom
   export _root_.libgit.functions.git_error_set_str
   export _root_.libgit.functions.git_fetch_init_options
@@ -12443,6 +12610,7 @@ object all:
   export _root_.libgit.functions.git_libgit2_features
   export _root_.libgit.functions.git_libgit2_init
   export _root_.libgit.functions.git_libgit2_opts
+  export _root_.libgit.functions.git_libgit2_prerelease
   export _root_.libgit.functions.git_libgit2_shutdown
   export _root_.libgit.functions.git_libgit2_version
   export _root_.libgit.functions.git_mailmap_add_entry
@@ -12778,6 +12946,7 @@ object all:
   export _root_.libgit.functions.git_repository_message
   export _root_.libgit.functions.git_repository_message_remove
   export _root_.libgit.functions.git_repository_odb
+  export _root_.libgit.functions.git_repository_oid_type
   export _root_.libgit.functions.git_repository_open
   export _root_.libgit.functions.git_repository_open_bare
   export _root_.libgit.functions.git_repository_open_ext
@@ -12834,6 +13003,8 @@ object all:
   export _root_.libgit.functions.git_stash_foreach
   export _root_.libgit.functions.git_stash_pop
   export _root_.libgit.functions.git_stash_save
+  export _root_.libgit.functions.git_stash_save_options_init
+  export _root_.libgit.functions.git_stash_save_with_opts
   export _root_.libgit.functions.git_status_byindex
   export _root_.libgit.functions.git_status_file
   export _root_.libgit.functions.git_status_foreach
