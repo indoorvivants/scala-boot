@@ -3,7 +3,7 @@ package scalaboot
 import scala.scalanative.unsafe.*
 import scala.scalanative.unsigned.*
 
-def clone(local: os.Path, remote: String) =
+def clone(local: os.Path, remote: String, branch: Option[String] = None) =
   import libgit.all.*
   Zone { implicit z =>
     val repo = alloc[Ptr[git_repository]]()
@@ -21,6 +21,9 @@ def clone(local: os.Path, remote: String) =
       git_clone_options_init(opts, 1.toUInt),
       "failed to init git clone options"
     )
+    branch.foreach { br =>
+      (!opts).checkout_branch = toCString(br)
+    }
 
     doOrError(
       git_clone(repo, toCString(remote), toCString(local.toString), opts),

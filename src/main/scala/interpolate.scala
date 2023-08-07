@@ -55,38 +55,41 @@ def fillDirectory(
     output: os.Path,
     settings: Settings,
     makeOrigin: os.RelPath => FileOrigin,
-    overwrite: Boolean = false
+    overwrite: Boolean = false,
+    skip: Set[os.Path] = Set.empty
 ): Set[os.Path] =
+  scribe.debug("Working on", input.toString, "into", output.toString)
   Err.assert(input.toIO.exists(), s"Directory [$input] doesn't exist")
   Err.assert(input.toIO.isDirectory(), s"Path [$input] is not a directory")
 
   val processed = collection.mutable.Set.empty[os.Path]
 
-  os.walk.stream(input, maxDepth = 1).foreach { path =>
-    if path == input / "default.properties" then
-      scribe.debug(
-        s"Skipping [$path] (default.properties is a reserved filename in scala-boot)"
-      )
-    else if path.toIO.isDirectory() then
-      // TODO: handle conditional names and such
-      processed ++=
-        fillDirectory(
-          path,
-          output / (path.relativeTo(input)),
-          settings,
-          makeOrigin = makeOrigin,
-          overwrite
-        )
-    else
-      val rp = path.relativeTo(input)
-      processed +=
-        fillFile(
-          Source.File(path, makeOrigin(rp)),
-          output / rp,
-          settings,
-          overwrite
-        )
-  }
+  os.list(input).filterNot(skip).foreach { path =>
+    val newLast = fill(tokenize(Source.Str(path.last)), settings)
+    if newLast.nonEmpty then
+      val rp = path.relativeTo(input) / os.up / newLast
+      if os.isDir(path) then
+        processed ++=
+          fillDirectory(
+            input = path,
+            output = output / rp,
+            settings = settings,
+            makeOrigin = makeOrigin,
+            overwrite = overwrite,
+            skip = skip
+          )
+      else
+        processed +=
+          fillFile(
+            file = Source.File(path, makeOrigin(rp)),
+            destination = output / rp,
+            settings = settings,
+            overwrite = overwrite
+          )
+      end if
 
+    end if
+
+  }
   processed.toSet
 end fillDirectory

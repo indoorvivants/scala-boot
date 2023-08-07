@@ -23,9 +23,16 @@ enum PropertyValue:
       case Str(value) if truths(value.toLowerCase()) => true
       case _                                         => false
 
+  def stringValue = this match
+    case Str(value) => value
+end PropertyValue
+
 case class Tokenized(tokens: Vector[Token], source: Source)
-case class Props(properties: Map[String, Tokenized])
-case class Settings(values: Map[String, PropertyValue])
+case class Props(properties: Map[String, Tokenized], ordering: Map[String, Int])
+case class Settings(
+    values: Map[String, PropertyValue],
+    ordering: Map[String, Int]
+)
 
 enum Format:
   case Lower, Upper, Hyphen, Norm, Capitalize, Decapitalize, Word, Camel,
@@ -65,12 +72,15 @@ def readProperties(file: os.Path) =
   val props = java.util.Properties()
   props.load(file.getInputStream)
 
-  val propsBuilder = Map.newBuilder[String, Tokenized]
+  val propsBuilder = List.newBuilder[(String, Tokenized)]
   val names = props.stringPropertyNames()
   names.forEach { name =>
     propsBuilder.addOne(name -> tokenize(Source.Str(props.getProperty(name))))
   }
-  Props(propsBuilder.result())
+  Props(
+    propsBuilder.result().toMap,
+    propsBuilder.result().map(_._1).zipWithIndex.toMap
+  )
 end readProperties
 
 def makeDefaults(props: Props) =
@@ -140,7 +150,7 @@ def makeDefaults(props: Props) =
   val (result, iterations) = go(lst, Map.empty, Nil, 0)
   scribe.debug(s"Interpolating properties took $iterations iterations")
 
-  Settings(result)
+  Settings(result, props.ordering)
 end makeDefaults
 
 def applyFormats(value: String, formats: List[Format]) =
