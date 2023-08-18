@@ -17,17 +17,38 @@ given Conversion[Token, LoggableMessage] =
 def bold(s: String) =
   fansi.Bold.On(s)
 
-def init(config: Config) =
-  val name = config.template // TODO: handle file and full URLs
-  val clone_dest = os.temp.dir(prefix = "scala-boot")
-  try
-    val githubAddress = s"https://github.com/$name"
-    val gitAddress = githubAddress + ".git"
+case class BootstrapResult(localPath: os.Path, origin: os.RelPath => FileOrigin)
+
+def bootstrap(template: String): BootstrapResult =
+  def gitClone(gitAddress: String): os.Path =
+    val clone_dest = os.temp.dir(prefix = "scala-boot")
     clone(clone_dest, gitAddress)
+    clone_dest
+
+  template match
+    case s"file://$path" =>
+      BootstrapResult(os.Path(path), _ => FileOrigin.Local)
+    case full @ s"https://$gitAddress" =>
+      BootstrapResult(gitClone(full), _ => FileOrigin.None)
+    case full @ s"git://$gitAddress" =>
+      BootstrapResult(gitClone(full), _ => FileOrigin.None)
+    case name =>
+      val githubAddress = s"https://github.com/$name"
+      val gitAddress = githubAddress + ".git"
+      BootstrapResult(
+        gitClone(gitAddress),
+        rp => FileOrigin.FromURL(githubAddress + "/blob/main/src/main/g8", rp)
+      )
+  end match
+end bootstrap
+
+def init(config: Config) =
+  val BootstrapResult(clone_dest, makeOrigin) = bootstrap(config.template)
+  try
     val g8Sources = clone_dest / "src" / "main" / "g8"
     Err.assert(
       g8Sources.toIO.isDirectory(),
-      s"Path [src/main/g8] doesn't exist in [$githubAddress]. Are you sure it's a Giter8-compatible template?"
+      s"Path [src/main/g8] doesn't exist in the template. Are you sure it's a Giter8-compatible template?"
     )
     val props = readProperties(g8Sources / "default.properties")
     val defaults = makeDefaults(props)
@@ -47,12 +68,12 @@ def init(config: Config) =
       dest,
       settings,
       overwrite = true,
-      makeOrigin =
-        rp => FileOrigin.FromURL(githubAddress + "/blob/main/src/main/g8", rp),
+      makeOrigin = makeOrigin,
       skip = Set(g8Sources / "default.properties")
     )
     println(
-      s"\n✅ Template ${fansi.Bold.On(name)} applied in ${fansi.Bold.On(dest.toString)}"
+      s"\n✅ Template ${fansi.Bold.On(config.template)} applied in ${fansi.Bold
+          .On(dest.toString)}"
     )
     results.toVector.sorted.foreach { p =>
       println("- " + fansi.Color.Green(p.relativeTo(dest).toString))
@@ -95,14 +116,17 @@ def interactive(defaults: Settings) =
 end interactive
 
 @main def scalaboot(args: String*) =
-  // val path =
-  //   try os.Path(out)
-  //   catch
-  //     case exc =>
-  //       os.pwd / out
-
-  val config =
-    ParserForClass[Config].constructOrExit(args, allowPositional = true)
+  val config: Config =
+    ParserForClass[Config].constructEither(
+      args,
+      allowPositional = true,
+      sorted = false
+    ) match
+      case Left(msg) =>
+        System.err.println(msg)
+        sys.exit(1)
+      case Right(value) =>
+        value.asInstanceOf[Config]
 
   init(config)
 

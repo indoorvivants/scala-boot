@@ -29,7 +29,7 @@ object Back:
   extension (c: Back) inline def toInt: Int = c
 
 enum FileOrigin:
-  case Local
+  case Local, None
   case FromURL(base: String, relative: os.RelPath)
 
 enum Source:
