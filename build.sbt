@@ -30,6 +30,7 @@ val Versions = new {
   val mainargs = "0.5.1"
   val sttp = "3.9.0"
   val roach = "0.0.3"
+  val ujson = "3.1.0"
 }
 
 lazy val root =
@@ -64,6 +65,7 @@ lazy val `repo-indexer` = bootApp("repo-indexer")
       "com.lihaoyi" %%% "pprint" % Versions.pprint,
       "com.lihaoyi" %%% "os-lib" % Versions.osLib,
       "com.lihaoyi" %%% "mainargs" % Versions.mainargs,
+      "com.lihaoyi" %%% "ujson" % Versions.ujson,
       "com.softwaremill.sttp.client3" %%% "core" % Versions.sttp
     )
   )

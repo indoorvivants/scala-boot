@@ -1,112 +1,90 @@
 import curl.all.*
-import curl.enumerations.CURLoption.CURLOPT_URL
-import scalanative.unsafe.*
-import curl.enumerations.CURLoption.CURLOPT_WRITEFUNCTION
-import scala.scalanative.libc.string
-import scala.scalanative.libc.stdio
-import curl.enumerations.CURLoption.CURLOPT_WRITEDATA
+import curl.enumerations.CURLoption.*
+
 import scala.collection.mutable.ArrayBuilder
-import curl.enumerations.CURLoption.CURLOPT_HTTPHEADER
+import scala.scalanative.libc.stdio
+import scala.scalanative.libc.string
+
+import scalanative.unsafe.*
+import curl.enumerations.CURLINFO.CURLINFO_RESPONSE_CODE
+import mainargs.ParserForClass
+import scribe.Level
+import scala.util.Using
 
 inline def zone[A](inline f: Zone ?=> A) = Zone { z => f(using z) }
 
-@main def hello =
+@main def repoIndexer(args: String*) =
+  val config: Config =
+    ParserForClass[Config].constructEither(
+      args,
+      allowPositional = true,
+      sorted = false
+    ) match
+      case Left(msg) =>
+        System.err.println(msg)
+        sys.exit(1)
+      case Right(value) =>
+        value.asInstanceOf[Config]
+
+  init(config)
+end repoIndexer
+
+def init(config: Config) =
   zone {
-    val client = CurlClient()
-    println(
-      client.get(
-        "https://httpbun.org/get",
-        response = client.ResponseHandler.ToString,
-        headers = Map("Accept" -> "application/vnd.github+json")
+    scribe.Logger.root.withMinimumLevel(Level.Debug).replace()
+    Using(CurlClient()) { client =>
+      val token = sys.env("SCALABOOT_GITHUB_TOKEN").trim
+      val github = Map(
+        "Accept" -> "application/vnd.github+json",
+        s"Authorization" -> s"Bearer $token",
+        "User-agent" -> "Scala Boot Repo Indexer"
       )
-    )
-  }
+      val reposList = client
+        .get(
+          s"https://api.github.com/orgs/${config.org}/repos?type=public",
+          response = client.ResponseHandler.ToJson,
+          headers = github
+        )
+        .getOrThrow()
+        .arr
+        .map(_.obj("full_name").str)
+        .toVector
 
-class CurlClient private (curl: Ptr[CURL]):
-  def get[T](
-      url: String,
-      headers: Map[String, String] = Map.empty,
-      response: ResponseHandler[T]
-  )(using
-      Zone
-  ): T =
-    curl_easy_setopt(curl, CURLOPT_URL, toCString(url))
-    val (before, after) = setup(response)
-    val teardownHeaders = setHeaders(headers)
-    val interm = before(curl)
-    val res = curl_easy_perform(curl)
-    val result = after(interm)
-    teardownHeaders()
-    assert(res == CURLcode.CURLE_OK, "Expected request to succeed")
-    curl_easy_cleanup(curl)
-    result
-  end get
+      val templateRepos = reposList.filter(_.endsWith(".g8")).take(2)
 
-  private def makeHeaders(hd: Map[String, String])(using Zone) =
-    var slist: Ptr[curl_slist] = null
-    hd.foreach { case (k, v) =>
-      slist = curl_slist_append(slist, toCString(s"$k:$v"))
-    }
-    slist
+      scribe.info(
+        "Discovered the following g8 repos: " + templateRepos
+          .map(fansi.Color.Green(_))
+          .mkString(", ")
+      )
 
-  private def setHeaders(hd: Map[String, String])(using Zone) =
-    val slist = makeHeaders(hd)
-    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, slist)
-    () => curl_slist_free_all(slist)
-
-  private type Setup[T] = Ptr[CURL] => Any
-  private type Teardown[T] = Any => T
-
-  private def setup[T](handler: ResponseHandler[T])(using Zone) =
-    val before: Setup[T] = curl =>
-      handler match
-        case ResponseHandler.ToString =>
-          val builder = Array.newBuilder[Byte]
-          val (ptr, memory) = Captured.unsafe(builder)
-
-          val write_data_callback = CFuncPtr4.fromScalaFunction {
-            (ptr: Ptr[Byte], size: CSize, nmemb: CSize, userdata: Ptr[Byte]) =>
-              val vec = !userdata.asInstanceOf[Ptr[ArrayBuilder[Byte]]]
-              for i <- 0 until nmemb.toInt do vec.addOne(ptr(i))
-              nmemb * size
+      templateRepos.foreach { repo =>
+        scribe.info(s"Working on $repo...")
+        val commits = client
+          .get(
+            s"https://api.github.com/repos/$repo/commits?per_page=1",
+            response = client.ResponseHandler.ToJson,
+            headers = github
+          )
+          .getOrThrow()
+          .arr
+          .map(_.obj)
+          .map { o =>
+            val sha = o("sha").str
+            scribe.info(s"Latest commit is $sha")
+            val readmeUrl =
+              s"https://raw.githubusercontent.com/$repo/$sha/README.md"
+            val contents = client
+              .get(
+                readmeUrl,
+                headers = github,
+                response = client.ResponseHandler.ToString
+              )
+              .getOrThrow()
+            scribe.info(s"README contents: $contents")
           }
 
-          check(
-            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data_callback)
-          )
-          check(curl_easy_setopt(curl, CURLOPT_WRITEDATA, ptr))
+      }
 
-          (builder, memory)
-
-        case ResponseHandler.Void =>
-          ()
-
-    val after: Teardown[T] = any =>
-      handler match
-        case ResponseHandler.ToString =>
-          val (b, mem) = any.asInstanceOf[(ArrayBuilder[Byte], Memory)]
-          val res = new String(b.result())
-          mem.deallocate()
-
-          res
-
-        case ResponseHandler.Void => ()
-
-    before -> after
-
-  end setup
-
-  export CurlClient.ResponseHandler
-end CurlClient
-
-object CurlClient:
-  def apply(): CurlClient =
-    val curl = curl_easy_init()
-    assert(curl != null, "Expected curl init to succeed")
-    new CurlClient(curl)
-
-  enum ResponseHandler[T]:
-    case ToString extends ResponseHandler[String]
-    case Void extends ResponseHandler[Unit]
-
-end CurlClient
+    }
+  }
