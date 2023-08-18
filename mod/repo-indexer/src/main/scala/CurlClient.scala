@@ -17,7 +17,20 @@ enum Result[T]:
         sys.error(s"Request failed with code [$code]: [$body]")
 end Result
 
-class CurlClient private (curl: Ptr[CURL]):
+import CurlClient.ResponseHandler
+
+trait CurlClient:
+  def get[T](
+      url: String,
+      headers: Map[String, String] = Map.empty,
+      response: ResponseHandler[T] = ResponseHandler.Void,
+      codeCheck: Long => Boolean = code => code >= 200 && code <= 300
+  )(using
+      Zone
+  ): Result[T]
+end CurlClient
+
+class CurlClientImpl(curl: Ptr[CURL]) extends CurlClient:
   private var dead = false
   def get[T](
       url: String,
@@ -118,22 +131,23 @@ class CurlClient private (curl: Ptr[CURL]):
     end match
   end setup
 
-  private def _cleanup() = if !dead then
+  def _cleanup() = if !dead then
     curl_easy_cleanup(curl)
     dead = true
   else sys.error("Double clean up on an already shut down client!")
 
   export CurlClient.ResponseHandler
-end CurlClient
+end CurlClientImpl
 
 object CurlClient:
   def apply(): CurlClient =
     val curl = curl_easy_init()
     assert(curl != null, "Expected curl init to succeed")
-    new CurlClient(curl)
+    new CurlClientImpl(curl)
 
   given Releasable[CurlClient] with
-    def release(resource: CurlClient): Unit = resource._cleanup()
+    def release(resource: CurlClient): Unit = resource match
+      case c: CurlClientImpl => c._cleanup()
 
   enum ResponseHandler[T]:
     case ToString extends ResponseHandler[String]

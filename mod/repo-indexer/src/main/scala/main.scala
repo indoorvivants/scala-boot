@@ -29,62 +29,72 @@ inline def zone[A](inline f: Zone ?=> A) = Zone { z => f(using z) }
   init(config)
 end repoIndexer
 
+import CurlClient.ResponseHandler
+
 def init(config: Config) =
   zone {
     scribe.Logger.root.withMinimumLevel(Level.Debug).replace()
     Using(CurlClient()) { client =>
-      val token = sys.env("SCALABOOT_GITHUB_TOKEN").trim
-      val github = Map(
-        "Accept" -> "application/vnd.github+json",
-        s"Authorization" -> s"Bearer $token",
-        "User-agent" -> "Scala Boot Repo Indexer"
-      )
-      val reposList = client
-        .get(
-          s"https://api.github.com/orgs/${config.org}/repos?type=public",
-          response = client.ResponseHandler.ToJson,
-          headers = github
-        )
-        .getOrThrow()
-        .arr
-        .map(_.obj("full_name").str)
-        .toVector
+      val token = Token(sys.env("SCALABOOT_GITHUB_TOKEN").trim)
+      val github = GithubApi(client, token)
 
-      val templateRepos = reposList.filter(_.endsWith(".g8")).take(2)
-
-      scribe.info(
-        "Discovered the following g8 repos: " + templateRepos
-          .map(fansi.Color.Green(_))
-          .mkString(", ")
-      )
-
-      templateRepos.foreach { repo =>
-        scribe.info(s"Working on $repo...")
-        val commits = client
-          .get(
-            s"https://api.github.com/repos/$repo/commits?per_page=1",
-            response = client.ResponseHandler.ToJson,
-            headers = github
-          )
-          .getOrThrow()
-          .arr
-          .map(_.obj)
-          .map { o =>
-            val sha = o("sha").str
-            scribe.info(s"Latest commit is $sha")
-            val readmeUrl =
-              s"https://raw.githubusercontent.com/$repo/$sha/README.md"
-            val contents = client
-              .get(
-                readmeUrl,
-                headers = github,
-                response = client.ResponseHandler.ToString
-              )
-              .getOrThrow()
-            scribe.info(s"README contents: $contents")
-          }
-
+      github.templateRepos(config.org).foreach { repo =>
+        val sha = github.latestCommit(repo)
+        val readmeContents = github.readFile(repo, sha, "README.md")
+        scribe.info(readmeContents)
       }
 
     }
   }
+
+class Token(val value: String):
+  override def toString(): String = "Token[redacted]"
+
+class GithubApi(client: CurlClient, token: Token):
+  val github = Map(
+    "Accept" -> "application/vnd.github+json",
+    s"Authorization" -> s"Bearer ${token.value}",
+    "User-agent" -> "Scala Boot Repo Indexer"
+  )
+  def templateRepos(org: String)(using Zone) =
+    val reposList = client
+      .get(
+        s"https://api.github.com/orgs/${org}/repos?type=public",
+        response = ResponseHandler.ToJson,
+        headers = github
+      )
+      .getOrThrow()
+      .arr
+      .map(_.obj("full_name").str)
+      .toVector
+
+    val templateRepos = reposList.filter(_.endsWith(".g8"))
+
+    scribe.info(
+      "Discovered the following g8 repos: " + templateRepos
+        .map(fansi.Color.Green(_))
+        .mkString(", ")
+    )
+    templateRepos
+  end templateRepos
+
+  def latestCommit(repo: String)(using Zone) =
+    client
+      .get(
+        s"https://api.github.com/repos/$repo/commits?per_page=1",
+        response = ResponseHandler.ToJson,
+        headers = github
+      )
+      .getOrThrow()
+      .arr
+      .map(_.obj("sha").str)
+      .head
+
+  def readFile(repo: String, sha: String, file: String)(using Zone) =
+    val url = s"https://raw.githubusercontent.com/$repo/$sha/$file"
+
+    client
+      .get(url, headers = github, response = ResponseHandler.ToString)
+      .getOrThrow()
+
+end GithubApi
