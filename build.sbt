@@ -36,7 +36,27 @@ val Versions = new {
 lazy val root =
   project
     .in(file("."))
-    .aggregate(cli, `libgit2-bindings`, `repo-indexer`, `libcurl-bindings`)
+    .aggregate(
+      cli,
+      `libgit2-bindings`,
+      `repo-indexer`,
+      `libcurl-bindings`,
+      server
+    )
+
+lazy val server = bootApp("server")
+  .settings(
+    vcpkgDependencies := VcpkgDependencies(
+      "libpq",
+      "libidn2"
+    ),
+    libraryDependencies ++= Seq(
+      "com.github.lolgab" %%% "snunit-tapir" % "0.7.2",
+      "com.outr" %%% "scribe" % Versions.scribe,
+      "com.lihaoyi" %%% "mainargs" % Versions.mainargs,
+      "com.indoorvivants.roach" %%% "core" % Versions.roach
+    )
+  )
 
 lazy val cli = bootApp("cli")
   .dependsOn(`libgit2-bindings`)
@@ -48,8 +68,7 @@ lazy val cli = bootApp("cli")
       "com.outr" %%% "scribe" % Versions.scribe,
       "com.lihaoyi" %%% "pprint" % Versions.pprint,
       "com.lihaoyi" %%% "os-lib" % Versions.osLib,
-      "com.lihaoyi" %%% "mainargs" % Versions.mainargs,
-      "com.indoorvivants.roach" %%% "core" % Versions.roach
+      "com.lihaoyi" %%% "mainargs" % Versions.mainargs
     )
   )
 
@@ -120,4 +139,32 @@ writeCompileCommands := {
   IO.writeLines(dest, flags)
 
   sLog.value.info(s"Compile flags were written to $dest")
+}
+
+lazy val buildServer = taskKey[File]("")
+
+buildServer := {
+  val dest = (ThisBuild / baseDirectory).value / "build"
+  val statedir = dest / "statedir"
+  IO.createDirectory(dest)
+  val serverBinary = (server / Compile / nativeLink).value
+
+  IO.copyFile(serverBinary, dest / "server")
+  IO.copyFile(dest.getParentFile() / "conf.json", statedir / "conf.json")
+
+  dest
+}
+
+lazy val runServer = taskKey[Unit]("")
+
+runServer := {
+  val dest = buildServer.value
+
+  import sys.process.*
+
+  val cmd =
+    s"unitd --statedir statedir --log /dev/stderr --no-daemon --control 127.0.0.1:9000"
+  val proc = Process(cmd, cwd = dest)
+
+  proc.!
 }

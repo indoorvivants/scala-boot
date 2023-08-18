@@ -1,0 +1,17 @@
+{
+  "applications": {
+    "app": {
+      "type": "external",
+      "executable": "server",
+      "processes": {
+        "spare": 2,
+        "max": 8
+      }
+    }
+  },
+  "listeners": {
+    "*:8080": {
+      "pass": "applications/app"
+    }
+  }
+}
