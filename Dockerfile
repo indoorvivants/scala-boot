@@ -10,7 +10,7 @@ RUN apt-get update && \
     apt-get update && \
     apt-get install -y unit unit-dev
 
-RUN apt-get install -y openjdk-17-jdk clang zip unzip tar make cmake autoconf ninja-build pkg-config git
+RUN apt-get install -y openjdk-17-jdk clang zip unzip tar make cmake autoconf ninja-build pkg-config git libtool
 
 WORKDIR /workdir
 

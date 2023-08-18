@@ -47,8 +47,7 @@ lazy val root =
 lazy val server = bootApp("server")
   .settings(
     vcpkgDependencies := VcpkgDependencies(
-      "libpq",
-      "libidn2"
+      (ThisBuild / baseDirectory).value / "server-vcpkg.json"
     ),
     libraryDependencies ++= Seq(
       "com.github.lolgab" %%% "snunit-tapir" % "0.7.2",
