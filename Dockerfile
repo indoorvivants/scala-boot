@@ -36,11 +36,16 @@ RUN mkdir empty_dir
 RUN cat /etc/passwd | grep unit > passwd
 RUN cat /etc/group | grep unit > group
 
+RUN chown unit:unit build/server
+RUN chmod 0777 build/server
+
+RUN ls -R
+
 FROM scratch
 
 WORKDIR /workdir
 
-COPY --from=dev /workdir/build/statedir /workdir/
+COPY --from=dev /workdir/build/statedir /workdir/statedir
 COPY --from=dev /workdir/build/server /workdir/server
 
 # unitd dependencies
