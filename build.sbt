@@ -54,7 +54,8 @@ lazy val server = bootApp("server")
       "com.outr" %%% "scribe" % Versions.scribe,
       "com.lihaoyi" %%% "mainargs" % Versions.mainargs,
       "com.indoorvivants.roach" %%% "core" % Versions.roach
-    )
+    ),
+    nativeConfig ~= { _.withEmbedResources(true) }
   )
 
 lazy val cli = bootApp("cli")

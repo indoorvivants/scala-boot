@@ -1,16 +1,30 @@
-import snunit.tapir.SNUnitIdServerInterpreter._
-import sttp.tapir._
+package scalaboot.server
 
-object TapirHelloWorld {
-  val helloWorld = endpoint.get
-    .in("hello")
-    .in(query[String]("name"))
-    .out(stringBody)
-    .serverLogic[Id](name => Right(s"Hello $name!"))
+import snunit.tapir.SNUnitIdServerInterpreter.*
+import sttp.tapir.*
+import scala.scalanative.unsafe.Zone
 
-  def main(args: Array[String]): Unit =
-    snunit.SyncServerBuilder
-      .setRequestHandler(toHandler(helloWorld :: Nil))
-      .build()
-      .listen()
-}
+inline def zone[A](inline f: Zone ?=> A) = Zone { z => f(using z) }
+
+val helloWorldEndpoint = endpoint.get
+  .in("get-repo")
+  .in(query[String]("name"))
+  .out(stringBody)
+
+@main def server =
+  val str = "postgresql://postgres:mysecretpassword@localhost:5432/postgres"
+  zone {
+    Db.use(str) { db =>
+      val helloWorld =
+        helloWorldEndpoint.serverLogic[Id](name =>
+          Right(db.getAllRepos.filter(_ == name).toString)
+        )
+
+      snunit.SyncServerBuilder
+        .setRequestHandler(toHandler(helloWorld :: Nil))
+        .build()
+        .listen()
+
+    }
+  }
+end server
