@@ -2,14 +2,10 @@ package scalaboot.server
 
 import snunit.tapir.SNUnitIdServerInterpreter.*
 import sttp.tapir.*
+import scalaboot.protocol
 import scala.scalanative.unsafe.Zone
 
 inline def zone[A](inline f: Zone ?=> A) = Zone { z => f(using z) }
-
-val helloWorldEndpoint = endpoint.get
-  .in("get-repo")
-  .in(query[String]("name"))
-  .out(stringBody)
 
 def connection_string() =
   sys.env.getOrElse(

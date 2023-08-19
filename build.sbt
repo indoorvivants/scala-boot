@@ -2,7 +2,7 @@ import scala.scalanative.build.Mode
 import bindgen.plugin.BindgenMode
 import bindgen.interface.Binding
 
-val common = Seq(scalaVersion := "3.3.0")
+val common = Seq(scalaVersion := Versions.Scala)
 
 def bootProject(id: String) =
   sbt.Project
@@ -24,6 +24,8 @@ def bootApp(subfolder: String) =
     })
 
 val Versions = new {
+  val Scala = "3.3.0"
+
   val scribe = "3.11.9"
   val osLib = "0.9.1"
   val pprint = "0.8.1"
@@ -31,6 +33,8 @@ val Versions = new {
   val sttp = "3.9.0"
   val roach = "0.0.3"
   val ujson = "3.1.0"
+  val snunit = "0.7.2"
+  val tapir = "1.7.2"
 }
 
 lazy val root =
@@ -41,16 +45,44 @@ lazy val root =
       `libgit2-bindings`,
       `repo-indexer`,
       `libcurl-bindings`,
-      server
+      server,
+      `curl-sttp-backend`
     )
 
+lazy val `http-protocol` = projectMatrix
+  .in(file("mod/http-protocol"))
+  .nativePlatform(Seq(Versions.Scala))
+  // .jsPlatform(Seq(Versions.Scala))
+  .settings(
+    libraryDependencies ++= Seq(
+      "com.lihaoyi" %%% "ujson" % Versions.ujson,
+      "com.softwaremill.sttp.tapir" %%% "tapir-core" % Versions.tapir,
+      "com.softwaremill.sttp.tapir" %%% "tapir-json-upickle" % Versions.tapir
+    )
+  )
+
+lazy val `curl-sttp-backend` = bootApp("curl-sttp-backend")
+  .dependsOn(`libcurl-bindings`)
+  .settings(
+    vcpkgDependencies := VcpkgDependencies(
+      "curl",
+      "libidn2"
+    ),
+    vcpkgNativeConfig ~= { _.addRenamedLibrary("curl", "libcurl") },
+    libraryDependencies ++= Seq(
+      "com.softwaremill.sttp.client3" %%% "core" % Versions.sttp
+    ),
+    nativeConfig ~= { _.withEmbedResources(true) }
+  )
+
 lazy val server = bootApp("server")
+  .dependsOn(`http-protocol`.native(Versions.Scala))
   .settings(
     vcpkgDependencies := VcpkgDependencies(
       (ThisBuild / baseDirectory).value / "server-vcpkg.json"
     ),
     libraryDependencies ++= Seq(
-      "com.github.lolgab" %%% "snunit-tapir" % "0.7.2",
+      "com.github.lolgab" %%% "snunit-tapir" % Versions.snunit,
       "com.outr" %%% "scribe" % Versions.scribe,
       "com.lihaoyi" %%% "mainargs" % Versions.mainargs,
       "com.indoorvivants.roach" %%% "core" % Versions.roach
