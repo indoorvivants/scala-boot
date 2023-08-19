@@ -132,15 +132,15 @@ abstract class AbstractCurlBackend[F[_]](monad: MonadError[F], verbose: Boolean)
   ): F[CURLcode] =
     import CURLoption.*
     val m = method match
-      case Method.GET => OPT(CURLOPT_HTTPGET, true)
+      case Method.GET => OPT(CURLOPT_HTTPGET, 1L)
       // TODO: check
-      case Method.HEAD    => OPT(CURLOPT_HTTPHEADER, true)
-      case Method.POST    => OPT(CURLOPT_POST, true)
-      case Method.PUT     => OPT(CURLOPT_PUT, true)
+      case Method.HEAD    => OPT(CURLOPT_HTTPHEADER, 1L)
+      case Method.POST    => OPT(CURLOPT_POST, 1L)
+      case Method.PUT     => OPT(CURLOPT_PUT, 1L)
       case Method.DELETE  => OPT(CURLOPT_CUSTOMREQUEST, c"DELETE")
-      case Method.OPTIONS => OPT(CURLOPT_RTSP_REQUEST, true)
+      case Method.OPTIONS => OPT(CURLOPT_RTSP_REQUEST, 1L)
       case Method.PATCH   => OPT(CURLOPT_CUSTOMREQUEST, c"PATCH")
-      case Method.CONNECT => OPT(CURLOPT_CONNECT_ONLY, true)
+      case Method.CONNECT => OPT(CURLOPT_CONNECT_ONLY, 1L)
       case Method.TRACE   => OPT(CURLOPT_CUSTOMREQUEST, c"TRACE")
       case Method(m)      => OPT(CURLOPT_CUSTOMREQUEST, toCString(m))
 

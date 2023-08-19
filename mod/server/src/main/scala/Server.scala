@@ -5,6 +5,8 @@ import sttp.tapir.*
 import scalaboot.protocol
 import scala.scalanative.unsafe.Zone
 import scalaboot.protocol.RepositoryInfo
+import scala.util.Try
+import scribe.Level
 
 inline def zone[A](inline f: Zone ?=> A) = Zone { z => f(using z) }
 
@@ -23,6 +25,15 @@ def connection_string() =
 
 @main def server =
   zone {
+    scribe.Logger.root
+      .clearHandlers()
+      .withHandler(
+        writer = scribe.writer.SystemErrWriter,
+        outputFormat = scribe.output.format.ANSIOutputFormat
+      )
+      .withMinimumLevel(Level.Debug)
+      .replace()
+
     Db.use(connection_string()) { db =>
       import protocol.*
       val getAll =
@@ -33,13 +44,17 @@ def connection_string() =
       }
 
       val add = repos.add.serverLogic[Id] { inp =>
-        scribe.info(
-          "Adding repository with id : " + db
+        val x = Try(
+          db
             .addRepo(
               inp
             )
             .toString
         )
+
+        System.err.println(x)
+
+        scribe.info("Adding repository with id : " + x.toString())
 
         Right(())
 

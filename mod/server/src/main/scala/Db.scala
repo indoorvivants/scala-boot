@@ -44,7 +44,7 @@ class Db(pool: Pool):
   )(using Zone): Option[Int] =
     pool.withLease {
       sql"""insert into 
-      repositories(${repository_fields.sql})) 
+      repositories(${repository_fields.sql}) 
       values(${repository_fields}) returning repoId""".one(data, int4)
     }
 

@@ -19,17 +19,16 @@ case class SearchResult(repo: RepositoryInfo, rank: Float)
     derives upickle.default.ReadWriter
 
 object repos:
-  private val base = endpoint.in("repos")
 
-  val all = base
-    .in("all")
+  val all = endpoint
+    .in("repos" / "all")
     .out(jsonBody[List[RepositoryInfo]])
 
-  val search = base
-    .in("search")
+  val search = endpoint
+    .in("repos" / "search")
     .in(query[String]("query"))
     .out(jsonBody[List[SearchResult]])
 
   val add =
-    base.put.in("add").in(jsonBody[RepositoryInfo])
+    endpoint.post.in("repos" / "add").in(jsonBody[RepositoryInfo])
 end repos

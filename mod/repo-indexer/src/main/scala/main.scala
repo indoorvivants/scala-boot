@@ -12,6 +12,10 @@ import scribe.Level
 import scala.util.Using
 import sttp.client3.SttpBackend
 import sttp.model.Uri
+import scalaboot.client.Client
+import scalaboot.protocol.RepositoryInfo
+import scalaboot.protocol.Metadata
+import scala.util.control.NonFatal
 
 inline def zone[A](inline f: Zone ?=> A) = Zone { z => f(using z) }
 
@@ -31,20 +35,80 @@ inline def zone[A](inline f: Zone ?=> A) = Zone { z => f(using z) }
   init(config)
 end repoIndexer
 
+case class GithubRepo(slug: String, lastCommit: String, markdown: String)
+
 def init(config: Config) =
   zone {
-    val client = scalaboot.curl.CurlBackend()
+    val backend = scalaboot.curl.CurlBackend(verbose = true)
     scribe.Logger.root.withMinimumLevel(Level.Debug).replace()
     val token = Token(sys.env("SCALABOOT_GITHUB_TOKEN").trim)
-    val github = GithubApi(client, token)
+    val github = GithubApi(backend, token)
+    val apiClient = Client.create(config.api)
 
-    github.templateRepos(config.org).foreach { repo =>
-      val sha = github.latestCommit(repo)
-      val readmeContents = github.readFile(repo, sha, "README.md")
-      scribe.info(readmeContents)
+    val discoveredRepos = github
+      .templateRepos(config.org)
+      .map { repo =>
+        val sha = github.latestCommit(repo)
+        val readmeContents = github.readFile(repo, sha, "README.md")
+
+        GithubRepo(repo, sha, readmeContents)
+      }
+      .toList
+
+    printRepos("Discovered template repos", discoveredRepos.map(_.slug))
+
+    val onServer = apiClient.all()
+
+    // pre-calculate to make filtering faster
+    val discoveredReposByName = discoveredRepos.map(r => r.slug -> r).toMap
+    val discoveredReposNames = discoveredReposByName.keySet
+    val onServerByName = onServer.map(s => s.name -> s).toMap
+    val onServerReposNames = onServerByName.keySet
+
+    val missingOnServer =
+      discoveredRepos.filter(repo => !onServerReposNames(repo.slug))
+
+    printRepos("Missing on server", missingOnServer.map(_.slug))
+
+    val deletedOnGithub =
+      onServer.filter(repo => !discoveredReposNames(repo.name))
+
+    printRepos("Deleted on Github", deletedOnGithub.map(_.name))
+
+    val commitMismatch =
+      onServer
+
+    val repoErrors = List.newBuilder[(String, Throwable)]
+
+    missingOnServer.foreach { missingRepo =>
+      try
+        val repoInfo = RepositoryInfo(
+          name = missingRepo.slug,
+          last_commit = missingRepo.lastCommit,
+          readme_markdown = missingRepo.markdown,
+          metadata = Metadata()
+          // TODO: extract headline and summary using cmark
+        )
+
+        apiClient.create(repo = repoInfo)
+        scribe.info(s"✅ Created ${missingRepo.slug}")
+      catch
+        case NonFatal(exc) =>
+          // repoErrors += (missingRepo.slug -> exc)
+          scribe.error(
+            s"❌ Failed to process ${missingRepo.slug}",
+            exc
+          )
     }
 
   }
+
+def printRepos(msg: String, repos: Seq[String]) =
+  scribe.info(
+    msg + ": " + repos
+      .map(fansi.Color.Green(_))
+      .mkString(", ")
+  )
 
 class Token(val value: String):
   override def toString(): String = "Token[redacted]"
@@ -73,11 +137,6 @@ class GithubApi(client: SttpBackend[sttp.client3.Identity, Any], token: Token):
 
     val templateRepos = reposList.filter(_.endsWith(".g8"))
 
-    scribe.info(
-      "Discovered the following g8 repos: " + templateRepos
-        .map(fansi.Color.Green(_))
-        .mkString(", ")
-    )
     templateRepos
   end templateRepos
 
