@@ -35,11 +35,21 @@ inline def zone[A](inline f: Zone ?=> A) = Zone { z => f(using z) }
   init(config)
 end repoIndexer
 
-case class GithubRepo(slug: String, lastCommit: String, markdown: String)
+case class GithubRepoSnapshot(repo: GithubRepo, revision: RepoRevision)
+
+case class GithubRepo(
+    slug: String,
+    stars: Int
+)
+
+case class RepoRevision(
+    lastCommit: String,
+    markdown: String
+)
 
 def init(config: Config) =
   zone {
-    val backend = scalaboot.curl.CurlBackend(verbose = true)
+    val backend = scalaboot.curl.CurlBackend()
     scribe.Logger.root.withMinimumLevel(Level.Debug).replace()
     val token = Token(sys.env("SCALABOOT_GITHUB_TOKEN").trim)
     val github = GithubApi(backend, token)
@@ -48,45 +58,46 @@ def init(config: Config) =
     val discoveredRepos = github
       .templateRepos(config.org)
       .map { repo =>
-        val sha = github.latestCommit(repo)
-        val readmeContents = github.readFile(repo, sha, "README.md")
+        val sha = github.latestCommit(repo.slug)
+        val readmeContents = github.readFile(repo.slug, sha, "README.md")
 
-        GithubRepo(repo, sha, readmeContents)
+        GithubRepoSnapshot(repo, RepoRevision(lastCommit = sha, readmeContents))
       }
       .toList
 
-    printRepos("Discovered template repos", discoveredRepos.map(_.slug))
+    printRepos("Discovered template repos", discoveredRepos.map(_.repo.slug))
 
     val onServer = apiClient.all()
 
     // pre-calculate to make filtering faster
-    val discoveredReposByName = discoveredRepos.map(r => r.slug -> r).toMap
+    val discoveredReposByName = discoveredRepos.map(r => r.repo.slug -> r).toMap
     val discoveredReposNames = discoveredReposByName.keySet
-    val onServerByName = onServer.map(s => s.name -> s).toMap
+    val onServerByName = onServer.map(s => s.info.name -> s).toMap
     val onServerReposNames = onServerByName.keySet
 
     val missingOnServer =
-      discoveredRepos.filter(repo => !onServerReposNames(repo.slug))
+      discoveredRepos.filter(repo => !onServerReposNames(repo.repo.slug))
 
-    printRepos("Missing on server", missingOnServer.map(_.slug))
+    printRepos("Missing on server", missingOnServer.map(_.repo.slug))
 
     val deletedOnGithub =
-      onServer.filter(repo => !discoveredReposNames(repo.name))
+      onServer.filter(repo => !discoveredReposNames(repo.info.name))
 
-    printRepos("Deleted on Github", deletedOnGithub.map(_.name))
+    printRepos("Deleted on Github", deletedOnGithub.map(_.info.name))
 
     val commitMismatch =
       onServer
 
     val repoErrors = List.newBuilder[(String, Throwable)]
 
-    missingOnServer.foreach { missingRepo =>
+    missingOnServer.foreach { case GithubRepoSnapshot(missingRepo, revision) =>
       try
         val repoInfo = RepositoryInfo(
           name = missingRepo.slug,
-          last_commit = missingRepo.lastCommit,
-          readme_markdown = missingRepo.markdown,
-          metadata = Metadata()
+          last_commit = revision.lastCommit,
+          readme_markdown = revision.markdown,
+          metadata = Metadata(),
+          stars = missingRepo.stars
           // TODO: extract headline and summary using cmark
         )
 
@@ -94,11 +105,17 @@ def init(config: Config) =
         scribe.info(s"✅ Created ${missingRepo.slug}")
       catch
         case NonFatal(exc) =>
-          // repoErrors += (missingRepo.slug -> exc)
           scribe.error(
-            s"❌ Failed to process ${missingRepo.slug}",
-            exc
+            s"❌ Failed to process ${missingRepo.slug}, exception will be printed at the end of the run"
           )
+          repoErrors += (missingRepo.slug -> exc)
+    }
+
+    repoErrors.result().foreach { case (repo, exc) =>
+      scribe.error(
+        s"❌ Failed to process $repo",
+        exc
+      )
     }
 
   }
@@ -121,6 +138,7 @@ class GithubApi(client: SttpBackend[sttp.client3.Identity, Any], token: Token):
   )
   import sttp.client3.*
   import sttp.client3.upicklejson.*
+
   def templateRepos(org: String)(using Zone) =
     val reposList = basicRequest
       .get(
@@ -133,9 +151,15 @@ class GithubApi(client: SttpBackend[sttp.client3.Identity, Any], token: Token):
       .right
       .get
       .arr
-      .map(_.obj("full_name").str)
+      .map(_.obj)
+      .map(r =>
+        GithubRepo(
+          slug = r("full_name").str,
+          stars = r("stargazers_count").num.toInt
+        )
+      )
 
-    val templateRepos = reposList.filter(_.endsWith(".g8"))
+    val templateRepos = reposList.filter(_.slug.endsWith(".g8"))
 
     templateRepos
   end templateRepos

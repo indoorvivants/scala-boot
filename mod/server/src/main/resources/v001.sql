@@ -6,6 +6,8 @@ CREATE TABLE repositories (
   summary text,
   readme_markdown text not null,
   metadata json,
-  last_commit varchar(40)
+  last_commit varchar(40),
+  stars int4 not null,
+  deleted boolean not null default false
 );
 

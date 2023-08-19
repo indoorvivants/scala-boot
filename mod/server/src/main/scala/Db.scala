@@ -13,39 +13,45 @@ import roach.codecs.*
 import scalaboot.protocol.*
 
 class Db(pool: Pool):
-  val repository_fields =
-    Fragment("name,last_commit,readme_markdown, metadata, headline,summary")
-      .applied(
-        (text ~ varchar ~ text ~ roach_json[Metadata] ~ text.opt ~ text.opt)
-          .as[scalaboot.protocol.RepositoryInfo]
-      )
-  def getAllRepos(using Zone): Vector[RepositoryInfo] =
-    pool.withLease {
-      sql"select ${repository_fields.sql} from repositories".all(
-        repository_fields.codec
-      )
-    }
-
-  val search_result = (repository_fields.codec ~ float4).as[SearchResult]
+  import Db.codecs.*
 
   def search(query: String)(using Zone): Vector[SearchResult] =
     pool.withLease {
 
       sql"""
-      select ${repository_fields.sql}, ts_rank(ts, to_tsquery('english', $varchar)) as rank 
+      select ${repository_fields.sql}, ts_rank(ts, websearch_to_tsquery('english', $varchar)) as rank 
       from repositories
-      where ts @@ to_tsquery('english', $varchar)
+      where 
+        deleted = FALSE and 
+        ts @@ websearch_to_tsquery('english', $varchar)
       order by rank DESC;
       """
         .all(query -> query, search_result)
     }
+
+  def deleteRepo(id: Int)(using Zone) =
+    pool.withLease {
+      sql"update repositories set deleted = TRUE where repoId = $int4".exec(id)
+    }
+
   def addRepo(
       data: RepositoryInfo
   )(using Zone): Option[Int] =
     pool.withLease {
-      sql"""insert into 
-      repositories(${repository_fields.sql}) 
-      values(${repository_fields}) returning repoId""".one(data, int4)
+      sql"""
+      insert into 
+        repositories(${repository_fields.sql}) 
+      values(${repository_fields}) 
+      returning 
+        repoId"""
+        .one(data, int4)
+    }
+  def getAllRepos(using Zone) =
+    pool.withLease {
+      sql"select repoId, ${repository_fields.sql} from repositories where deleted = FALSE"
+        .all(
+          savedRepository
+        )
     }
 
 end Db
@@ -62,4 +68,22 @@ object Db:
       migrate(pool)
       f(new Db(pool))
     }
+
+  private object codecs:
+    lazy val search_result = (repository_fields.codec ~ float4).as[SearchResult]
+    lazy val repository_fields =
+      Fragment(
+        "name,last_commit,readme_markdown, metadata, headline,summary,stars"
+      )
+        .applied(
+          (text ~ varchar ~ text ~ roach_json[
+            Metadata
+          ] ~ text.opt ~ text.opt ~ int4)
+            .as[scalaboot.protocol.RepositoryInfo]
+        )
+
+    lazy val savedRepository =
+      (int4 ~ repository_fields.codec).as[SavedRepository]
+  end codecs
+
 end Db

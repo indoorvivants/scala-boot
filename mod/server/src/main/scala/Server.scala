@@ -44,24 +44,17 @@ def connection_string() =
       }
 
       val add = repos.add.serverLogic[Id] { inp =>
-        val x = Try(
-          db
-            .addRepo(
-              inp
-            )
-            .toString
-        )
-
-        System.err.println(x)
-
-        scribe.info("Adding repository with id : " + x.toString())
-
+        db.addRepo(inp)
         Right(())
+      }
 
+      val delete = repos.delete.serverLogic[Id] { case DeleteRepository(id) =>
+        db.deleteRepo(id)
+        Right(())
       }
 
       snunit.SyncServerBuilder
-        .setRequestHandler(toHandler(getAll :: search :: add :: Nil))
+        .setRequestHandler(toHandler(getAll :: search :: add :: delete :: Nil))
         .build()
         .listen()
 

@@ -4,7 +4,9 @@ import sttp.tapir.*
 import sttp.tapir.json.upickle.*
 import sttp.tapir.generic.auto.*
 
-case class Metadata() derives upickle.default.ReadWriter
+import upickle.default.ReadWriter as JSON
+
+case class Metadata() derives JSON
 
 case class RepositoryInfo(
     name: String,
@@ -12,17 +14,18 @@ case class RepositoryInfo(
     readme_markdown: String,
     metadata: Metadata,
     headline: Option[String] = None,
-    summary: Option[String] = None
-) derives upickle.default.ReadWriter
-
-case class SearchResult(repo: RepositoryInfo, rank: Float)
-    derives upickle.default.ReadWriter
+    summary: Option[String] = None,
+    stars: Int
+) derives JSON
+case class SearchResult(repo: RepositoryInfo, rank: Float) derives JSON
+case class SavedRepository(id: Int, info: RepositoryInfo) derives JSON
+case class DeleteRepository(id: Int) derives JSON
 
 object repos:
 
   val all = endpoint
     .in("repos" / "all")
-    .out(jsonBody[List[RepositoryInfo]])
+    .out(jsonBody[List[SavedRepository]])
 
   val search = endpoint
     .in("repos" / "search")
@@ -31,4 +34,8 @@ object repos:
 
   val add =
     endpoint.post.in("repos" / "add").in(jsonBody[RepositoryInfo])
+
+  val delete =
+    endpoint.delete.in("repos" / "delete").in(jsonBody[DeleteRepository])
+
 end repos

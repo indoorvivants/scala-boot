@@ -18,7 +18,7 @@ class Client(
   def create(repo: RepositoryInfo): Unit =
     interp.toClientThrowErrors(repos.add, Some(base), backend).apply(repo)
 
-  def all(): List[RepositoryInfo] =
+  def all(): List[SavedRepository] =
     interp.toClientThrowErrors(repos.all, Some(base), backend).apply(())
 end Client
 
