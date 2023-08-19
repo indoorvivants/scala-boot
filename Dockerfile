@@ -29,7 +29,7 @@ RUN ./cs launch com.indoorvivants.vcpkg:sn-vcpkg_3:0.0.13 -- install --manifest 
 
 COPY . .
 
-
+ENV SCALABOOT_RELEASE=true
 RUN ./sbt buildServer
 
 RUN mkdir empty_dir

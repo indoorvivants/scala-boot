@@ -70,7 +70,11 @@ abstract class AbstractCurlBackend[F[_]](monad: MonadError[F], verbose: Boolean)
           val builder = Array.newBuilder[Byte]
           val (ptr, memory) = Captured.unsafe(builder)
 
+          val headersBuilder = Array.newBuilder[Byte]
+          val (headersPtr, headersMemory) = Captured.unsafe(headersBuilder)
+
           finalizers += (() => memory.deallocate())
+          finalizers += (() => headersMemory.deallocate())
 
           val write_data_callback = CFuncPtr4.fromScalaFunction {
             (ptr: Ptr[Byte], size: CSize, nmemb: CSize, userdata: Ptr[Byte]) =>
@@ -85,8 +89,26 @@ abstract class AbstractCurlBackend[F[_]](monad: MonadError[F], verbose: Boolean)
               nmemb * size
           }
 
+          val write_headers_callback = CFuncPtr4.fromScalaFunction {
+            (
+                buffer: Ptr[Byte],
+                size: CSize,
+                nitems: CSize,
+                userdata: Ptr[Byte]
+            ) =>
+              val vec = !userdata.asInstanceOf[Ptr[ArrayBuilder[Byte]]]
+
+              for i <- 0 until nitems.toInt do vec.addOne(buffer(i))
+
+              nitems * size
+
+          }
+
           OPT(CURLoption.CURLOPT_WRITEFUNCTION, write_data_callback)
           OPT(CURLoption.CURLOPT_WRITEDATA, ptr)
+
+          OPT(CURLoption.CURLOPT_HEADERFUNCTION, write_headers_callback)
+          OPT(CURLoption.CURLOPT_HEADERDATA, headersPtr)
 
           setMethod(curl_handle, request.method)
           setRequestBody(request.body)
@@ -94,6 +116,9 @@ abstract class AbstractCurlBackend[F[_]](monad: MonadError[F], verbose: Boolean)
           check(curl_easy_perform(curl_handle))
 
           val responseBody = new String(builder.result())
+
+          val headerLines =
+            new String(headersBuilder.result()).linesIterator.toList
 
           val code = stackalloc[Long]()
           check(
@@ -106,7 +131,10 @@ abstract class AbstractCurlBackend[F[_]](monad: MonadError[F], verbose: Boolean)
 
           val statusCode = StatusCode((!code).toInt)
 
-          val metadata = ResponseMetadata(statusCode, "", Nil)
+          val statusText = headerLines.head.split(" ").last
+          val headers = headerLines.tail.flatMap(parseHeaders)
+
+          val metadata = ResponseMetadata(statusCode, statusText, headers)
           val body =
             bodyFromResponseAs(request.response, metadata, Left(responseBody))
 
@@ -114,8 +142,8 @@ abstract class AbstractCurlBackend[F[_]](monad: MonadError[F], verbose: Boolean)
             Response[T](
               body = b,
               code = statusCode,
-              statusText = "",
-              headers = Nil, // TODO
+              statusText = statusText,
+              headers = headers,
               history = Nil,
               request = onlyMetadata(request)
             )
@@ -126,6 +154,18 @@ abstract class AbstractCurlBackend[F[_]](monad: MonadError[F], verbose: Boolean)
       end if
 
     }
+
+  private def parseHeaders(str: String): Seq[Header] =
+    val array = str
+      .split("\n")
+      .filter(_.trim.length > 0)
+    Seq(array*)
+      .map { line =>
+        val split = line.split(":", 2)
+        if split.size == 2 then Header(split(0).trim, split(1).trim)
+        else Header(split(0).trim, "")
+      }
+  end parseHeaders
 
   private def setMethod(handle: Ptr[CURL], method: Method)(using
       Zone

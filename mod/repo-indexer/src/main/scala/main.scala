@@ -1,3 +1,5 @@
+package scalaboot.repo_indexer
+
 import curl.all.*
 import curl.enumerations.CURLoption.*
 
@@ -81,7 +83,12 @@ def init(config: Config) =
     printRepos("Missing on server", missingOnServer.map(_.repo.slug))
 
     val deletedOnGithub =
-      onServer.filter(repo => !discoveredReposNames(repo.info.name))
+      onServer.filter(repo =>
+        !discoveredReposNames(repo.info.name) &&
+          repo.info.name.startsWith(
+            config.org + "/"
+          )
+      )
 
     printRepos("Deleted on Github", deletedOnGithub.map(_.info.name))
 
@@ -140,25 +147,42 @@ class GithubApi(client: SttpBackend[sttp.client3.Identity, Any], token: Token):
   import sttp.client3.upicklejson.*
 
   def templateRepos(org: String)(using Zone) =
-    val reposList = basicRequest
-      .get(
-        Uri.unsafeParse(s"https://api.github.com/orgs/${org}/repos?type=public")
-      )
-      .headers(github)
-      .response(asJson[ujson.Value])
-      .send(client)
-      .body
-      .right
-      .get
-      .arr
-      .map(_.obj)
-      .map(r =>
-        GithubRepo(
-          slug = r("full_name").str,
-          stars = r("stargazers_count").num.toInt
-        )
-      )
+    def go(url: String, result: List[GithubRepo]): List[GithubRepo] =
+      scribe.debug(s"Fetching github repos from $url")
+      val response = basicRequest
+        .get(Uri.unsafeParse(url))
+        .headers(github)
+        .response(asJson[ujson.Value])
+        .send(client)
 
+      val nextPageUrl =
+        response.headers
+          .find(_.name == "Link")
+          .map(_.value)
+          .map(extractLinks(_))
+          .flatMap(_.get("next"))
+
+      val reposList = response.body.right.get.arr
+        .map(_.obj)
+        .map(r =>
+          GithubRepo(
+            slug = r("full_name").str,
+            stars = r("stargazers_count").num.toInt
+          )
+        )
+
+      val next = result ++ reposList
+
+      nextPageUrl match
+        case None        => next
+        case Some(value) => go(value, next)
+
+    end go
+
+    val startUrl =
+      s"https://api.github.com/orgs/${org}/repos?type=public&per_page=100"
+
+    val reposList = go(startUrl, Nil)
     val templateRepos = reposList.filter(_.slug.endsWith(".g8"))
 
     templateRepos
@@ -193,5 +217,12 @@ class GithubApi(client: SttpBackend[sttp.client3.Identity, Any], token: Token):
       .right
       .get
   end readFile
+
+  private def extractLinks(linkHeader: String): Map[String, String] =
+    val singleLink = "<([^>]+)>; rel=\"(.*?)\"".r
+    val all = singleLink.findAllMatchIn(linkHeader)
+    all.map { m =>
+      m.group(2) -> m.group(1)
+    }.toMap
 
 end GithubApi

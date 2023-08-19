@@ -113,6 +113,7 @@ lazy val cli = bootApp("cli")
       "curl",
       "libidn2"
     ),
+    vcpkgNativeConfig ~= { _.addRenamedLibrary("curl", "libcurl") },
     libraryDependencies ++= Seq(
       "com.outr" %%% "scribe" % Versions.scribe,
       "com.lihaoyi" %%% "pprint" % Versions.pprint,
@@ -205,6 +206,40 @@ buildServer := {
   IO.copyFile(dest.getParentFile() / "conf.json", statedir / "conf.json")
 
   dest
+}
+
+lazy val buildCli = taskKey[File]("")
+
+buildCli := {
+  val dest = (ThisBuild / baseDirectory).value / "build"
+  IO.createDirectory(dest)
+  val cliBinary = (cli / Compile / nativeLink).value
+
+  val cliDestination = dest / "scala-boot"
+  IO.copyFile(cliBinary, cliDestination)
+
+  cliDestination
+}
+
+lazy val buildRepoIndexer = taskKey[File]("")
+
+buildRepoIndexer := {
+  val dest = (ThisBuild / baseDirectory).value / "build"
+  IO.createDirectory(dest)
+  val cliBinary = (`repo-indexer` / Compile / nativeLink).value
+
+  val cliDestination = dest / "scala-boot-repo-indexer"
+  IO.copyFile(cliBinary, cliDestination)
+
+  cliDestination
+}
+
+lazy val buildAll = taskKey[File]("")
+
+buildAll := {
+  buildCli.value
+  buildRepoIndexer.value
+  buildServer.value
 }
 
 lazy val runServer = taskKey[Unit]("")

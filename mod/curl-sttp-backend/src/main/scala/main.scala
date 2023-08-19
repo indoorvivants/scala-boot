@@ -12,5 +12,7 @@ import concurrent.duration.*
     .readTimeout(2.second)
     .send(backend)
 
+  println(response.headers)
+
   println(response.body)
 end hello

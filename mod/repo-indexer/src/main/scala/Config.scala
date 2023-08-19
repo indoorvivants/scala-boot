@@ -1,3 +1,5 @@
+package scalaboot.repo_indexer
+
 import mainargs.{main, arg, ParserForClass, Flag}
 import mainargs.TokensReader
 
