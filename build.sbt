@@ -31,7 +31,7 @@ val Versions = new {
   val pprint = "0.8.1"
   val mainargs = "0.5.1"
   val sttp = "3.9.0"
-  val roach = "0.0.3"
+  val roach = "0.0.4"
   val ujson = "3.1.0"
   val snunit = "0.7.2"
   val tapir = "1.7.2"
@@ -46,8 +46,10 @@ lazy val root =
       `repo-indexer`,
       `libcurl-bindings`,
       server,
-      `curl-sttp-backend`
+      `curl-sttp-backend`,
+      `http-client`
     )
+    .aggregate(`http-protocol`.projectRefs*)
 
 lazy val `http-protocol` = projectMatrix
   .in(file("mod/http-protocol"))
@@ -61,6 +63,19 @@ lazy val `http-protocol` = projectMatrix
     )
   )
 
+lazy val `http-client` = bootApp("http-client")
+  .dependsOn(`curl-sttp-backend`, `http-protocol`.native(Versions.Scala))
+  .settings(
+    vcpkgDependencies := VcpkgDependencies(
+      "curl",
+      "libidn2"
+    ),
+    vcpkgNativeConfig ~= { _.addRenamedLibrary("curl", "libcurl") },
+    libraryDependencies ++= Seq(
+      "com.softwaremill.sttp.tapir" %%% "tapir-sttp-client" % Versions.tapir
+    )
+  )
+
 lazy val `curl-sttp-backend` = bootApp("curl-sttp-backend")
   .dependsOn(`libcurl-bindings`)
   .settings(
@@ -71,8 +86,7 @@ lazy val `curl-sttp-backend` = bootApp("curl-sttp-backend")
     vcpkgNativeConfig ~= { _.addRenamedLibrary("curl", "libcurl") },
     libraryDependencies ++= Seq(
       "com.softwaremill.sttp.client3" %%% "core" % Versions.sttp
-    ),
-    nativeConfig ~= { _.withEmbedResources(true) }
+    )
   )
 
 lazy val server = bootApp("server")
@@ -85,16 +99,19 @@ lazy val server = bootApp("server")
       "com.github.lolgab" %%% "snunit-tapir" % Versions.snunit,
       "com.outr" %%% "scribe" % Versions.scribe,
       "com.lihaoyi" %%% "mainargs" % Versions.mainargs,
-      "com.indoorvivants.roach" %%% "core" % Versions.roach
+      "com.indoorvivants.roach" %%% "core" % Versions.roach,
+      "com.indoorvivants.roach" %%% "upickle" % Versions.roach
     ),
     nativeConfig ~= { _.withEmbedResources(true) }
   )
 
 lazy val cli = bootApp("cli")
-  .dependsOn(`libgit2-bindings`)
+  .dependsOn(`libgit2-bindings`, `http-client`)
   .settings(
     vcpkgDependencies := VcpkgDependencies(
-      "libgit2"
+      "libgit2",
+      "curl",
+      "libidn2"
     ),
     libraryDependencies ++= Seq(
       "com.outr" %%% "scribe" % Versions.scribe,
@@ -105,10 +122,11 @@ lazy val cli = bootApp("cli")
   )
 
 lazy val `repo-indexer` = bootApp("repo-indexer")
-  .dependsOn(`libcurl-bindings`)
+  .dependsOn(`http-client`)
   .settings(
     vcpkgDependencies := VcpkgDependencies(
-      "curl"
+      "curl",
+      "libidn2"
     ),
     vcpkgNativeConfig ~= { _.addRenamedLibrary("curl", "libcurl") },
     libraryDependencies ++= Seq(
@@ -117,8 +135,10 @@ lazy val `repo-indexer` = bootApp("repo-indexer")
       "com.lihaoyi" %%% "os-lib" % Versions.osLib,
       "com.lihaoyi" %%% "mainargs" % Versions.mainargs,
       "com.lihaoyi" %%% "ujson" % Versions.ujson,
-      "com.softwaremill.sttp.client3" %%% "core" % Versions.sttp
-    )
+      "com.softwaremill.sttp.client3" %%% "core" % Versions.sttp,
+      "com.softwaremill.sttp.client3" %%% "upickle" % Versions.sttp
+    ),
+    libraryDependencySchemes += "com.lihaoyi" % "upickle_native0.4_3" % VersionScheme.Always
   )
 
 lazy val `libcurl-bindings` = bootProject("libcurl-bindings")

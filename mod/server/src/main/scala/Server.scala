@@ -4,6 +4,7 @@ import snunit.tapir.SNUnitIdServerInterpreter.*
 import sttp.tapir.*
 import scalaboot.protocol
 import scala.scalanative.unsafe.Zone
+import scalaboot.protocol.RepositoryInfo
 
 inline def zone[A](inline f: Zone ?=> A) = Zone { z => f(using z) }
 
@@ -23,13 +24,29 @@ def connection_string() =
 @main def server =
   zone {
     Db.use(connection_string()) { db =>
-      val helloWorld =
-        helloWorldEndpoint.serverLogic[Id](name =>
-          Right(db.getAllRepos.filter(_ == name).toString)
+      import protocol.*
+      val getAll =
+        repos.all.serverLogic[Id](name => Right(db.getAllRepos.toList))
+
+      val search = repos.search.serverLogic[Id] { query =>
+        Right(db.search(query).toList)
+      }
+
+      val add = repos.add.serverLogic[Id] { inp =>
+        scribe.info(
+          "Adding repository with id : " + db
+            .addRepo(
+              inp
+            )
+            .toString
         )
 
+        Right(())
+
+      }
+
       snunit.SyncServerBuilder
-        .setRequestHandler(toHandler(helloWorld :: Nil))
+        .setRequestHandler(toHandler(getAll :: search :: add :: Nil))
         .build()
         .listen()
 

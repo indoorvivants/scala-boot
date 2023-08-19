@@ -10,6 +10,8 @@ import curl.enumerations.CURLINFO.CURLINFO_RESPONSE_CODE
 import mainargs.ParserForClass
 import scribe.Level
 import scala.util.Using
+import sttp.client3.SttpBackend
+import sttp.model.Uri
 
 inline def zone[A](inline f: Zone ?=> A) = Zone { z => f(using z) }
 
@@ -29,44 +31,45 @@ inline def zone[A](inline f: Zone ?=> A) = Zone { z => f(using z) }
   init(config)
 end repoIndexer
 
-import CurlClient.ResponseHandler
-
 def init(config: Config) =
   zone {
+    val client = scalaboot.curl.CurlBackend()
     scribe.Logger.root.withMinimumLevel(Level.Debug).replace()
-    Using(CurlClient()) { client =>
-      val token = Token(sys.env("SCALABOOT_GITHUB_TOKEN").trim)
-      val github = GithubApi(client, token)
+    val token = Token(sys.env("SCALABOOT_GITHUB_TOKEN").trim)
+    val github = GithubApi(client, token)
 
-      github.templateRepos(config.org).foreach { repo =>
-        val sha = github.latestCommit(repo)
-        val readmeContents = github.readFile(repo, sha, "README.md")
-        scribe.info(readmeContents)
-      }
-
+    github.templateRepos(config.org).foreach { repo =>
+      val sha = github.latestCommit(repo)
+      val readmeContents = github.readFile(repo, sha, "README.md")
+      scribe.info(readmeContents)
     }
+
   }
 
 class Token(val value: String):
   override def toString(): String = "Token[redacted]"
 
-class GithubApi(client: CurlClient, token: Token):
+class GithubApi(client: SttpBackend[sttp.client3.Identity, Any], token: Token):
   val github = Map(
     "Accept" -> "application/vnd.github+json",
     s"Authorization" -> s"Bearer ${token.value}",
     "User-agent" -> "Scala Boot Repo Indexer"
   )
+  import sttp.client3.*
+  import sttp.client3.upicklejson.*
   def templateRepos(org: String)(using Zone) =
-    val reposList = client
+    val reposList = basicRequest
       .get(
-        s"https://api.github.com/orgs/${org}/repos?type=public",
-        response = ResponseHandler.ToJson,
-        headers = github
+        Uri.unsafeParse(s"https://api.github.com/orgs/${org}/repos?type=public")
       )
-      .getOrThrow()
+      .headers(github)
+      .response(asJson[ujson.Value])
+      .send(client)
+      .body
+      .right
+      .get
       .arr
       .map(_.obj("full_name").str)
-      .toVector
 
     val templateRepos = reposList.filter(_.endsWith(".g8"))
 
@@ -79,13 +82,18 @@ class GithubApi(client: CurlClient, token: Token):
   end templateRepos
 
   def latestCommit(repo: String)(using Zone) =
-    client
+    basicRequest
       .get(
-        s"https://api.github.com/repos/$repo/commits?per_page=1",
-        response = ResponseHandler.ToJson,
-        headers = github
+        Uri.unsafeParse(
+          s"https://api.github.com/repos/$repo/commits?per_page=1"
+        )
       )
-      .getOrThrow()
+      .headers(github)
+      .response(asJson[ujson.Value])
+      .send(client)
+      .body
+      .right
+      .get
       .arr
       .map(_.obj("sha").str)
       .head
@@ -93,8 +101,14 @@ class GithubApi(client: CurlClient, token: Token):
   def readFile(repo: String, sha: String, file: String)(using Zone) =
     val url = s"https://raw.githubusercontent.com/$repo/$sha/$file"
 
-    client
-      .get(url, headers = github, response = ResponseHandler.ToString)
-      .getOrThrow()
+    basicRequest
+      .get(Uri.unsafeParse(url))
+      .headers(github)
+      .response(asString)
+      .send(client)
+      .body
+      .right
+      .get
+  end readFile
 
 end GithubApi
