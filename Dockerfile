@@ -39,8 +39,6 @@ RUN cat /etc/group | grep unit > group
 RUN chown unit:unit build/server
 RUN chmod 0777 build/server
 
-RUN ls -R
-
 FROM scratch
 
 WORKDIR /workdir
