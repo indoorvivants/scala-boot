@@ -61,7 +61,7 @@ def init(config: Config) =
       .templateRepos(config.org)
       .map { repo =>
         val sha = github.latestCommit(repo.slug)
-        val readmeContents = github.readFile(repo.slug, sha, "README.md")
+        val readmeContents = github.readFile(repo.slug, sha, "README.md").getOrElse("")
 
         GithubRepoSnapshot(repo, RepoRevision(lastCommit = sha, readmeContents))
       }
@@ -162,7 +162,9 @@ class GithubApi(client: SttpBackend[sttp.client3.Identity, Any], token: Token):
           .map(extractLinks(_))
           .flatMap(_.get("next"))
 
-      val reposList = response.body.right.get.arr
+      val reposList = response.body
+        .fold(throw _, identity)
+        .arr
         .map(_.obj)
         .map(r =>
           GithubRepo(
@@ -199,23 +201,24 @@ class GithubApi(client: SttpBackend[sttp.client3.Identity, Any], token: Token):
       .response(asJson[ujson.Value])
       .send(client)
       .body
-      .right
-      .get
+      .fold(throw _, identity)
       .arr
       .map(_.obj("sha").str)
       .head
 
-  def readFile(repo: String, sha: String, file: String)(using Zone) =
+  def readFile(repo: String, sha: String, file: String)(using
+      Zone
+  ): Option[String] =
     val url = s"https://raw.githubusercontent.com/$repo/$sha/$file"
 
-    basicRequest
+    val response = basicRequest
       .get(Uri.unsafeParse(url))
       .headers(github)
       .response(asString)
       .send(client)
-      .body
-      .right
-      .get
+
+    if response.code.code == 404 then None
+    else response.body.fold(sys.error(_), Option.apply)
   end readFile
 
   private def extractLinks(linkHeader: String): Map[String, String] =
