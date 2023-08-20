@@ -36,7 +36,7 @@ case class Settings(
 
 enum Format:
   case Lower, Upper, Hyphen, Norm, Capitalize, Decapitalize, Word, Camel,
-    CamelLower, Start
+    CamelLower, Start, Snake
 
   def apply(value: String): String = this match
     case Lower        => value.toLowerCase()
@@ -48,6 +48,7 @@ enum Format:
     case Word         => value.filter(c => c.isLetterOrDigit || c == '_')
     case Camel        => Word(Start(value))
     case Start        => value.split(" ").map(_.capitalize).mkString(" ")
+    case Snake        => value.replace(" ", "_").replace(".", "_")
 
 end Format
 
@@ -57,6 +58,8 @@ object Format:
     s match
       case "lower" | "lowercase"  => Lower
       case "hyphen" | "hyphenate" => Hyphen
+      case "snake"                => Snake
+      case "norm"                 => Norm
 
       // TODO: rest of cases
       case _ => null
