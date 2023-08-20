@@ -132,6 +132,7 @@ def initSearch(config: SearchConfig) =
   sorted.take(limit).zipWithIndex.foreach { case (result, idx) =>
     println(
       s"[${idx + 1}] " + renderStars(result.repo.stars) + "  " + fansi.Color
+        .DarkGray("https://github.com/") + fansi.Color
         .Green(result.repo.name)
     )
   }
