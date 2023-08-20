@@ -7,6 +7,7 @@ import scribe.output.TextOutput
 import scalanative.unsafe.*
 import scalanative.unsigned.*
 import mainargs.ParserForClass
+import scalaboot.client.Client
 
 given Conversion[UnsafeCursor, LoggableMessage] =
   LoggableMessage[UnsafeCursor](a => new TextOutput(a.toString()))
@@ -115,19 +116,76 @@ def interactive(defaults: Settings) =
   Settings(settings.result(), defaults.ordering)
 end interactive
 
-@main def scalaboot(args: String*) =
-  val config: Config =
-    ParserForClass[Config].constructEither(
-      args,
-      allowPositional = true,
-      sorted = false
-    ) match
-      case Left(msg) =>
-        System.err.println(msg)
-        sys.exit(1)
-      case Right(value) =>
-        value.asInstanceOf[Config]
+def initSearch(config: SearchConfig) =
+  val backend = scalaboot.curl.CurlBackend()
+  val client = Client.create(config.api.getOrElse("https://scala-boot.fly.dev"))
+  val sorted = client.search(config.query).sortBy(_.rank).reverse
+  val maxStars = sorted.maxByOption(_.repo.stars).map(_.repo.stars).getOrElse(0)
+  val starsFieldLength = maxStars.toString().length
 
-  init(config)
+  def renderStars(stars: Int) =
+    val spacer = " " * (starsFieldLength - stars.toString.length)
+    s"⭐️ ${fansi.Bold.On(stars.toString)}$spacer"
 
-end scalaboot
+  val limit = if config.all.value then sorted.size else 5
+
+  sorted.take(limit).zipWithIndex.foreach { case (result, idx) =>
+    println(
+      s"[${idx + 1}] " + renderStars(result.repo.stars) + "  " + fansi.Color
+        .Green(result.repo.name)
+    )
+  }
+
+  if sorted.size > limit then
+    println(
+      s"Displaying only top 5 results, to see the remaining ${sorted.size - limit}, pass a ${fansi.Bold.On("-a")} flag"
+    )
+
+  if config.interactive.value then
+
+    if config.yes.value then
+      println(
+        s"You've passed ${fansi.Bold.On("-y")} flag, so template will render with defaults automatically"
+      )
+    val defaultPrompt =
+      "Please enter a number or press Enter to choose first one: "
+
+    def go(prompt: String): Int =
+      io.StdIn.readLine(prompt).trim() match
+        case "" =>
+          0
+        case other =>
+          other.toIntOption match
+            case Some(num) if num >= 1 && num <= limit =>
+              num - 1
+            case _ =>
+              go(defaultPrompt)
+
+    val choice = go(defaultPrompt)
+
+    val template = sorted(choice)
+
+    val goConfig = Config(template = template.repo.name, yes = config.yes)
+
+    init(goConfig)
+  end if
+
+end initSearch
+
+object Commands:
+  import mainargs.{main as entrypoint, arg, ParserForMethods, Flag}
+
+  @entrypoint
+  def go(
+      config: Config
+  ) =
+    init(config)
+
+  @entrypoint
+  def search(
+      config: SearchConfig
+  ) =
+    initSearch(config)
+
+  def main(args: Array[String]): Unit = ParserForMethods(this).runOrExit(args)
+end Commands
