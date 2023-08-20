@@ -17,9 +17,15 @@ case class RepositoryInfo(
     summary: Option[String] = None,
     stars: Int
 ) derives JSON
-case class SearchResult(repo: RepositoryInfo, rank: Float) derives JSON
+case class SearchResult(repo: RepositorySummary, rank: Float) derives JSON
 case class SavedRepository(id: Int, info: RepositoryInfo) derives JSON
 case class DeleteRepository(id: Int) derives JSON
+case class RepositorySummary(
+    name: String,
+    headline: Option[String],
+    summary: Option[String],
+    stars: Int
+) derives JSON
 
 object repos:
 

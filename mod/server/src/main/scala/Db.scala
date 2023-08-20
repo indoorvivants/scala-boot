@@ -19,7 +19,7 @@ class Db(pool: Pool):
     pool.withLease {
 
       sql"""
-      select ${repository_fields.sql}, ts_rank(ts, websearch_to_tsquery('english', $varchar)) as rank 
+      select ${repository_summary.sql}, ts_rank(ts, websearch_to_tsquery('english', $varchar)) as rank 
       from repositories
       where 
         deleted = FALSE and 
@@ -70,7 +70,8 @@ object Db:
     }
 
   private object codecs:
-    lazy val search_result = (repository_fields.codec ~ float4).as[SearchResult]
+    lazy val search_result =
+      (repository_summary.codec ~ float4).as[SearchResult]
     lazy val repository_fields =
       Fragment(
         "name,last_commit,readme_markdown, metadata, headline,summary,stars"
@@ -80,6 +81,15 @@ object Db:
             Metadata
           ] ~ text.opt ~ text.opt ~ int4)
             .as[scalaboot.protocol.RepositoryInfo]
+        )
+
+    lazy val repository_summary =
+      Fragment(
+        "name,headline,summary,stars"
+      )
+        .applied(
+          (text ~ text.opt ~ text.opt ~ int4)
+            .as[scalaboot.protocol.RepositorySummary]
         )
 
     lazy val savedRepository =
