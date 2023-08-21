@@ -15,12 +15,6 @@ def bootApp(subfolder: String) =
     .settings(nativeConfig ~= { config =>
       config
         .withIncrementalCompilation(true)
-        .withMode(
-          sys.env
-            .get("SCALABOOT_RELEASE")
-            .map(_ => Mode.releaseFast)
-            .getOrElse(config.mode)
-        )
     })
 
 val Versions = new {
