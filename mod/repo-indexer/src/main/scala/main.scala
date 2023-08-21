@@ -5,17 +5,20 @@ import curl.enumerations.CURLINFO.CURLINFO_RESPONSE_CODE
 import curl.enumerations.CURLoption.*
 import mainargs.ParserForClass
 import scalaboot.client.Client
-import scalaboot.protocol, protocol.*
+import scalaboot.client.Retries
+import scalaboot.protocol
 import scribe.Level
 import sttp.client3.SttpBackend
 import sttp.model.Uri
 
 import scala.collection.mutable.ArrayBuilder
+import scala.concurrent.duration.*
 import scala.scalanative.libc.stdio
 import scala.scalanative.libc.string
 import scala.util.Using
 import scala.util.control.NonFatal
 
+import protocol.*
 import scalanative.unsafe.*
 
 inline def zone[A](inline f: Zone ?=> A) = Zone { z => f(using z) }
@@ -50,12 +53,24 @@ case class RepoRevision(
 
 def init(config: Config) =
   zone {
+    if config.verbose.value then
+      scribe.Logger.root.withMinimumLevel(Level.Debug).replace()
+
     val backend = scalaboot.curl.CurlBackend()
-    scribe.Logger.root.withMinimumLevel(Level.Debug).replace()
+    val retries = Retries.exponential(5, 30.millis)
+    val baseClient =
+      Client.create(config.api.getOrElse(protocol.SCALABOOT_PRODUCTION))
+    val client = Client.stabilise(
+      baseClient,
+      retries,
+      (label, attempt) =>
+        scribe.debug(
+          s"[$label] failed, retrying in ${attempt.action.sleep}ms (${attempt.action.remaining} more attempts left)"
+        )
+    )
+
     val token = sys.env.get("SCALABOOT_GITHUB_TOKEN").map(Token(_))
     val github = GithubApi(backend, token)
-    val apiClient =
-      Client.create(config.api.getOrElse(protocol.SCALABOOT_PRODUCTION))
 
     val discoveredRepos = github
       .templateRepos(config.org)
@@ -70,7 +85,7 @@ def init(config: Config) =
 
     printRepos("Discovered template repos", discoveredRepos.map(_.repo.slug))
 
-    val onServer = apiClient.all()
+    val onServer = client.all()
 
     // pre-calculate to make filtering faster
     val discoveredReposByName = discoveredRepos.map(r => r.repo.slug -> r).toMap
@@ -109,7 +124,7 @@ def init(config: Config) =
           // TODO: extract headline and summary using cmark
         )
 
-        apiClient.create(repo = repoInfo)
+        client.create(repo = repoInfo)
         scribe.info(s"✅ Created ${missingRepo.slug}")
       catch
         case NonFatal(exc) =>
