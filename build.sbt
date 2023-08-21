@@ -249,3 +249,54 @@ runServer := {
 
   proc.!
 }
+
+import sbtwelcome.*
+
+logo :=
+  s"""
+     |   ▄▄▄▄▄▄▄ ▄▄▄▄▄▄▄ ▄▄▄▄▄▄ ▄▄▄     ▄▄▄▄▄▄    ▄▄▄▄▄▄▄ ▄▄▄▄▄▄▄ ▄▄▄▄▄▄▄ ▄▄▄▄▄▄▄ 
+     |  █       █       █      █   █   █      █  █  ▄    █       █       █       █
+     |  █  ▄▄▄▄▄█       █  ▄   █   █   █  ▄   █  █ █▄█   █   ▄   █   ▄   █▄     ▄█
+     |  █ █▄▄▄▄▄█     ▄▄█ █▄█  █   █   █ █▄█  █  █       █  █ █  █  █ █  █ █   █  
+     |  █▄▄▄▄▄  █    █  █      █   █▄▄▄█      █  █  ▄   ██  █▄█  █  █▄█  █ █   █  
+     |   ▄▄▄▄▄█ █    █▄▄█  ▄   █       █  ▄   █  █ █▄█   █       █       █ █   █  
+     |  █▄▄▄▄▄▄▄█▄▄▄▄▄▄▄█▄█ █▄▄█▄▄▄▄▄▄▄█▄█ █▄▄█  █▄▄▄▄▄▄▄█▄▄▄▄▄▄▄█▄▄▄▄▄▄▄█ █▄▄▄█  
+     | (name TBD)
+     |
+     |${version.value}
+     |
+     |${scala.Console.YELLOW}Scala ${Versions.Scala} ${scala.Console.RESET}
+     |
+     |Pre-requisites for building/running:
+     | All tools require Clang installed. It's installed by default on MacOS.
+     | First run will bootstrap Vcpkg and build a lot of native dependencies 
+     | from scratch. This will take a while, and then it will become much quicker
+     |  
+     |  Server:
+     |    1. Install Unitd: https://unit.nginx.org/installation/#homebrew
+     |    2. Postgres running with password "mysecretpassword"
+     |       In Docker: 
+     |       docker run -p 5432:5432 -e POSTGRES_PASSWORD=mysecretpassword -d postgres
+     |
+     |Sample commands:
+     | ${scala.Console.BOLD}cli/run go softwaremill/tapir.g8${scala.Console.RESET} - template a repository
+     | ${scala.Console.BOLD}cli/run search 'akka http' --api http://localhost:8080${scala.Console.RESET} - search against a locally running server
+     |
+     |""".stripMargin
+
+usefulTasks := Seq(
+  UsefulTask(
+    "buildCli",
+    "Build ./build/scala-boot CLI (search and templating)"
+  ),
+  UsefulTask(
+    "buildRepoIndexer",
+    "Build ./build/scala-boot-repo-indexer CLI (repo indexing)"
+  ),
+  UsefulTask(
+    "runServer",
+    "Run the Scala Boot server at http://localhost:8080. Requires unitd (see above)"
+  )
+)
+
+logoColor := scala.Console.MAGENTA
