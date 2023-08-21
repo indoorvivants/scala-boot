@@ -34,7 +34,10 @@ case class SearchConfig(
     @arg(short = 'a', doc = "Show all results instead of the top 5")
     all: Flag,
     @arg(short = 'y', doc = "When template is selected in interactive mode, apply it with defaults")
-    yes: Flag
+    yes: Flag,
+    @arg(short = 'v', doc = "Enable verbose (really verbose) logging")
+    verbose: Flag,
+
 )
 object SearchConfig:
   given ParserForClass[SearchConfig] = ParserForClass[SearchConfig]

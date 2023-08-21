@@ -1,13 +1,16 @@
 package scalaboot
 
+import mainargs.ParserForClass
+import scalaboot.client.Client
+import scalaboot.client.Retries
 import scribe.Level
 import scribe.message.LoggableMessage
 import scribe.output.TextOutput
 
+import scala.concurrent.duration.*
+
 import scalanative.unsafe.*
 import scalanative.unsigned.*
-import mainargs.ParserForClass
-import scalaboot.client.Client
 
 given Conversion[UnsafeCursor, LoggableMessage] =
   LoggableMessage[UnsafeCursor](a => new TextOutput(a.toString()))
@@ -117,9 +120,22 @@ def interactive(defaults: Settings) =
 end interactive
 
 def initSearch(config: SearchConfig) =
+  if config.verbose.value then
+    scribe.Logger.root.withMinimumLevel(Level.Debug).replace()
+
   val backend = scalaboot.curl.CurlBackend()
-  val client =
+  val retries = Retries.exponential(5, 30.millis)
+  val baseClient =
     Client.create(config.api.getOrElse(protocol.SCALABOOT_PRODUCTION))
+  val client = Client.stabilise(
+    baseClient,
+    retries,
+    (label, attempt) =>
+      scribe.debug(
+        s"[$label] failed, retrying in ${attempt.action.sleep}ms (${attempt.action.remaining} more attempts left)"
+      )
+  )
+
   val sorted = client.search(config.query).sortBy(_.rank).reverse
   val maxStars = sorted.maxByOption(_.repo.stars).map(_.repo.stars).getOrElse(0)
   val starsFieldLength = maxStars.toString().length
