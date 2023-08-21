@@ -177,6 +177,17 @@ lazy val `libgit2-bindings` = bootProject("libgit2-bindings")
     )
   )
 
+lazy val `dev-server` = bootProject("dev-server")
+  .enablePlugins(RevolverPlugin)
+  .settings(
+    fork := true,
+    envVars ++= Map(
+      "SCALABOOT_SERVER_BINARY" -> (ThisBuild / buildServer).value.toString,
+      "SCALABOOT_UNITD_COMMAND" -> UNITD_LOCAL_COMMAND,
+      "SCALABOOT_SERVER_CWD" -> ((ThisBuild / baseDirectory).value / "build").toString,
+    )
+  )
+
 lazy val writeCompileCommands = taskKey[Unit]("")
 
 writeCompileCommands := {
@@ -190,7 +201,7 @@ writeCompileCommands := {
 
 lazy val buildServer = taskKey[File]("")
 
-buildServer := {
+ThisBuild / buildServer := {
   val dest = (ThisBuild / baseDirectory).value / "build"
   val statedir = dest / "statedir"
   IO.createDirectory(dest)
@@ -236,6 +247,9 @@ buildAll := {
   buildServer.value
 }
 
+def UNITD_LOCAL_COMMAND =
+  "unitd --statedir statedir --log /dev/stderr --no-daemon --control 127.0.0.1:9000"
+
 lazy val runServer = taskKey[Unit]("")
 
 runServer := {
@@ -243,9 +257,7 @@ runServer := {
 
   import sys.process.*
 
-  val cmd =
-    s"unitd --statedir statedir --log /dev/stderr --no-daemon --control 127.0.0.1:9000"
-  val proc = Process(cmd, cwd = dest)
+  val proc = Process(UNITD_LOCAL_COMMAND, cwd = dest)
 
   proc.!
 }
@@ -281,6 +293,10 @@ logo :=
      |Sample commands:
      | ${scala.Console.BOLD}cli/run go softwaremill/tapir.g8${scala.Console.RESET} - template a repository
      | ${scala.Console.BOLD}cli/run search 'akka http' --api http://localhost:8080${scala.Console.RESET} - search against a locally running server
+     | ${scala.Console.BOLD}~dev-server/reStart${scala.Console.RESET} - continuously restard the unitd server on changes. 
+     |    Note: this process won't be interactive, the server binary needs to be relinked if it ever changes 
+     |          and that takes a relatively long time.
+     |          Still, this is useful for running a server in the background while you use the SBT shell to issue commands to it.
      |
      |""".stripMargin
 
