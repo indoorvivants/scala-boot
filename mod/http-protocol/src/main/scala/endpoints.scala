@@ -6,6 +6,8 @@ import sttp.tapir.generic.auto.*
 
 import upickle.default.ReadWriter as JSON
 
+private[scalaboot] inline def SCALABOOT_PRODUCTION = "https://scala-boot.fly.dev"
+
 case class Metadata() derives JSON
 
 case class RepositoryInfo(

@@ -5,8 +5,7 @@ import curl.enumerations.CURLINFO.CURLINFO_RESPONSE_CODE
 import curl.enumerations.CURLoption.*
 import mainargs.ParserForClass
 import scalaboot.client.Client
-import scalaboot.protocol.Metadata
-import scalaboot.protocol.RepositoryInfo
+import scalaboot.protocol, protocol.*
 import scribe.Level
 import sttp.client3.SttpBackend
 import sttp.model.Uri
@@ -53,15 +52,17 @@ def init(config: Config) =
   zone {
     val backend = scalaboot.curl.CurlBackend()
     scribe.Logger.root.withMinimumLevel(Level.Debug).replace()
-    val token = Token(sys.env("SCALABOOT_GITHUB_TOKEN").trim)
+    val token = sys.env.get("SCALABOOT_GITHUB_TOKEN").map(Token(_))
     val github = GithubApi(backend, token)
-    val apiClient = Client.create(config.api)
+    val apiClient =
+      Client.create(config.api.getOrElse(protocol.SCALABOOT_PRODUCTION))
 
     val discoveredRepos = github
       .templateRepos(config.org)
       .map { repo =>
         val sha = github.latestCommit(repo.slug)
-        val readmeContents = github.readFile(repo.slug, sha, "README.md").getOrElse("")
+        val readmeContents =
+          github.readFile(repo.slug, sha, "README.md").getOrElse("")
 
         GithubRepoSnapshot(repo, RepoRevision(lastCommit = sha, readmeContents))
       }
@@ -137,12 +138,19 @@ def printRepos(msg: String, repos: Seq[String]) =
 class Token(val value: String):
   override def toString(): String = "Token[redacted]"
 
-class GithubApi(client: SttpBackend[sttp.client3.Identity, Any], token: Token):
+class GithubApi(
+    client: SttpBackend[sttp.client3.Identity, Any],
+    token: Option[Token]
+):
+  val tokHeader = token.map { token =>
+    s"Authorization" -> s"Bearer ${token.value}"
+  }.toMap
+
   val github = Map(
     "Accept" -> "application/vnd.github+json",
-    s"Authorization" -> s"Bearer ${token.value}",
     "User-agent" -> "Scala Boot Repo Indexer"
-  )
+  ) ++ tokHeader
+
   import sttp.client3.*
   import sttp.client3.upicklejson.*
 

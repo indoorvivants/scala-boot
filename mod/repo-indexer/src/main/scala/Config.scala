@@ -10,6 +10,6 @@ case class Config(
     @arg(short = 'v', doc = "verbose logging")
     verbose: Flag,
     @arg(doc = "Address of Scala Boot service")
-    api: String = "",
+    api: Option[String] = None,
 
 )

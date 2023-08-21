@@ -118,7 +118,8 @@ end interactive
 
 def initSearch(config: SearchConfig) =
   val backend = scalaboot.curl.CurlBackend()
-  val client = Client.create(config.api.getOrElse("https://scala-boot.fly.dev"))
+  val client =
+    Client.create(config.api.getOrElse(protocol.SCALABOOT_PRODUCTION))
   val sorted = client.search(config.query).sortBy(_.rank).reverse
   val maxStars = sorted.maxByOption(_.repo.stars).map(_.repo.stars).getOrElse(0)
   val starsFieldLength = maxStars.toString().length
