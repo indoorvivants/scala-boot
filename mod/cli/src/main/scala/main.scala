@@ -1,5 +1,7 @@
 package scalaboot
 
+import template.*
+
 import mainargs.ParserForClass
 import scalaboot.client.Client
 import scalaboot.client.Retries
@@ -11,6 +13,22 @@ import scala.concurrent.duration.*
 
 import scalanative.unsafe.*
 import scalanative.unsigned.*
+
+def readProperties(file: os.Path) =
+  val props = java.util.Properties()
+  props.load(file.getInputStream)
+
+  val propsBuilder = List.newBuilder[(String, Tokenized)]
+  val names = props.stringPropertyNames()
+  names.forEach { name =>
+    propsBuilder.addOne(name -> tokenize(Source.Str(props.getProperty(name))))
+  }
+  Props(
+    propsBuilder.result().toMap,
+    propsBuilder.result().map(_._1).zipWithIndex.toMap
+  )
+end readProperties
+
 
 given Conversion[UnsafeCursor, LoggableMessage] =
   LoggableMessage[UnsafeCursor](a => new TextOutput(a.toString()))

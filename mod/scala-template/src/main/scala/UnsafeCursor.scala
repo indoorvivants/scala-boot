@@ -1,4 +1,4 @@
-package scalaboot
+package scalaboot.template
 
 case class Context(
     source: Source

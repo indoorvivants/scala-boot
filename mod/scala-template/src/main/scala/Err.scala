@@ -1,4 +1,4 @@
-package scalaboot
+package scalaboot.template
 
 import Console.*
 

@@ -1,5 +1,7 @@
 package scalaboot
 
+import template.*
+
 import scala.scalanative.unsafe.*
 import scala.scalanative.unsigned.*
 

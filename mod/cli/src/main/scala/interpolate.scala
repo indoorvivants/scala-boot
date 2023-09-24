@@ -1,30 +1,6 @@
 package scalaboot
 
-def fill(tokenized: Tokenized, settings: Settings) =
-  val sb = new java.lang.StringBuilder
-  tokenized.tokens.foreach { tok =>
-    tok.fragment match
-      case Fragment.Str(content) => sb.append(content)
-      case Fragment.Inject(interp) =>
-        interp match
-          case Interpolation.Variable(name, formats) =>
-            settings.values.get(name) match
-              case None =>
-                Err.raise(
-                  s"Unknown variable [$name] in interpolation",
-                  tokenized.source,
-                  Some(tok.pos)
-                )
-              case Some(value) =>
-                value match
-                  case PropertyValue.Str(value) =>
-                    sb.append(applyFormats(value, formats))
-
-          case Interpolation.Comment =>
-
-  }
-  sb.toString()
-end fill
+import template.*
 
 def fillFile(
     file: Source.File,
@@ -40,7 +16,7 @@ def fillFile(
     )
   scribe.debug(s"Filling file [$destination] using [$file] as template")
   val tokenized = tokenize(file)
-  val filled = fill(tokenized, settings)
+  val filled = fillString(tokenized, settings)
 
   os.makeDir.all(destination / os.up)
 
@@ -65,7 +41,7 @@ def fillDirectory(
   val processed = collection.mutable.Set.empty[os.Path]
 
   os.list(input).filterNot(skip).foreach { path =>
-    val newLast = fill(tokenize(Source.Str(path.last)), settings)
+    val newLast = fillString(tokenize(Source.Str(path.last)), settings)
     if newLast.nonEmpty then
       val rp = path.relativeTo(input) / os.up / newLast
       if os.isDir(path) then

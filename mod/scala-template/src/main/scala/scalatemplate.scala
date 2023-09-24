@@ -1,4 +1,4 @@
-package scalaboot
+package scalaboot.template
 
 import util.chaining.*
 import scala.util.boundary, boundary.break
@@ -71,20 +71,6 @@ def tokenize(s: Source): Tokenized =
   parse(using Context(source = s))(b.addOne)
   Tokenized(b.result(), s)
 
-def readProperties(file: os.Path) =
-  val props = java.util.Properties()
-  props.load(file.getInputStream)
-
-  val propsBuilder = List.newBuilder[(String, Tokenized)]
-  val names = props.stringPropertyNames()
-  names.forEach { name =>
-    propsBuilder.addOne(name -> tokenize(Source.Str(props.getProperty(name))))
-  }
-  Props(
-    propsBuilder.result().toMap,
-    propsBuilder.result().map(_._1).zipWithIndex.toMap
-  )
-end readProperties
 
 def makeDefaults(props: Props) =
   val lst = props.properties.toList.sortBy(_._1)
@@ -302,3 +288,30 @@ def collectQuotedString(continue: Continue)(using Context) =
   }
   strRaw.toString() -> skipped
 end collectQuotedString
+
+def fillString(tokenized: Tokenized, settings: Settings) =
+  val sb = new java.lang.StringBuilder
+  tokenized.tokens.foreach { tok =>
+    tok.fragment match
+      case Fragment.Str(content) => sb.append(content)
+      case Fragment.Inject(interp) =>
+        interp match
+          case Interpolation.Variable(name, formats) =>
+            settings.values.get(name) match
+              case None =>
+                Err.raise(
+                  s"Unknown variable [$name] in interpolation",
+                  tokenized.source,
+                  Some(tok.pos)
+                )
+              case Some(value) =>
+                value match
+                  case PropertyValue.Str(value) =>
+                    sb.append(applyFormats(value, formats))
+
+          case Interpolation.Comment =>
+
+  }
+  sb.toString()
+end fillString
+

@@ -1,4 +1,4 @@
-package scalaboot
+package scalaboot.template
 import scala.reflect.TypeTest
 
 opaque type Opt[+A] = A | Null

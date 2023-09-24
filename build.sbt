@@ -18,17 +18,17 @@ def bootApp(subfolder: String) =
     })
 
 val Versions = new {
-  val Scala = "3.3.0"
+  val Scala = "3.3.1"
 
   val scribe = "3.11.9"
   val osLib = "0.9.1"
   val pprint = "0.8.1"
   val mainargs = "0.5.1"
   val sttp = "3.9.0"
-  val roach = "0.0.4"
-  val ujson = "3.1.0"
+  val roach = "0.0.4+4-c4543b82+20230923-1047-SNAPSHOT"
+  val ujson = "3.1.3"
   val snunit = "0.7.2"
-  val tapir = "1.7.2"
+  val tapir = "1.7.4"
 }
 
 lazy val root =
@@ -36,16 +36,31 @@ lazy val root =
     .in(file("."))
     .aggregate(
       cli,
-      `libgit2-bindings`,
-      `repo-indexer`,
-      `libcurl-bindings`,
+      libgit2Bindings,
+      repoIndexer,
+      libcurlBindings,
       server,
-      `curl-sttp-backend`,
-      `http-client`
+      curlSttpBackend,
+      httpClient
     )
-    .aggregate(`http-protocol`.projectRefs*)
+    .aggregate(httpProtocol.projectRefs*)
+    .aggregate(scalaTemplate.projectRefs*)
 
-lazy val `http-protocol` = projectMatrix
+lazy val scalaTemplate = projectMatrix
+  .withId("scala-template")
+  .in(file("mod/scala-template"))
+  .nativePlatform(Seq(Versions.Scala))
+  .settings(
+    libraryDependencies ++= Seq(
+      "com.outr" %%% "scribe" % Versions.scribe,
+      "com.lihaoyi" %%% "pprint" % Versions.pprint,
+      "com.lihaoyi" %%% "os-lib" % Versions.osLib,
+    )
+  )
+// .jsPlatform(Seq(Versions.Scala))
+
+lazy val httpProtocol = projectMatrix
+  .withId("http-protocol")
   .in(file("mod/http-protocol"))
   .nativePlatform(Seq(Versions.Scala))
   // .jsPlatform(Seq(Versions.Scala))
@@ -57,8 +72,8 @@ lazy val `http-protocol` = projectMatrix
     )
   )
 
-lazy val `http-client` = bootApp("http-client")
-  .dependsOn(`curl-sttp-backend`, `http-protocol`.native(Versions.Scala))
+lazy val httpClient = bootApp("http-client")
+  .dependsOn(curlSttpBackend, httpProtocol.native(Versions.Scala))
   .settings(
     vcpkgDependencies := VcpkgDependencies(
       "curl",
@@ -70,8 +85,8 @@ lazy val `http-client` = bootApp("http-client")
     )
   )
 
-lazy val `curl-sttp-backend` = bootApp("curl-sttp-backend")
-  .dependsOn(`libcurl-bindings`)
+lazy val curlSttpBackend = bootApp("curl-sttp-backend")
+  .dependsOn(libcurlBindings)
   .settings(
     vcpkgDependencies := VcpkgDependencies(
       "curl",
@@ -84,7 +99,7 @@ lazy val `curl-sttp-backend` = bootApp("curl-sttp-backend")
   )
 
 lazy val server = bootApp("server")
-  .dependsOn(`http-protocol`.native(Versions.Scala))
+  .dependsOn(httpProtocol.native(Versions.Scala))
   .settings(
     vcpkgDependencies := VcpkgDependencies(
       (ThisBuild / baseDirectory).value / "server-vcpkg.json"
@@ -100,7 +115,7 @@ lazy val server = bootApp("server")
   )
 
 lazy val cli = bootApp("cli")
-  .dependsOn(`libgit2-bindings`, `http-client`)
+  .dependsOn(libgit2Bindings, httpClient, scalaTemplate.native(Versions.Scala))
   .settings(
     vcpkgDependencies := VcpkgDependencies(
       "libgit2",
@@ -116,8 +131,8 @@ lazy val cli = bootApp("cli")
     )
   )
 
-lazy val `repo-indexer` = bootApp("repo-indexer")
-  .dependsOn(`http-client`)
+lazy val repoIndexer = bootApp("repo-indexer")
+  .dependsOn(httpClient)
   .settings(
     vcpkgDependencies := VcpkgDependencies(
       "curl",
@@ -136,7 +151,7 @@ lazy val `repo-indexer` = bootApp("repo-indexer")
     libraryDependencySchemes += "com.lihaoyi" % "upickle_native0.4_3" % VersionScheme.Always
   )
 
-lazy val `libcurl-bindings` = bootProject("libcurl-bindings")
+lazy val libcurlBindings = bootProject("libcurl-bindings")
   .enablePlugins(BindgenPlugin, ScalaNativePlugin, VcpkgPlugin)
   .settings(
     vcpkgDependencies := VcpkgDependencies(
@@ -154,7 +169,7 @@ lazy val `libcurl-bindings` = bootProject("libcurl-bindings")
     )
   )
 
-lazy val `libgit2-bindings` = bootProject("libgit2-bindings")
+lazy val libgit2Bindings = bootProject("libgit2-bindings")
   .enablePlugins(BindgenPlugin, ScalaNativePlugin, VcpkgPlugin)
   .settings(
     vcpkgDependencies := VcpkgDependencies(
@@ -177,14 +192,14 @@ lazy val `libgit2-bindings` = bootProject("libgit2-bindings")
     )
   )
 
-lazy val `dev-server` = bootProject("dev-server")
+lazy val devServer = bootProject("dev-server")
   .enablePlugins(RevolverPlugin)
   .settings(
     fork := true,
     envVars ++= Map(
       "SCALABOOT_SERVER_BINARY" -> (ThisBuild / buildServer).value.toString,
       "SCALABOOT_UNITD_COMMAND" -> UNITD_LOCAL_COMMAND,
-      "SCALABOOT_SERVER_CWD" -> ((ThisBuild / baseDirectory).value / "build").toString,
+      "SCALABOOT_SERVER_CWD" -> ((ThisBuild / baseDirectory).value / "build").toString
     )
   )
 
@@ -231,7 +246,7 @@ lazy val buildRepoIndexer = taskKey[File]("")
 buildRepoIndexer := {
   val dest = (ThisBuild / baseDirectory).value / "build"
   IO.createDirectory(dest)
-  val cliBinary = (`repo-indexer` / Compile / nativeLink).value
+  val cliBinary = (repoIndexer / Compile / nativeLink).value
 
   val cliDestination = dest / "scala-boot-repo-indexer"
   IO.copyFile(cliBinary, cliDestination)
