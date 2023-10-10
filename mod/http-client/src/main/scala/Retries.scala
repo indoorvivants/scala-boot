@@ -50,12 +50,11 @@ def retryable[A](
     policy.next(n) match
       case Action.Stop => last.fold(throw _, identity)
       case a @ Action.KeepRetrying(_, delay) =>
-        val result = Try(ioa).toEither
-        result match
+        last match
           case Left(value) if isError(value) =>
             logger(Attempt(a, value))
             Thread.sleep(delay.toMillis)
-            go(n + 1, result)
+            go(n + 1, Try(ioa).toEither)
           case Left(err)    => throw err
           case Right(value) => value
 
