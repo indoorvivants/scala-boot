@@ -43,7 +43,8 @@ class Db(pool: Pool):
         repositories(${repository_fields.sql}) 
       values(${repository_fields}) 
       returning 
-        repoId"""
+        repoId
+      """
         .one(data, int4)
     }
   def getAllRepos(using Zone) =

@@ -1,4 +1,4 @@
-FROM ubuntu:22.04 as dev
+FROM keynmol/sn-vcpkg:latest as dev
 
 # Install NGINX Unit
 RUN apt-get update && \
@@ -10,22 +10,14 @@ RUN apt-get update && \
     apt-get update && \
     apt-get install -y unit unit-dev
 
-RUN apt-get install -y openjdk-17-jdk clang zip unzip tar make cmake autoconf ninja-build pkg-config git libtool
-
 WORKDIR /workdir
 
-COPY sbt sbt
-
 # pre-download SBT
-RUN ./sbt --sbt-create version
-
-COPY coursier cs
-RUN ./cs launch com.indoorvivants.vcpkg:sn-vcpkg_3:0.0.13 -- --help
+RUN sbt --sbt-create version
 
 COPY server-vcpkg.json .
 ENV VCPKG_FORCE_SYSTEM_BINARIES=1
-RUN ./cs launch com.indoorvivants.vcpkg:sn-vcpkg_3:0.0.13 -- install --manifest server-vcpkg.json
-
+RUN sn-vcpkg install --manifest server-vcpkg.json
 
 COPY . .
 

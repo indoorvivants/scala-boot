@@ -25,7 +25,7 @@ val Versions = new {
   val pprint = "0.8.1"
   val mainargs = "0.5.1"
   val sttp = "3.9.0"
-  val roach = "0.0.4+4-c4543b82+20230923-1047-SNAPSHOT"
+  val roach = "0.0.5"
   val ujson = "3.1.3"
   val snunit = "0.7.2"
   val tapir = "1.7.4"
@@ -326,8 +326,24 @@ usefulTasks := Seq(
   ),
   UsefulTask(
     "runServer",
-    "Run the Scala Boot server at http://localhost:8080. Requires unitd (see above)"
+    "(blocking) Run the Scala Boot server at http://localhost:8080. Requires unitd (see above)"
+  ),
+  UsefulTask(
+    "runDevServer",
+    "(background) Run the Scala Boot server at http://localhost:8080. Requires unitd (see above)"
+  ),
+  UsefulTask(
+    "localRepoIndex",
+    "Run repo indexer CLI pointing at http://localhost:8080"
+  ),
+  UsefulTask(
+    "localSearch",
+    "Run search CLI pointing at http://localhost:8080"
   )
 )
+
+addCommandAlias("localRepoIndex", "repo-indexer/run --api http://localhost:8080 ")
+addCommandAlias("localSearch", "cli/run search --api http://localhost:8080 ")
+addCommandAlias("runDevServer", "dev-server/reStart")
 
 logoColor := scala.Console.MAGENTA
