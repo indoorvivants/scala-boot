@@ -21,6 +21,13 @@ RUN sn-vcpkg install --manifest server-vcpkg.json
 
 COPY . .
 
+ARG scalanative_mode=release-fast
+ARG scalanative_lto=thin
+
+ENV SCALANATIVE_MODE=${scalanative_mode}
+ENV SCALANATIVE_LTO=${scalanative_lto}
+ENV CI=true
+
 RUN ./sbt buildServer
 
 RUN mkdir empty_dir

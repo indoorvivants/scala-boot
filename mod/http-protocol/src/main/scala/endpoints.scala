@@ -6,7 +6,8 @@ import sttp.tapir.generic.auto.*
 
 import upickle.default.ReadWriter as JSON
 
-private[scalaboot] inline def SCALABOOT_PRODUCTION = "https://scala-boot.fly.dev"
+private[scalaboot] inline def SCALABOOT_PRODUCTION =
+  "https://scala-boot.fly.dev"
 
 case class Metadata() derives JSON
 
@@ -34,16 +35,24 @@ object repos:
   val all = endpoint
     .in("repos" / "all")
     .out(jsonBody[List[SavedRepository]])
+    .errorOut(stringBody)
 
   val search = endpoint
     .in("repos" / "search")
     .in(query[String]("query"))
     .out(jsonBody[List[SearchResult]])
+    .errorOut(stringBody)
 
   val add =
-    endpoint.post.in("repos" / "add").in(jsonBody[RepositoryInfo])
+    endpoint.post
+      .in("repos" / "add")
+      .in(jsonBody[RepositoryInfo])
+      .errorOut(stringBody)
 
   val delete =
-    endpoint.delete.in("repos" / "delete").in(jsonBody[DeleteRepository])
+    endpoint.delete
+      .in("repos" / "delete")
+      .in(jsonBody[DeleteRepository])
+      .errorOut(stringBody)
 
 end repos

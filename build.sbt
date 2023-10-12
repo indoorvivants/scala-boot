@@ -2,15 +2,15 @@ import scala.scalanative.build.Mode
 import bindgen.plugin.BindgenMode
 import bindgen.interface.Binding
 
-val common = Seq(scalaVersion := Versions.Scala)
+def NAME = "scala-boot"
 
-def bootProject(id: String) =
+def proj(id: String) =
   sbt.Project
     .apply(id, file(s"mod/$id"))
-    .settings(common)
+    .settings(scalaVersion := Versions.Scala)
 
-def bootApp(subfolder: String) =
-  bootProject(subfolder)
+def projApp(subfolder: String) =
+  proj(subfolder)
     .enablePlugins(VcpkgNativePlugin, ScalaNativePlugin)
     .settings(nativeConfig ~= { config =>
       config
@@ -20,10 +20,10 @@ def bootApp(subfolder: String) =
 val Versions = new {
   val Scala = "3.3.1"
 
-  val scribe = "3.11.9"
+  val scribe = "3.12.2"
   val osLib = "0.9.1"
   val pprint = "0.8.1"
-  val mainargs = "0.5.1"
+  val mainargs = "0.5.4"
   val sttp = "3.9.0"
   val roach = "0.0.5"
   val ujson = "3.1.3"
@@ -54,7 +54,7 @@ lazy val scalaTemplate = projectMatrix
     libraryDependencies ++= Seq(
       "com.outr" %%% "scribe" % Versions.scribe,
       "com.lihaoyi" %%% "pprint" % Versions.pprint,
-      "com.lihaoyi" %%% "os-lib" % Versions.osLib,
+      "com.lihaoyi" %%% "os-lib" % Versions.osLib
     )
   )
 // .jsPlatform(Seq(Versions.Scala))
@@ -72,7 +72,7 @@ lazy val httpProtocol = projectMatrix
     )
   )
 
-lazy val httpClient = bootApp("http-client")
+lazy val httpClient = projApp("http-client")
   .dependsOn(curlSttpBackend, httpProtocol.native(Versions.Scala))
   .settings(
     vcpkgDependencies := VcpkgDependencies(
@@ -85,7 +85,7 @@ lazy val httpClient = bootApp("http-client")
     )
   )
 
-lazy val curlSttpBackend = bootApp("curl-sttp-backend")
+lazy val curlSttpBackend = projApp("curl-sttp-backend")
   .dependsOn(libcurlBindings)
   .settings(
     vcpkgDependencies := VcpkgDependencies(
@@ -98,7 +98,7 @@ lazy val curlSttpBackend = bootApp("curl-sttp-backend")
     )
   )
 
-lazy val server = bootApp("server")
+lazy val server = projApp("server")
   .dependsOn(httpProtocol.native(Versions.Scala))
   .settings(
     vcpkgDependencies := VcpkgDependencies(
@@ -114,7 +114,7 @@ lazy val server = bootApp("server")
     nativeConfig ~= { _.withEmbedResources(true) }
   )
 
-lazy val cli = bootApp("cli")
+lazy val cli = projApp("cli")
   .dependsOn(libgit2Bindings, httpClient, scalaTemplate.native(Versions.Scala))
   .settings(
     vcpkgDependencies := VcpkgDependencies(
@@ -131,7 +131,7 @@ lazy val cli = bootApp("cli")
     )
   )
 
-lazy val repoIndexer = bootApp("repo-indexer")
+lazy val repoIndexer = projApp("repo-indexer")
   .dependsOn(httpClient)
   .settings(
     vcpkgDependencies := VcpkgDependencies(
@@ -151,48 +151,52 @@ lazy val repoIndexer = bootApp("repo-indexer")
     libraryDependencySchemes += "com.lihaoyi" % "upickle_native0.4_3" % VersionScheme.Always
   )
 
-lazy val libcurlBindings = bootProject("libcurl-bindings")
+lazy val libcurlBindings = proj("libcurl-bindings")
   .enablePlugins(BindgenPlugin, ScalaNativePlugin, VcpkgPlugin)
   .settings(
     vcpkgDependencies := VcpkgDependencies(
       "curl"
     ),
     bindgenBindings +=
-      Binding(
-        vcpkgConfigurator.value.includes("curl") / "curl" / "curl.h",
-        "curl",
-        cImports = List("curl/curl.h")
-      ),
+      Binding
+        .builder(
+          vcpkgConfigurator.value.includes("curl") / "curl" / "curl.h",
+          "curl"
+        )
+        .addCImport("curl/curl.h")
+        .build,
     bindgenMode := BindgenMode.Manual(
       sourceDirectory.value / "main" / "scala" / "generated",
       (Compile / resourceDirectory).value / "scala-native"
     )
   )
 
-lazy val libgit2Bindings = bootProject("libgit2-bindings")
+lazy val libgit2Bindings = proj("libgit2-bindings")
   .enablePlugins(BindgenPlugin, ScalaNativePlugin, VcpkgPlugin)
   .settings(
     vcpkgDependencies := VcpkgDependencies(
       "libgit2"
     ),
-    bindgenBindings := Seq(
-      Binding(
-        vcpkgConfigurator.value.includes("libgit2") / "git2.h",
-        "libgit",
-        // linkName = Some("git2"),
-        cImports = List("git2.h"),
-        clangFlags = vcpkgConfigurator.value.pkgConfig
-          .updateCompilationFlags(List("-fsigned-char"), "libgit2")
-          .toList
-      )
-    ),
+    bindgenBindings +=
+      Binding
+        .builder(
+          vcpkgConfigurator.value.includes("libgit2") / "git2.h",
+          "libgit"
+        )
+        .addCImport("git2.h")
+        .withClangFlags(
+          vcpkgConfigurator.value.pkgConfig
+            .updateCompilationFlags(List("-fsigned-char"), "libgit2")
+            .toList
+        )
+        .build,
     bindgenMode := BindgenMode.Manual(
       sourceDirectory.value / "main" / "scala" / "generated",
       (Compile / resourceDirectory).value / "scala-native"
     )
   )
 
-lazy val devServer = bootProject("dev-server")
+lazy val devServer = proj("dev-server")
   .enablePlugins(RevolverPlugin)
   .settings(
     fork := true,
@@ -204,7 +208,6 @@ lazy val devServer = bootProject("dev-server")
   )
 
 lazy val writeCompileCommands = taskKey[Unit]("")
-
 writeCompileCommands := {
   val dest = (ThisBuild / baseDirectory).value / "compile_flags.txt"
   val flags = nativeConfig.value.compileOptions
@@ -215,7 +218,6 @@ writeCompileCommands := {
 }
 
 lazy val buildServer = taskKey[File]("")
-
 ThisBuild / buildServer := {
   val dest = (ThisBuild / baseDirectory).value / "build"
   val statedir = dest / "statedir"
@@ -229,33 +231,30 @@ ThisBuild / buildServer := {
 }
 
 lazy val buildCli = taskKey[File]("")
-
 buildCli := {
   val dest = (ThisBuild / baseDirectory).value / "build"
   IO.createDirectory(dest)
   val cliBinary = (cli / Compile / nativeLink).value
 
-  val cliDestination = dest / "scala-boot"
+  val cliDestination = dest / NAME
   IO.copyFile(cliBinary, cliDestination)
 
   cliDestination
 }
 
 lazy val buildRepoIndexer = taskKey[File]("")
-
 buildRepoIndexer := {
   val dest = (ThisBuild / baseDirectory).value / "build"
   IO.createDirectory(dest)
   val cliBinary = (repoIndexer / Compile / nativeLink).value
 
-  val cliDestination = dest / "scala-boot-repo-indexer"
+  val cliDestination = dest / s"${NAME}-repo-indexer"
   IO.copyFile(cliBinary, cliDestination)
 
   cliDestination
 }
 
 lazy val buildAll = taskKey[File]("")
-
 buildAll := {
   buildCli.value
   buildRepoIndexer.value
@@ -266,7 +265,6 @@ def UNITD_LOCAL_COMMAND =
   "unitd --statedir statedir --log /dev/stderr --no-daemon --control 127.0.0.1:9000"
 
 lazy val runServer = taskKey[Unit]("")
-
 runServer := {
   val dest = buildServer.value
 
@@ -279,6 +277,8 @@ runServer := {
 
 import sbtwelcome.*
 
+logoColor := scala.Console.MAGENTA
+welcomeEnabled := !sys.env.contains("CI")
 logo :=
   s"""
      |   ▄▄▄▄▄▄▄ ▄▄▄▄▄▄▄ ▄▄▄▄▄▄ ▄▄▄     ▄▄▄▄▄▄    ▄▄▄▄▄▄▄ ▄▄▄▄▄▄▄ ▄▄▄▄▄▄▄ ▄▄▄▄▄▄▄ 
@@ -318,19 +318,23 @@ logo :=
 usefulTasks := Seq(
   UsefulTask(
     "buildCli",
-    "Build ./build/scala-boot CLI (search and templating)"
+    s"Build ./build/$NAME CLI (search and templating)"
+  ),
+  UsefulTask(
+    "buildServer",
+    "Build HTTP server at ./build/server"
   ),
   UsefulTask(
     "buildRepoIndexer",
-    "Build ./build/scala-boot-repo-indexer CLI (repo indexing)"
+    s"Build ./build/$NAME-repo-indexer CLI (repo indexing)"
   ),
   UsefulTask(
     "runServer",
-    "(blocking) Run the Scala Boot server at http://localhost:8080. Requires unitd (see above)"
+    s"(blocking) Run the $NAME server at http://localhost:8080"
   ),
   UsefulTask(
     "runDevServer",
-    "(background) Run the Scala Boot server at http://localhost:8080. Requires unitd (see above)"
+    s"(background) Run the $NAME server at http://localhost:8080"
   ),
   UsefulTask(
     "localRepoIndex",
@@ -339,11 +343,16 @@ usefulTasks := Seq(
   UsefulTask(
     "localSearch",
     "Run search CLI pointing at http://localhost:8080"
+  ),
+  UsefulTask(
+    "writeCompileCommands",
+    "Write compile_flags.txt file, to use with Clang LSP server (for C source files)"
   )
 )
 
-addCommandAlias("localRepoIndex", "repo-indexer/run --api http://localhost:8080 ")
+addCommandAlias(
+  "localRepoIndex",
+  "repo-indexer/run --api http://localhost:8080 "
+)
 addCommandAlias("localSearch", "cli/run search --api http://localhost:8080 ")
 addCommandAlias("runDevServer", "dev-server/reStart")
-
-logoColor := scala.Console.MAGENTA
