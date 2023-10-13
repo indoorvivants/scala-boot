@@ -51,9 +51,14 @@ def init(config: Config) =
       scribe.Logger.root.withMinimumLevel(Level.Debug).replace()
 
     val backend = scalaboot.curl.CurlBackend()
+    val apiKey = sys.env.get("SCALABOOT_API_KEY")
+    if apiKey.isEmpty then
+      scribe.warn(
+        "SCALABOOT_API_KEY is not set, requests will run unauthorized"
+      )
     val retries = Retries.exponential(5, 30.millis)
     val baseClient =
-      Client.create(config.api.getOrElse(protocol.SCALABOOT_PRODUCTION))
+      Client.create(config.api.getOrElse(protocol.SCALABOOT_PRODUCTION), apiKey)
     val client = Client.stabilise(
       baseClient,
       retries,

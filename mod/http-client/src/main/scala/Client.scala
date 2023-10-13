@@ -22,7 +22,7 @@ trait Client:
 end Client
 
 object Client:
-  def create(uri: String): Client =
+  def create(uri: String, token: Option[String] = None): Client =
     new ClientImpl(CurlBackend(), SttpClientInterpreter(), Uri.unsafeParse(uri))
 
   def stabilise(
@@ -49,7 +49,7 @@ object Client:
       override def create(repo: RepositoryInfo): Unit =
         wrap(repos.add.showShort, self.create(repo))
 
-      override def update(repo: UpdateRepository): Unit = 
+      override def update(repo: UpdateRepository): Unit =
         wrap(repos.update.showShort, self.update(repo))
 
       override def all(): List[SavedRepository] =
@@ -61,24 +61,33 @@ object Client:
   private class ClientImpl(
       backend: SttpBackend[sttp.client3.Identity, Any],
       interp: SttpClientInterpreter,
-      base: Uri
+      base: Uri,
+      token: Option[String] = None
   ) extends Client:
     def search(query: String): List[SearchResult] =
-      interp.toClientThrowErrors(repos.search, Some(base), backend).apply(query)
+      interp
+        .toClientThrowErrors(repos.search, Some(base), backend)
+        .apply(query)
 
     def create(repo: RepositoryInfo): Unit =
-      interp.toClientThrowErrors(repos.add, Some(base), backend).apply(repo)
+      interp
+        .toSecureClientThrowErrors(repos.add, Some(base), backend)
+        .apply(token)
+        .apply(repo)
 
     def update(repo: UpdateRepository): Unit =
-      interp.toClientThrowErrors(repos.update, Some(base), backend).apply(repo)
-
+      interp
+        .toSecureClientThrowErrors(repos.update, Some(base), backend)
+        .apply(token)
+        .apply(repo)
 
     def all(): List[SavedRepository] =
       interp.toClientThrowErrors(repos.all, Some(base), backend).apply(())
 
     def delete(id: Int): Unit =
       interp
-        .toClientThrowErrors(repos.delete, Some(base), backend)
+        .toSecureClientThrowErrors(repos.delete, Some(base), backend)
+        .apply(token)
         .apply(DeleteRepository(id))
   end ClientImpl
 end Client
