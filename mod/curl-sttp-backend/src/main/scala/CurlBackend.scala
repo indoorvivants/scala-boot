@@ -110,7 +110,7 @@ abstract class AbstractCurlBackend[F[_]](monad: MonadError[F], verbose: Boolean)
           OPT(CURLoption.CURLOPT_HEADERFUNCTION, write_headers_callback)
           OPT(CURLoption.CURLOPT_HEADERDATA, headersPtr)
 
-          setMethod(curl_handle, request.method)
+          setMethod(request.method)
           setRequestBody(request.body)
 
           check(curl_easy_perform(curl_handle))
@@ -167,7 +167,7 @@ abstract class AbstractCurlBackend[F[_]](monad: MonadError[F], verbose: Boolean)
       }
   end parseHeaders
 
-  private def setMethod(handle: Ptr[CURL], method: Method)(using
+  private def setMethod(method: Method)(using
       Zone
   ): F[CURLcode] =
     import CURLoption.*

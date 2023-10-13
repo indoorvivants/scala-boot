@@ -23,8 +23,6 @@ object Captured:
           libc.free(toRawPtr[Captured[D]](mem))
       )
 
-    val originalAddress = Intrinsics.castObjectToRawPtr(value)
-
     Intrinsics.storeObject(rawptr, value)
 
     GCRoots.addRoot(value)

@@ -1,25 +1,19 @@
 package scalaboot.repo_indexer
 
 import curl.all.*
-import curl.enumerations.CURLINFO.CURLINFO_RESPONSE_CODE
-import curl.enumerations.CURLoption.*
 import mainargs.ParserForClass
 import scalaboot.client.Client
 import scalaboot.client.Retries
 import scalaboot.protocol
 import scribe.Level
-import sttp.client3.SttpBackend
 import sttp.model.Uri
 
-import scala.collection.mutable.ArrayBuilder
 import scala.concurrent.duration.*
-import scala.scalanative.libc.stdio
-import scala.scalanative.libc.string
-import scala.util.Using
 import scala.util.control.NonFatal
 
 import protocol.*
 import scalanative.unsafe.*
+import sttp.client3.SttpBackend
 
 inline def zone[A](inline f: Zone ?=> A) = Zone { z => f(using z) }
 

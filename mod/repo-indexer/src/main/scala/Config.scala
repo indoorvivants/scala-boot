@@ -1,7 +1,6 @@
 package scalaboot.repo_indexer
 
-import mainargs.{main, arg, ParserForClass, Flag}
-import mainargs.TokensReader
+import mainargs.{main, arg, Flag}
 
 @main(name = "scala-boot/repo-indexer")
 case class Config(

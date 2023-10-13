@@ -8,6 +8,8 @@ def proj(id: String) =
   sbt.Project
     .apply(id, file(s"mod/$id"))
     .settings(scalaVersion := Versions.Scala)
+    .settings(scalacOptions += "-Wunused:all")
+
 
 def projApp(subfolder: String) =
   proj(subfolder)
@@ -25,10 +27,10 @@ val Versions = new {
   val pprint = "0.8.1"
   val mainargs = "0.5.4"
   val sttp = "3.9.0"
-  val roach = "0.0.5"
+  val roach = "0.0.6"
   val ujson = "3.1.3"
   val snunit = "0.7.2"
-  val tapir = "1.7.4"
+  val tapir = "1.8.1"
 }
 
 lazy val root =

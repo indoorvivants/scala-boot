@@ -3,10 +3,8 @@ package scalaboot.client
 import sttp.tapir.client.sttp.SttpClientInterpreter
 import scalaboot.protocol.*
 import scalaboot.curl.CurlBackend
-import scalaboot.curl.AbstractCurlBackend
 import sttp.model.Uri
 import sttp.client3.SttpBackend
-import scala.scalanative.unsafe.extern
 import scala.util.control.NonFatal
 
 trait Client:

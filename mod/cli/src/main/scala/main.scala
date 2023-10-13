@@ -2,7 +2,6 @@ package scalaboot
 
 import template.*
 
-import mainargs.ParserForClass
 import scalaboot.client.Client
 import scalaboot.client.Retries
 import scribe.Level
@@ -10,9 +9,6 @@ import scribe.message.LoggableMessage
 import scribe.output.TextOutput
 
 import scala.concurrent.duration.*
-
-import scalanative.unsafe.*
-import scalanative.unsigned.*
 
 def readProperties(file: os.Path) =
   val props = java.util.Properties()
@@ -141,7 +137,6 @@ def initSearch(config: SearchConfig) =
   if config.verbose.value then
     scribe.Logger.root.withMinimumLevel(Level.Debug).replace()
 
-  val backend = scalaboot.curl.CurlBackend()
   val retries = Retries.exponential(5, 30.millis)
   val baseClient =
     Client.create(config.api.getOrElse(protocol.SCALABOOT_PRODUCTION))
@@ -209,7 +204,7 @@ def initSearch(config: SearchConfig) =
 end initSearch
 
 object Commands:
-  import mainargs.{main as entrypoint, arg, ParserForMethods, Flag}
+  import mainargs.{main as entrypoint, arg, ParserForMethods}
 
   @entrypoint
   def go(
