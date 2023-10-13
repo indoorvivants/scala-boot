@@ -13,6 +13,10 @@ trait Client:
 
   def create(repo: RepositoryInfo): Unit
 
+  def update(repo: UpdateRepository): Unit
+
+  def delete(id: Int): Unit
+
   def all(): List[SavedRepository]
 
 end Client
@@ -45,8 +49,14 @@ object Client:
       override def create(repo: RepositoryInfo): Unit =
         wrap(repos.add.showShort, self.create(repo))
 
+      override def update(repo: UpdateRepository): Unit = 
+        wrap(repos.update.showShort, self.update(repo))
+
       override def all(): List[SavedRepository] =
         wrap(repos.all.showShort, self.all())
+
+      override def delete(id: Int): Unit =
+        wrap(repos.delete.showShort, self.delete(id))
 
   private class ClientImpl(
       backend: SttpBackend[sttp.client3.Identity, Any],
@@ -59,7 +69,16 @@ object Client:
     def create(repo: RepositoryInfo): Unit =
       interp.toClientThrowErrors(repos.add, Some(base), backend).apply(repo)
 
+    def update(repo: UpdateRepository): Unit =
+      interp.toClientThrowErrors(repos.update, Some(base), backend).apply(repo)
+
+
     def all(): List[SavedRepository] =
       interp.toClientThrowErrors(repos.all, Some(base), backend).apply(())
+
+    def delete(id: Int): Unit =
+      interp
+        .toClientThrowErrors(repos.delete, Some(base), backend)
+        .apply(DeleteRepository(id))
   end ClientImpl
 end Client

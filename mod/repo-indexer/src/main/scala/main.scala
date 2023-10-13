@@ -102,8 +102,26 @@ def init(config: Config) =
 
     printRepos("Deleted on Github", deletedOnGithub.map(_.info.name))
 
-    val commitMismatch =
-      onServer
+    val infoMismatch =
+      discoveredReposByName.flatMap { case (name, snap) =>
+        onServerByName.get(name).flatMap { saved =>
+          val update =
+            UpdateRepository(
+              id = saved.id,
+              last_commit = Option(snap.revision.lastCommit)
+                .filter(_ != saved.info.last_commit),
+              stars = Option(snap.repo.stars).filter(_ != saved.info.stars),
+              readme_markdown = Option(snap.revision.markdown)
+                .filter(_ != saved.info.readme_markdown)
+            )
+
+          val needUpdating = update != UpdateRepository(id = saved.id)
+
+          Option.when(needUpdating)(name -> update)
+        }
+      }.toList
+
+    printRepos("Need updating on server", infoMismatch.map(_._1))
 
     val repoErrors = List.newBuilder[(String, Throwable)]
 
@@ -123,9 +141,33 @@ def init(config: Config) =
       catch
         case NonFatal(exc) =>
           scribe.error(
-            s"❌ Failed to process ${missingRepo.slug}, exception will be printed at the end of the run"
+            s"❌ Failed to create ${missingRepo.slug}, exception will be printed at the end of the run"
           )
           repoErrors += (missingRepo.slug -> exc)
+    }
+
+    deletedOnGithub.foreach { repo =>
+      try
+        client.delete(repo.id)
+        scribe.info(s"✅ Deleted ${repo.info.name}")
+      catch
+        case NonFatal(exc) =>
+          scribe.error(
+            s"❌ Failed to delete ${repo.info.name}, exception will be printed at the end of the run"
+          )
+          repoErrors += (repo.info.name -> exc)
+    }
+
+    infoMismatch.foreach { case (name, update) =>
+      try
+        client.update(update)
+        scribe.info(s"✅ Updated ${name}")
+      catch
+        case NonFatal(exc) =>
+          scribe.error(
+            s"❌ Failed to update ${name}, exception will be printed at the end of the run"
+          )
+          repoErrors += (name -> exc)
     }
 
     repoErrors.result().foreach { case (repo, exc) =>
