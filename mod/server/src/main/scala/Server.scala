@@ -1,11 +1,8 @@
 package scalaboot.server
 
 import snunit.tapir.SNUnitIdServerInterpreter.*
-import sttp.tapir.*
 import scalaboot.protocol
 import scala.scalanative.unsafe.Zone
-import scalaboot.protocol.RepositoryInfo
-import scala.util.Try
 import scribe.Level
 
 inline def zone[A](inline f: Zone ?=> A) = Zone { z => f(using z) }
@@ -36,25 +33,27 @@ def connection_string() =
 
     Db.use(connection_string()) { db =>
       import protocol.*
-      val getAll =
-        repos.all.serverLogic[Id](name => Right(db.getAllRepos.toList))
-
-      val search = repos.search.serverLogic[Id] { query =>
-        Right(db.search(query).toList)
-      }
-
-      val add = repos.add.serverLogic[Id] { inp =>
-        db.addRepo(inp)
-        Right(())
-      }
-
-      val delete = repos.delete.serverLogic[Id] { case DeleteRepository(id) =>
-        db.deleteRepo(id)
-        Right(())
-      }
+      val handlers = List(
+        repos.all.serverLogic[Id](name => Right(db.getAllRepos.toList)),
+        repos.search.serverLogic[Id] { query =>
+          Right(db.search(query).toList)
+        },
+        repos.add.serverLogic[Id] { inp =>
+          db.addRepo(inp)
+          Right(())
+        },
+        repos.delete.serverLogic[Id] { case DeleteRepository(id) =>
+          db.deleteRepo(id)
+          Right(())
+        },
+        repos.update.serverLogic[Id] { u =>
+          db.updateRepo(u)
+          Right(())
+        }
+      )
 
       snunit.SyncServerBuilder
-        .setRequestHandler(toHandler(getAll :: search :: add :: delete :: Nil))
+        .setRequestHandler(toHandler(handlers))
         .build()
         .listen()
 

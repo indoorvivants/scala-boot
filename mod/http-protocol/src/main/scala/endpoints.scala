@@ -30,6 +30,15 @@ case class RepositorySummary(
     stars: Int
 ) derives JSON
 
+case class UpdateRepository(
+    id: Int,
+    last_commit: Option[String] = None,
+    readme_markdown: Option[String] = None,
+    headline: Option[String] = None,
+    summary: Option[String] = None,
+    stars: Option[Int] = None
+) derives JSON
+
 object repos:
 
   val all = endpoint
@@ -53,6 +62,12 @@ object repos:
     endpoint.delete
       .in("repos" / "delete")
       .in(jsonBody[DeleteRepository])
+      .errorOut(stringBody)
+
+  val update =
+    endpoint.post
+      .in("repos" / "update")
+      .in(jsonBody[UpdateRepository])
       .errorOut(stringBody)
 
 end repos

@@ -1,16 +1,11 @@
 package scalaboot.server
 
-import snunit.tapir.SNUnitIdServerInterpreter.*
-import sttp.tapir.*
 import roach.*
 import roach.codecs.*
 import roach.upickle.jsonOf as roach_json
-import scalanative.unsafe.*
-import roach.*
-import scala.util.Using
 import scala.scalanative.unsafe.Zone
-import roach.codecs.*
 import scalaboot.protocol.*
+import scalanative.unsafe.*
 
 class Db(pool: Pool):
   import Db.codecs.*
@@ -47,12 +42,32 @@ class Db(pool: Pool):
       """
         .one(data, int4)
     }
+
   def getAllRepos(using Zone) =
     pool.withLease {
       sql"select repoId, ${repository_fields.sql} from repositories where deleted = FALSE"
         .all(
           savedRepository
         )
+    }
+
+  def updateRepo(data: UpdateRepository)(using Zone) =
+    pool.withLease {
+      scribe.info(data.toString())
+      sql"""
+        UPDATE repositories 
+        SET 
+          last_commit = COALESCE(${varchar.opt}, last_commit), 
+          stars = COALESCE(${int4.opt}, stars),
+          readme_markdown = COALESCE(${text.opt}, readme_markdown),
+          headline = COALESCE(${text.opt}, headline),
+          summary = COALESCE(${text.opt}, summary)
+        WHERE 
+          repoId = $int4
+      """.exec {
+        import data.*
+        (((((last_commit, stars), readme_markdown), headline), summary), id)
+      }
     }
 
 end Db
@@ -65,7 +80,10 @@ object Db:
     )
 
   def use(connectionString: String)(f: Db => Unit)(using Zone) =
-    Pool.single(connectionString) { pool =>
+    Pool.single(
+      connectionString,
+      noticeProcessor = s => scribe.info(s"[postgres]: $s")
+    ) { pool =>
       migrate(pool)
       f(new Db(pool))
     }
@@ -73,6 +91,7 @@ object Db:
   private object codecs:
     lazy val search_result =
       (repository_summary.codec ~ float4).as[SearchResult]
+
     lazy val repository_fields =
       Fragment(
         "name,last_commit,readme_markdown, metadata, headline,summary,stars"
