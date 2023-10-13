@@ -56,18 +56,21 @@ object repos:
     endpoint.post
       .in("repos" / "add")
       .in(jsonBody[RepositoryInfo])
+      .securityIn(auth.bearer[Option[String]]())
       .errorOut(stringBody)
 
   val delete =
     endpoint.delete
       .in("repos" / "delete")
       .in(jsonBody[DeleteRepository])
+      .securityIn(auth.bearer[Option[String]]())
       .errorOut(stringBody)
 
   val update =
     endpoint.post
       .in("repos" / "update")
       .in(jsonBody[UpdateRepository])
+      .securityIn(auth.bearer[Option[String]]())
       .errorOut(stringBody)
 
 end repos

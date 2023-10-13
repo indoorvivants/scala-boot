@@ -33,22 +33,39 @@ def connection_string() =
 
     Db.use(connection_string()) { db =>
       import protocol.*
+
+      lazy val apiKeySet =
+        sys.env.get("SCALABOOT_API_KEY") match
+          case None =>
+            scribe.warn(
+              "SCALABOOT_API_KEY variable not set, all requests will be unauthenticated"
+            )
+            None
+          case Some(value) => Some(value)
+
+      val auth = (key: Option[String]) =>
+        (apiKeySet, key) match
+          case (None, None)      => Right(())
+          case (Some(str), None) => Left("API key missing")
+          case (Some(expected), Some(provided)) =>
+            if expected.trim() == provided.trim() then Right(())
+            else Left("Provided API key is incorrect")
+          case (None, Some(_)) => Right(())
+
       val handlers = List(
         repos.all.serverLogic[Id](name => Right(db.getAllRepos.toList)),
         repos.search.serverLogic[Id] { query =>
           Right(db.search(query).toList)
         },
-        repos.add.serverLogic[Id] { inp =>
-          db.addRepo(inp)
-          Right(())
+        repos.add.serverSecurityLogic[Unit, Id](auth).serverLogicSuccess { _ =>
+          db.addRepo(_)
         },
-        repos.delete.serverLogic[Id] { case DeleteRepository(id) =>
-          db.deleteRepo(id)
-          Right(())
+        repos.delete.serverSecurityLogic[Unit, Id](auth).serverLogicSuccess {
+          _ => dr =>
+            db.deleteRepo(dr.id)
         },
-        repos.update.serverLogic[Id] { u =>
-          db.updateRepo(u)
-          Right(())
+        repos.update.serverSecurityLogic[Unit, Id](auth).serverLogicSuccess {
+          _ => db.updateRepo(_)
         }
       )
 
