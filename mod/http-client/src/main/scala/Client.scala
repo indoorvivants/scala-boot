@@ -23,7 +23,12 @@ end Client
 
 object Client:
   def create(uri: String, token: Option[String] = None): Client =
-    new ClientImpl(CurlBackend(), SttpClientInterpreter(), Uri.unsafeParse(uri))
+    new ClientImpl(
+      backend = CurlBackend(),
+      interp = SttpClientInterpreter(),
+      base = Uri.unsafeParse(uri),
+      token = token
+    )
 
   def stabilise(
       self: Client,
