@@ -18,6 +18,7 @@ jobs:
     env:
       SCALANATIVE_MODE: release-fast
       SCALANATIVE_LTO: thin
+      SCALABOOT_API_KEY: ${{ secrets.SCALABOOT_API_KEY }}
     steps:
       - uses: actions/checkout@v3
 
@@ -39,6 +40,7 @@ jobs:
       - run: sbt buildRepoIndexer
 
       - run: |
+          set -eu
           ./build/scala-boot-repo-indexer --org http4s
           ./build/scala-boot-repo-indexer --org typelevel
 
