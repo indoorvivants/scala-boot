@@ -8,7 +8,6 @@ import sttp.client3.SttpBackend
 import scala.util.control.NonFatal
 
 trait Client:
-  self =>
   def search(query: String): List[SearchResult]
 
   def create(repo: RepositoryInfo): Unit

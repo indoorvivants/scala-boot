@@ -25,7 +25,6 @@ def readProperties(file: os.Path) =
   )
 end readProperties
 
-
 given Conversion[UnsafeCursor, LoggableMessage] =
   LoggableMessage[UnsafeCursor](a => new TextOutput(a.toString()))
 
@@ -152,18 +151,29 @@ def initSearch(config: SearchConfig) =
   val sorted = client.search(config.query).sortBy(_.rank).reverse
   val maxStars = sorted.maxByOption(_.repo.stars).map(_.repo.stars).getOrElse(0)
   val starsFieldLength = maxStars.toString().length
+  val placeFieldLength = sorted.length.toString.length() + 2
 
-  def renderStars(stars: Int) =
+  def renderStars(stars: Int, place: Int) =
     val spacer = " " * (starsFieldLength - stars.toString.length)
     s"⭐️ ${fansi.Bold.On(stars.toString)}$spacer"
 
+  def renderPlace(place: Int) =
+    val spacer = " " * (placeFieldLength - place.toString().length)
+    s"[${place}]$spacer"
+
   val limit = if config.all.value then sorted.size else 5
+
+  def repoName(nm: String) =
+    nm match
+      case s"$org/$repo" =>
+        fansi.Str(org) ++ fansi.Color.DarkGray("/") ++
+          fansi.Color.Green(repo)
 
   sorted.take(limit).zipWithIndex.foreach { case (result, idx) =>
     println(
-      s"[${idx + 1}] " + renderStars(result.repo.stars) + "  " + fansi.Color
-        .DarkGray("https://github.com/") + fansi.Color
-        .Green(result.repo.name)
+      renderPlace(idx + 1) + renderStars(result.repo.stars, idx + 1) + "  " +
+        fansi.Color
+          .DarkGray("https://github.com/") + repoName(result.repo.name)
     )
   }
 
