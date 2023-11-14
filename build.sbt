@@ -205,7 +205,8 @@ lazy val devServer = proj("dev-server")
     envVars ++= Map(
       "SCALABOOT_SERVER_BINARY" -> (ThisBuild / buildServer).value.toString,
       "SCALABOOT_UNITD_COMMAND" -> UNITD_LOCAL_COMMAND,
-      "SCALABOOT_SERVER_CWD" -> ((ThisBuild / baseDirectory).value / "build").toString
+      "SCALABOOT_SERVER_CWD" -> ((ThisBuild / baseDirectory).value / "build").toString,
+      "PG_DB" -> "scala_boot"
     )
   )
 

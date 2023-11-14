@@ -1,0 +1,17 @@
+VirtusLab
+akka
+com-lihaoyi
+DevInsideYou
+http4s
+neandertech
+playframework
+sbt
+scala
+scala-js
+scala-native
+scalacenter
+scalafx
+scalameta
+softwaremill
+typelevel
+zio

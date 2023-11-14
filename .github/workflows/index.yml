@@ -41,6 +41,7 @@ jobs:
 
       - run: |
           set -eu
-          ./build/scala-boot-repo-indexer --org http4s
-          ./build/scala-boot-repo-indexer --org typelevel
+
+          cat .github/workflows/fixtures/orgs-to-index.txt | \
+            parallel ./build/scala-boot-repo-indexer --org {}
 
