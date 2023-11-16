@@ -43,5 +43,5 @@ jobs:
           set -eu
 
           cat .github/workflows/fixtures/orgs-to-index.txt | \
-            parallel ./build/scala-boot-repo-indexer --org {}
+            parallel -j 1 ./build/scala-boot-repo-indexer --org {}
 
