@@ -20,7 +20,7 @@ def projApp(subfolder: String) =
     })
 
 val Versions = new {
-  val Scala = "3.3.1"
+  val Scala = "3.3.2"
 
   val scribe = "3.12.2"
   val osLib = "0.9.1"
