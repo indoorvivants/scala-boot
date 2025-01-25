@@ -1,11 +1,11 @@
-addSbtPlugin("com.indoorvivants.vcpkg" % "sbt-vcpkg-native" % "0.0.18")
+addSbtPlugin("com.indoorvivants.vcpkg" % "sbt-vcpkg-native" % "0.0.21")
 
-addSbtPlugin("org.scala-native" % "sbt-scala-native" % "0.4.17")
+addSbtPlugin("org.scala-native" % "sbt-scala-native" % "0.5.6")
 
-addSbtPlugin("com.indoorvivants" % "bindgen-sbt-plugin" % "0.0.20")
+addSbtPlugin("com.indoorvivants" % "bindgen-sbt-plugin" % "0.2.1")
 
-addSbtPlugin("com.eed3si9n" % "sbt-projectmatrix" % "0.9.1")
+addSbtPlugin("com.eed3si9n" % "sbt-projectmatrix" % "0.10.1")
 
-addSbtPlugin("com.github.reibitto" % "sbt-welcome" % "0.3.2")
+addSbtPlugin("com.github.reibitto" % "sbt-welcome" % "0.5.0")
 
 addSbtPlugin("io.spray" % "sbt-revolver" % "0.10.0")

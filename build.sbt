@@ -20,17 +20,17 @@ def projApp(subfolder: String) =
     })
 
 val Versions = new {
-  val Scala = "3.3.2"
+  val Scala = "3.6.3"
 
-  val scribe = "3.12.2"
-  val osLib = "0.9.1"
-  val pprint = "0.8.1"
-  val mainargs = "0.5.4"
-  val sttp = "3.9.0"
-  val roach = "0.0.6"
-  val ujson = "3.1.3"
-  val snunit = "0.7.2"
-  val tapir = "1.8.1"
+  val scribe = "3.16.0"
+  val osLib = "0.11.3"
+  val pprint = "0.9.0"
+  val mainargs = "0.7.6"
+  val sttp = "4.0.0-M24"
+  val roach = "0.1.0"
+  val ujson = "3.3.1"
+  val snunit = "0.10.3"
+  val tapir = "1.11.3"
 }
 
 lazy val root =
@@ -96,7 +96,7 @@ lazy val curlSttpBackend = projApp("curl-sttp-backend")
     ),
     vcpkgNativeConfig ~= { _.addRenamedLibrary("curl", "libcurl") },
     libraryDependencies ++= Seq(
-      "com.softwaremill.sttp.client3" %%% "core" % Versions.sttp
+      "com.softwaremill.sttp.client4" %%% "core" % Versions.sttp
     )
   )
 
@@ -147,8 +147,8 @@ lazy val repoIndexer = projApp("repo-indexer")
       "com.lihaoyi" %%% "os-lib" % Versions.osLib,
       "com.lihaoyi" %%% "mainargs" % Versions.mainargs,
       "com.lihaoyi" %%% "ujson" % Versions.ujson,
-      "com.softwaremill.sttp.client3" %%% "core" % Versions.sttp,
-      "com.softwaremill.sttp.client3" %%% "upickle" % Versions.sttp
+      "com.softwaremill.sttp.client4" %%% "core" % Versions.sttp,
+      "com.softwaremill.sttp.client4" %%% "upickle" % Versions.sttp
     ),
     libraryDependencySchemes += "com.lihaoyi" % "upickle_native0.4_3" % VersionScheme.Always
   )
