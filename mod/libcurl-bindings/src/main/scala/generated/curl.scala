@@ -6,17 +6,17 @@ import _root_.scala.scalanative.libc.*
 import _root_.scala.scalanative.*
 
 object predef:
-  private[curl] trait CEnum[T](using eq: T =:= Int):
+  private[curl] trait _BindgenEnumCInt[T](using eq: T =:= CInt):
     given Tag[T] = Tag.Int.asInstanceOf[Tag[T]]
-    extension (inline t: T) 
-      inline def int: CInt = eq.apply(t)
-      inline def value: CInt = eq.apply(t)
-  private[curl] trait CEnumU[T](using eq: T =:= UInt):
+    extension (inline t: T)
+     inline def value: CInt = eq.apply(t)
+     inline def int: CInt = eq.apply(t).toInt
+  private[curl] trait _BindgenEnumCUnsignedInt[T](using eq: T =:= CUnsignedInt):
     given Tag[T] = Tag.UInt.asInstanceOf[Tag[T]]
     extension (inline t: T)
+     inline def value: CUnsignedInt = eq.apply(t)
      inline def int: CInt = eq.apply(t).toInt
      inline def uint: CUnsignedInt = eq.apply(t)
-     inline def value: CUnsignedInt = eq.apply(t)
 
 
 object enumerations:
@@ -25,7 +25,7 @@ object enumerations:
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
   */
   opaque type CURLFORMcode = CUnsignedInt
-  object CURLFORMcode extends CEnumU[CURLFORMcode]:
+  object CURLFORMcode extends _BindgenEnumCUnsignedInt[CURLFORMcode]:
     given _tag: Tag[CURLFORMcode] = Tag.UInt
     inline def define(inline a: Long): CURLFORMcode = a.toUInt
     val CURL_FORMADD_OK = define(0)
@@ -48,7 +48,7 @@ object enumerations:
         case CURL_FORMADD_ILLEGAL_ARRAY => Some("CURL_FORMADD_ILLEGAL_ARRAY")
         case CURL_FORMADD_DISABLED => Some("CURL_FORMADD_DISABLED")
         case CURL_FORMADD_LAST => Some("CURL_FORMADD_LAST")
-        case _ => None
+        case _ => _root_.scala.None
     extension (a: CURLFORMcode)
       inline def &(b: CURLFORMcode): CURLFORMcode = a & b
       inline def |(b: CURLFORMcode): CURLFORMcode = a | b
@@ -58,7 +58,7 @@ object enumerations:
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/header.h
   */
   opaque type CURLHcode = CUnsignedInt
-  object CURLHcode extends CEnumU[CURLHcode]:
+  object CURLHcode extends _BindgenEnumCUnsignedInt[CURLHcode]:
     given _tag: Tag[CURLHcode] = Tag.UInt
     inline def define(inline a: Long): CURLHcode = a.toUInt
     val CURLHE_OK = define(0)
@@ -79,7 +79,7 @@ object enumerations:
         case CURLHE_OUT_OF_MEMORY => Some("CURLHE_OUT_OF_MEMORY")
         case CURLHE_BAD_ARGUMENT => Some("CURLHE_BAD_ARGUMENT")
         case CURLHE_NOT_BUILT_IN => Some("CURLHE_NOT_BUILT_IN")
-        case _ => None
+        case _ => _root_.scala.None
     extension (a: CURLHcode)
       inline def &(b: CURLHcode): CURLHcode = a & b
       inline def |(b: CURLHcode): CURLHcode = a | b
@@ -89,7 +89,7 @@ object enumerations:
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
   */
   opaque type CURLINFO = CUnsignedInt
-  object CURLINFO extends CEnumU[CURLINFO]:
+  object CURLINFO extends _BindgenEnumCUnsignedInt[CURLINFO]:
     given _tag: Tag[CURLINFO] = Tag.UInt
     inline def define(inline a: Long): CURLINFO = a.toUInt
     val CURLINFO_NONE = define(0)
@@ -240,7 +240,7 @@ object enumerations:
         case CURLINFO_XFER_ID => Some("CURLINFO_XFER_ID")
         case CURLINFO_CONN_ID => Some("CURLINFO_CONN_ID")
         case CURLINFO_LASTONE => Some("CURLINFO_LASTONE")
-        case _ => None
+        case _ => _root_.scala.None
     extension (a: CURLINFO)
       inline def &(b: CURLINFO): CURLINFO = a & b
       inline def |(b: CURLINFO): CURLINFO = a | b
@@ -250,7 +250,7 @@ object enumerations:
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/multi.h
   */
   opaque type CURLMSG = CUnsignedInt
-  object CURLMSG extends CEnumU[CURLMSG]:
+  object CURLMSG extends _BindgenEnumCUnsignedInt[CURLMSG]:
     given _tag: Tag[CURLMSG] = Tag.UInt
     inline def define(inline a: Long): CURLMSG = a.toUInt
     val CURLMSG_NONE = define(0)
@@ -261,7 +261,7 @@ object enumerations:
         case CURLMSG_NONE => Some("CURLMSG_NONE")
         case CURLMSG_DONE => Some("CURLMSG_DONE")
         case CURLMSG_LAST => Some("CURLMSG_LAST")
-        case _ => None
+        case _ => _root_.scala.None
     extension (a: CURLMSG)
       inline def &(b: CURLMSG): CURLMSG = a & b
       inline def |(b: CURLMSG): CURLMSG = a | b
@@ -271,7 +271,7 @@ object enumerations:
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/multi.h
   */
   opaque type CURLMcode = CInt
-  object CURLMcode extends CEnum[CURLMcode]:
+  object CURLMcode extends _BindgenEnumCInt[CURLMcode]:
     given _tag: Tag[CURLMcode] = Tag.Int
     inline def define(inline a: CInt): CURLMcode = a
     val CURLM_CALL_MULTI_PERFORM = define(-1)
@@ -306,7 +306,7 @@ object enumerations:
         case CURLM_ABORTED_BY_CALLBACK => Some("CURLM_ABORTED_BY_CALLBACK")
         case CURLM_UNRECOVERABLE_POLL => Some("CURLM_UNRECOVERABLE_POLL")
         case CURLM_LAST => Some("CURLM_LAST")
-        case _ => None
+        case _ => _root_.scala.None
     extension (a: CURLMcode)
       inline def &(b: CURLMcode): CURLMcode = a & b
       inline def |(b: CURLMcode): CURLMcode = a | b
@@ -316,7 +316,7 @@ object enumerations:
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/multi.h
   */
   opaque type CURLMoption = CUnsignedInt
-  object CURLMoption extends CEnumU[CURLMoption]:
+  object CURLMoption extends _BindgenEnumCUnsignedInt[CURLMoption]:
     given _tag: Tag[CURLMoption] = Tag.UInt
     inline def define(inline a: Long): CURLMoption = a.toUInt
     val CURLMOPT_SOCKETFUNCTION = define(20001)
@@ -355,7 +355,7 @@ object enumerations:
         case CURLMOPT_PUSHDATA => Some("CURLMOPT_PUSHDATA")
         case CURLMOPT_MAX_CONCURRENT_STREAMS => Some("CURLMOPT_MAX_CONCURRENT_STREAMS")
         case CURLMOPT_LASTENTRY => Some("CURLMOPT_LASTENTRY")
-        case _ => None
+        case _ => _root_.scala.None
     extension (a: CURLMoption)
       inline def &(b: CURLMoption): CURLMoption = a & b
       inline def |(b: CURLMoption): CURLMoption = a | b
@@ -365,7 +365,7 @@ object enumerations:
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
   */
   opaque type CURLSHcode = CUnsignedInt
-  object CURLSHcode extends CEnumU[CURLSHcode]:
+  object CURLSHcode extends _BindgenEnumCUnsignedInt[CURLSHcode]:
     given _tag: Tag[CURLSHcode] = Tag.UInt
     inline def define(inline a: Long): CURLSHcode = a.toUInt
     val CURLSHE_OK = define(0)
@@ -384,7 +384,7 @@ object enumerations:
         case CURLSHE_NOMEM => Some("CURLSHE_NOMEM")
         case CURLSHE_NOT_BUILT_IN => Some("CURLSHE_NOT_BUILT_IN")
         case CURLSHE_LAST => Some("CURLSHE_LAST")
-        case _ => None
+        case _ => _root_.scala.None
     extension (a: CURLSHcode)
       inline def &(b: CURLSHcode): CURLSHcode = a & b
       inline def |(b: CURLSHcode): CURLSHcode = a | b
@@ -394,7 +394,7 @@ object enumerations:
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
   */
   opaque type CURLSHoption = CUnsignedInt
-  object CURLSHoption extends CEnumU[CURLSHoption]:
+  object CURLSHoption extends _BindgenEnumCUnsignedInt[CURLSHoption]:
     given _tag: Tag[CURLSHoption] = Tag.UInt
     inline def define(inline a: Long): CURLSHoption = a.toUInt
     val CURLSHOPT_NONE = define(0)
@@ -413,7 +413,7 @@ object enumerations:
         case CURLSHOPT_UNLOCKFUNC => Some("CURLSHOPT_UNLOCKFUNC")
         case CURLSHOPT_USERDATA => Some("CURLSHOPT_USERDATA")
         case CURLSHOPT_LAST => Some("CURLSHOPT_LAST")
-        case _ => None
+        case _ => _root_.scala.None
     extension (a: CURLSHoption)
       inline def &(b: CURLSHoption): CURLSHoption = a & b
       inline def |(b: CURLSHoption): CURLSHoption = a | b
@@ -423,7 +423,7 @@ object enumerations:
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
   */
   opaque type CURLSTScode = CUnsignedInt
-  object CURLSTScode extends CEnumU[CURLSTScode]:
+  object CURLSTScode extends _BindgenEnumCUnsignedInt[CURLSTScode]:
     given _tag: Tag[CURLSTScode] = Tag.UInt
     inline def define(inline a: Long): CURLSTScode = a.toUInt
     val CURLSTS_OK = define(0)
@@ -434,7 +434,7 @@ object enumerations:
         case CURLSTS_OK => Some("CURLSTS_OK")
         case CURLSTS_DONE => Some("CURLSTS_DONE")
         case CURLSTS_FAIL => Some("CURLSTS_FAIL")
-        case _ => None
+        case _ => _root_.scala.None
     extension (a: CURLSTScode)
       inline def &(b: CURLSTScode): CURLSTScode = a & b
       inline def |(b: CURLSTScode): CURLSTScode = a | b
@@ -444,7 +444,7 @@ object enumerations:
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/urlapi.h
   */
   opaque type CURLUPart = CUnsignedInt
-  object CURLUPart extends CEnumU[CURLUPart]:
+  object CURLUPart extends _BindgenEnumCUnsignedInt[CURLUPart]:
     given _tag: Tag[CURLUPart] = Tag.UInt
     inline def define(inline a: Long): CURLUPart = a.toUInt
     val CURLUPART_URL = define(0)
@@ -471,7 +471,7 @@ object enumerations:
         case CURLUPART_QUERY => Some("CURLUPART_QUERY")
         case CURLUPART_FRAGMENT => Some("CURLUPART_FRAGMENT")
         case CURLUPART_ZONEID => Some("CURLUPART_ZONEID")
-        case _ => None
+        case _ => _root_.scala.None
     extension (a: CURLUPart)
       inline def &(b: CURLUPart): CURLUPart = a & b
       inline def |(b: CURLUPart): CURLUPart = a | b
@@ -481,7 +481,7 @@ object enumerations:
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/urlapi.h
   */
   opaque type CURLUcode = CUnsignedInt
-  object CURLUcode extends CEnumU[CURLUcode]:
+  object CURLUcode extends _BindgenEnumCUnsignedInt[CURLUcode]:
     given _tag: Tag[CURLUcode] = Tag.UInt
     inline def define(inline a: Long): CURLUcode = a.toUInt
     val CURLUE_OK = define(0)
@@ -550,7 +550,7 @@ object enumerations:
         case CURLUE_BAD_USER => Some("CURLUE_BAD_USER")
         case CURLUE_LACKS_IDN => Some("CURLUE_LACKS_IDN")
         case CURLUE_LAST => Some("CURLUE_LAST")
-        case _ => None
+        case _ => _root_.scala.None
     extension (a: CURLUcode)
       inline def &(b: CURLUcode): CURLUcode = a & b
       inline def |(b: CURLUcode): CURLUcode = a | b
@@ -560,7 +560,7 @@ object enumerations:
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
   */
   opaque type CURL_NETRC_OPTION = CUnsignedInt
-  object CURL_NETRC_OPTION extends CEnumU[CURL_NETRC_OPTION]:
+  object CURL_NETRC_OPTION extends _BindgenEnumCUnsignedInt[CURL_NETRC_OPTION]:
     given _tag: Tag[CURL_NETRC_OPTION] = Tag.UInt
     inline def define(inline a: Long): CURL_NETRC_OPTION = a.toUInt
     val CURL_NETRC_IGNORED = define(0)
@@ -573,7 +573,7 @@ object enumerations:
         case CURL_NETRC_OPTIONAL => Some("CURL_NETRC_OPTIONAL")
         case CURL_NETRC_REQUIRED => Some("CURL_NETRC_REQUIRED")
         case CURL_NETRC_LAST => Some("CURL_NETRC_LAST")
-        case _ => None
+        case _ => _root_.scala.None
     extension (a: CURL_NETRC_OPTION)
       inline def &(b: CURL_NETRC_OPTION): CURL_NETRC_OPTION = a & b
       inline def |(b: CURL_NETRC_OPTION): CURL_NETRC_OPTION = a | b
@@ -583,7 +583,7 @@ object enumerations:
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
   */
   opaque type CURL_TLSAUTH = CUnsignedInt
-  object CURL_TLSAUTH extends CEnumU[CURL_TLSAUTH]:
+  object CURL_TLSAUTH extends _BindgenEnumCUnsignedInt[CURL_TLSAUTH]:
     given _tag: Tag[CURL_TLSAUTH] = Tag.UInt
     inline def define(inline a: Long): CURL_TLSAUTH = a.toUInt
     val CURL_TLSAUTH_NONE = define(0)
@@ -594,7 +594,7 @@ object enumerations:
         case CURL_TLSAUTH_NONE => Some("CURL_TLSAUTH_NONE")
         case CURL_TLSAUTH_SRP => Some("CURL_TLSAUTH_SRP")
         case CURL_TLSAUTH_LAST => Some("CURL_TLSAUTH_LAST")
-        case _ => None
+        case _ => _root_.scala.None
     extension (a: CURL_TLSAUTH)
       inline def &(b: CURL_TLSAUTH): CURL_TLSAUTH = a & b
       inline def |(b: CURL_TLSAUTH): CURL_TLSAUTH = a | b
@@ -604,7 +604,7 @@ object enumerations:
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
   */
   opaque type CURLcode = CUnsignedInt
-  object CURLcode extends CEnumU[CURLcode]:
+  object CURLcode extends _BindgenEnumCUnsignedInt[CURLcode]:
     given _tag: Tag[CURLcode] = Tag.UInt
     inline def define(inline a: Long): CURLcode = a.toUInt
     val CURLE_OK = define(0)
@@ -811,7 +811,7 @@ object enumerations:
         case CURLE_SSL_CLIENTCERT => Some("CURLE_SSL_CLIENTCERT")
         case CURLE_UNRECOVERABLE_POLL => Some("CURLE_UNRECOVERABLE_POLL")
         case CURL_LAST => Some("CURL_LAST")
-        case _ => None
+        case _ => _root_.scala.None
     extension (a: CURLcode)
       inline def &(b: CURLcode): CURLcode = a & b
       inline def |(b: CURLcode): CURLcode = a | b
@@ -821,7 +821,7 @@ object enumerations:
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
   */
   opaque type CURLformoption = CUnsignedInt
-  object CURLformoption extends CEnumU[CURLformoption]:
+  object CURLformoption extends _BindgenEnumCUnsignedInt[CURLformoption]:
     given _tag: Tag[CURLformoption] = Tag.UInt
     inline def define(inline a: Long): CURLformoption = a.toUInt
     val CURLFORM_NOTHING = define(0)
@@ -870,7 +870,7 @@ object enumerations:
         case CURLFORM_STREAM => Some("CURLFORM_STREAM")
         case CURLFORM_CONTENTLEN => Some("CURLFORM_CONTENTLEN")
         case CURLFORM_LASTENTRY => Some("CURLFORM_LASTENTRY")
-        case _ => None
+        case _ => _root_.scala.None
     extension (a: CURLformoption)
       inline def &(b: CURLformoption): CURLformoption = a & b
       inline def |(b: CURLformoption): CURLformoption = a | b
@@ -880,7 +880,7 @@ object enumerations:
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
   */
   opaque type CURLoption = CUnsignedInt
-  object CURLoption extends CEnumU[CURLoption]:
+  object CURLoption extends _BindgenEnumCUnsignedInt[CURLoption]:
     given _tag: Tag[CURLoption] = Tag.UInt
     inline def define(inline a: Long): CURLoption = a.toUInt
     val CURLOPT_WRITEDATA = define(10001)
@@ -1497,7 +1497,7 @@ object enumerations:
         case CURLOPT_QUICK_EXIT => Some("CURLOPT_QUICK_EXIT")
         case CURLOPT_HAPROXY_CLIENT_IP => Some("CURLOPT_HAPROXY_CLIENT_IP")
         case CURLOPT_LASTENTRY => Some("CURLOPT_LASTENTRY")
-        case _ => None
+        case _ => _root_.scala.None
     extension (a: CURLoption)
       inline def &(b: CURLoption): CURLoption = a & b
       inline def |(b: CURLoption): CURLoption = a | b
@@ -1507,7 +1507,7 @@ object enumerations:
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
   */
   opaque type CURLproxycode = CUnsignedInt
-  object CURLproxycode extends CEnumU[CURLproxycode]:
+  object CURLproxycode extends _BindgenEnumCUnsignedInt[CURLproxycode]:
     given _tag: Tag[CURLproxycode] = Tag.UInt
     inline def define(inline a: Long): CURLproxycode = a.toUInt
     val CURLPX_OK = define(0)
@@ -1582,7 +1582,7 @@ object enumerations:
         case CURLPX_UNKNOWN_MODE => Some("CURLPX_UNKNOWN_MODE")
         case CURLPX_USER_REJECTED => Some("CURLPX_USER_REJECTED")
         case CURLPX_LAST => Some("CURLPX_LAST")
-        case _ => None
+        case _ => _root_.scala.None
     extension (a: CURLproxycode)
       inline def &(b: CURLproxycode): CURLproxycode = a & b
       inline def |(b: CURLproxycode): CURLproxycode = a | b
@@ -1592,7 +1592,7 @@ object enumerations:
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
   */
   opaque type CURLsslset = CUnsignedInt
-  object CURLsslset extends CEnumU[CURLsslset]:
+  object CURLsslset extends _BindgenEnumCUnsignedInt[CURLsslset]:
     given _tag: Tag[CURLsslset] = Tag.UInt
     inline def define(inline a: Long): CURLsslset = a.toUInt
     val CURLSSLSET_OK = define(0)
@@ -1605,7 +1605,7 @@ object enumerations:
         case CURLSSLSET_UNKNOWN_BACKEND => Some("CURLSSLSET_UNKNOWN_BACKEND")
         case CURLSSLSET_TOO_LATE => Some("CURLSSLSET_TOO_LATE")
         case CURLSSLSET_NO_BACKENDS => Some("CURLSSLSET_NO_BACKENDS")
-        case _ => None
+        case _ => _root_.scala.None
     extension (a: CURLsslset)
       inline def &(b: CURLsslset): CURLsslset = a & b
       inline def |(b: CURLsslset): CURLsslset = a | b
@@ -1617,7 +1617,7 @@ object enumerations:
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
   */
   opaque type CURLversion = CUnsignedInt
-  object CURLversion extends CEnumU[CURLversion]:
+  object CURLversion extends _BindgenEnumCUnsignedInt[CURLversion]:
     given _tag: Tag[CURLversion] = Tag.UInt
     inline def define(inline a: Long): CURLversion = a.toUInt
     val CURLVERSION_FIRST = define(0)
@@ -1646,7 +1646,7 @@ object enumerations:
         case CURLVERSION_TENTH => Some("CURLVERSION_TENTH")
         case CURLVERSION_ELEVENTH => Some("CURLVERSION_ELEVENTH")
         case CURLVERSION_LAST => Some("CURLVERSION_LAST")
-        case _ => None
+        case _ => _root_.scala.None
     extension (a: CURLversion)
       inline def &(b: CURLversion): CURLversion = a & b
       inline def |(b: CURLversion): CURLversion = a | b
@@ -1656,7 +1656,7 @@ object enumerations:
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
   */
   opaque type curl_TimeCond = CUnsignedInt
-  object curl_TimeCond extends CEnumU[curl_TimeCond]:
+  object curl_TimeCond extends _BindgenEnumCUnsignedInt[curl_TimeCond]:
     given _tag: Tag[curl_TimeCond] = Tag.UInt
     inline def define(inline a: Long): curl_TimeCond = a.toUInt
     val CURL_TIMECOND_NONE = define(0)
@@ -1671,7 +1671,7 @@ object enumerations:
         case CURL_TIMECOND_IFUNMODSINCE => Some("CURL_TIMECOND_IFUNMODSINCE")
         case CURL_TIMECOND_LASTMOD => Some("CURL_TIMECOND_LASTMOD")
         case CURL_TIMECOND_LAST => Some("CURL_TIMECOND_LAST")
-        case _ => None
+        case _ => _root_.scala.None
     extension (a: curl_TimeCond)
       inline def &(b: curl_TimeCond): curl_TimeCond = a & b
       inline def |(b: curl_TimeCond): curl_TimeCond = a | b
@@ -1681,7 +1681,7 @@ object enumerations:
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
   */
   opaque type curl_closepolicy = CUnsignedInt
-  object curl_closepolicy extends CEnumU[curl_closepolicy]:
+  object curl_closepolicy extends _BindgenEnumCUnsignedInt[curl_closepolicy]:
     given _tag: Tag[curl_closepolicy] = Tag.UInt
     inline def define(inline a: Long): curl_closepolicy = a.toUInt
     val CURLCLOSEPOLICY_NONE = define(0)
@@ -1700,7 +1700,7 @@ object enumerations:
         case CURLCLOSEPOLICY_SLOWEST => Some("CURLCLOSEPOLICY_SLOWEST")
         case CURLCLOSEPOLICY_CALLBACK => Some("CURLCLOSEPOLICY_CALLBACK")
         case CURLCLOSEPOLICY_LAST => Some("CURLCLOSEPOLICY_LAST")
-        case _ => None
+        case _ => _root_.scala.None
     extension (a: curl_closepolicy)
       inline def &(b: curl_closepolicy): curl_closepolicy = a & b
       inline def |(b: curl_closepolicy): curl_closepolicy = a | b
@@ -1710,7 +1710,7 @@ object enumerations:
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/options.h
   */
   opaque type curl_easytype = CUnsignedInt
-  object curl_easytype extends CEnumU[curl_easytype]:
+  object curl_easytype extends _BindgenEnumCUnsignedInt[curl_easytype]:
     given _tag: Tag[curl_easytype] = Tag.UInt
     inline def define(inline a: Long): curl_easytype = a.toUInt
     val CURLOT_LONG = define(0)
@@ -1733,7 +1733,7 @@ object enumerations:
         case CURLOT_CBPTR => Some("CURLOT_CBPTR")
         case CURLOT_BLOB => Some("CURLOT_BLOB")
         case CURLOT_FUNCTION => Some("CURLOT_FUNCTION")
-        case _ => None
+        case _ => _root_.scala.None
     extension (a: curl_easytype)
       inline def &(b: curl_easytype): curl_easytype = a & b
       inline def |(b: curl_easytype): curl_easytype = a | b
@@ -1743,7 +1743,7 @@ object enumerations:
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
   */
   opaque type curl_ftpauth = CUnsignedInt
-  object curl_ftpauth extends CEnumU[curl_ftpauth]:
+  object curl_ftpauth extends _BindgenEnumCUnsignedInt[curl_ftpauth]:
     given _tag: Tag[curl_ftpauth] = Tag.UInt
     inline def define(inline a: Long): curl_ftpauth = a.toUInt
     val CURLFTPAUTH_DEFAULT = define(0)
@@ -1756,7 +1756,7 @@ object enumerations:
         case CURLFTPAUTH_SSL => Some("CURLFTPAUTH_SSL")
         case CURLFTPAUTH_TLS => Some("CURLFTPAUTH_TLS")
         case CURLFTPAUTH_LAST => Some("CURLFTPAUTH_LAST")
-        case _ => None
+        case _ => _root_.scala.None
     extension (a: curl_ftpauth)
       inline def &(b: curl_ftpauth): curl_ftpauth = a & b
       inline def |(b: curl_ftpauth): curl_ftpauth = a | b
@@ -1766,7 +1766,7 @@ object enumerations:
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
   */
   opaque type curl_ftpccc = CUnsignedInt
-  object curl_ftpccc extends CEnumU[curl_ftpccc]:
+  object curl_ftpccc extends _BindgenEnumCUnsignedInt[curl_ftpccc]:
     given _tag: Tag[curl_ftpccc] = Tag.UInt
     inline def define(inline a: Long): curl_ftpccc = a.toUInt
     val CURLFTPSSL_CCC_NONE = define(0)
@@ -1779,7 +1779,7 @@ object enumerations:
         case CURLFTPSSL_CCC_PASSIVE => Some("CURLFTPSSL_CCC_PASSIVE")
         case CURLFTPSSL_CCC_ACTIVE => Some("CURLFTPSSL_CCC_ACTIVE")
         case CURLFTPSSL_CCC_LAST => Some("CURLFTPSSL_CCC_LAST")
-        case _ => None
+        case _ => _root_.scala.None
     extension (a: curl_ftpccc)
       inline def &(b: curl_ftpccc): curl_ftpccc = a & b
       inline def |(b: curl_ftpccc): curl_ftpccc = a | b
@@ -1789,7 +1789,7 @@ object enumerations:
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
   */
   opaque type curl_ftpcreatedir = CUnsignedInt
-  object curl_ftpcreatedir extends CEnumU[curl_ftpcreatedir]:
+  object curl_ftpcreatedir extends _BindgenEnumCUnsignedInt[curl_ftpcreatedir]:
     given _tag: Tag[curl_ftpcreatedir] = Tag.UInt
     inline def define(inline a: Long): curl_ftpcreatedir = a.toUInt
     val CURLFTP_CREATE_DIR_NONE = define(0)
@@ -1802,7 +1802,7 @@ object enumerations:
         case CURLFTP_CREATE_DIR => Some("CURLFTP_CREATE_DIR")
         case CURLFTP_CREATE_DIR_RETRY => Some("CURLFTP_CREATE_DIR_RETRY")
         case CURLFTP_CREATE_DIR_LAST => Some("CURLFTP_CREATE_DIR_LAST")
-        case _ => None
+        case _ => _root_.scala.None
     extension (a: curl_ftpcreatedir)
       inline def &(b: curl_ftpcreatedir): curl_ftpcreatedir = a & b
       inline def |(b: curl_ftpcreatedir): curl_ftpcreatedir = a | b
@@ -1812,7 +1812,7 @@ object enumerations:
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
   */
   opaque type curl_ftpmethod = CUnsignedInt
-  object curl_ftpmethod extends CEnumU[curl_ftpmethod]:
+  object curl_ftpmethod extends _BindgenEnumCUnsignedInt[curl_ftpmethod]:
     given _tag: Tag[curl_ftpmethod] = Tag.UInt
     inline def define(inline a: Long): curl_ftpmethod = a.toUInt
     val CURLFTPMETHOD_DEFAULT = define(0)
@@ -1827,7 +1827,7 @@ object enumerations:
         case CURLFTPMETHOD_NOCWD => Some("CURLFTPMETHOD_NOCWD")
         case CURLFTPMETHOD_SINGLECWD => Some("CURLFTPMETHOD_SINGLECWD")
         case CURLFTPMETHOD_LAST => Some("CURLFTPMETHOD_LAST")
-        case _ => None
+        case _ => _root_.scala.None
     extension (a: curl_ftpmethod)
       inline def &(b: curl_ftpmethod): curl_ftpmethod = a & b
       inline def |(b: curl_ftpmethod): curl_ftpmethod = a | b
@@ -1837,7 +1837,7 @@ object enumerations:
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
   */
   opaque type curl_infotype = CUnsignedInt
-  object curl_infotype extends CEnumU[curl_infotype]:
+  object curl_infotype extends _BindgenEnumCUnsignedInt[curl_infotype]:
     given _tag: Tag[curl_infotype] = Tag.UInt
     inline def define(inline a: Long): curl_infotype = a.toUInt
     val CURLINFO_TEXT = define(0)
@@ -1858,7 +1858,7 @@ object enumerations:
         case CURLINFO_SSL_DATA_IN => Some("CURLINFO_SSL_DATA_IN")
         case CURLINFO_SSL_DATA_OUT => Some("CURLINFO_SSL_DATA_OUT")
         case CURLINFO_END => Some("CURLINFO_END")
-        case _ => None
+        case _ => _root_.scala.None
     extension (a: curl_infotype)
       inline def &(b: curl_infotype): curl_infotype = a & b
       inline def |(b: curl_infotype): curl_infotype = a | b
@@ -1868,7 +1868,7 @@ object enumerations:
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
   */
   opaque type curl_khmatch = CUnsignedInt
-  object curl_khmatch extends CEnumU[curl_khmatch]:
+  object curl_khmatch extends _BindgenEnumCUnsignedInt[curl_khmatch]:
     given _tag: Tag[curl_khmatch] = Tag.UInt
     inline def define(inline a: Long): curl_khmatch = a.toUInt
     val CURLKHMATCH_OK = define(0)
@@ -1881,7 +1881,7 @@ object enumerations:
         case CURLKHMATCH_MISMATCH => Some("CURLKHMATCH_MISMATCH")
         case CURLKHMATCH_MISSING => Some("CURLKHMATCH_MISSING")
         case CURLKHMATCH_LAST => Some("CURLKHMATCH_LAST")
-        case _ => None
+        case _ => _root_.scala.None
     extension (a: curl_khmatch)
       inline def &(b: curl_khmatch): curl_khmatch = a & b
       inline def |(b: curl_khmatch): curl_khmatch = a | b
@@ -1891,7 +1891,7 @@ object enumerations:
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
   */
   opaque type curl_khstat = CUnsignedInt
-  object curl_khstat extends CEnumU[curl_khstat]:
+  object curl_khstat extends _BindgenEnumCUnsignedInt[curl_khstat]:
     given _tag: Tag[curl_khstat] = Tag.UInt
     inline def define(inline a: Long): curl_khstat = a.toUInt
     val CURLKHSTAT_FINE_ADD_TO_FILE = define(0)
@@ -1908,7 +1908,7 @@ object enumerations:
         case CURLKHSTAT_DEFER => Some("CURLKHSTAT_DEFER")
         case CURLKHSTAT_FINE_REPLACE => Some("CURLKHSTAT_FINE_REPLACE")
         case CURLKHSTAT_LAST => Some("CURLKHSTAT_LAST")
-        case _ => None
+        case _ => _root_.scala.None
     extension (a: curl_khstat)
       inline def &(b: curl_khstat): curl_khstat = a & b
       inline def |(b: curl_khstat): curl_khstat = a | b
@@ -1918,7 +1918,7 @@ object enumerations:
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
   */
   opaque type curl_khtype = CUnsignedInt
-  object curl_khtype extends CEnumU[curl_khtype]:
+  object curl_khtype extends _BindgenEnumCUnsignedInt[curl_khtype]:
     given _tag: Tag[curl_khtype] = Tag.UInt
     inline def define(inline a: Long): curl_khtype = a.toUInt
     val CURLKHTYPE_UNKNOWN = define(0)
@@ -1935,7 +1935,7 @@ object enumerations:
         case CURLKHTYPE_DSS => Some("CURLKHTYPE_DSS")
         case CURLKHTYPE_ECDSA => Some("CURLKHTYPE_ECDSA")
         case CURLKHTYPE_ED25519 => Some("CURLKHTYPE_ED25519")
-        case _ => None
+        case _ => _root_.scala.None
     extension (a: curl_khtype)
       inline def &(b: curl_khtype): curl_khtype = a & b
       inline def |(b: curl_khtype): curl_khtype = a | b
@@ -1945,7 +1945,7 @@ object enumerations:
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
   */
   opaque type curl_lock_access = CUnsignedInt
-  object curl_lock_access extends CEnumU[curl_lock_access]:
+  object curl_lock_access extends _BindgenEnumCUnsignedInt[curl_lock_access]:
     given _tag: Tag[curl_lock_access] = Tag.UInt
     inline def define(inline a: Long): curl_lock_access = a.toUInt
     val CURL_LOCK_ACCESS_NONE = define(0)
@@ -1958,7 +1958,7 @@ object enumerations:
         case CURL_LOCK_ACCESS_SHARED => Some("CURL_LOCK_ACCESS_SHARED")
         case CURL_LOCK_ACCESS_SINGLE => Some("CURL_LOCK_ACCESS_SINGLE")
         case CURL_LOCK_ACCESS_LAST => Some("CURL_LOCK_ACCESS_LAST")
-        case _ => None
+        case _ => _root_.scala.None
     extension (a: curl_lock_access)
       inline def &(b: curl_lock_access): curl_lock_access = a & b
       inline def |(b: curl_lock_access): curl_lock_access = a | b
@@ -1970,7 +1970,7 @@ object enumerations:
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
   */
   opaque type curl_lock_data = CUnsignedInt
-  object curl_lock_data extends CEnumU[curl_lock_data]:
+  object curl_lock_data extends _BindgenEnumCUnsignedInt[curl_lock_data]:
     given _tag: Tag[curl_lock_data] = Tag.UInt
     inline def define(inline a: Long): curl_lock_data = a.toUInt
     val CURL_LOCK_DATA_NONE = define(0)
@@ -1993,7 +1993,7 @@ object enumerations:
         case CURL_LOCK_DATA_PSL => Some("CURL_LOCK_DATA_PSL")
         case CURL_LOCK_DATA_HSTS => Some("CURL_LOCK_DATA_HSTS")
         case CURL_LOCK_DATA_LAST => Some("CURL_LOCK_DATA_LAST")
-        case _ => None
+        case _ => _root_.scala.None
     extension (a: curl_lock_data)
       inline def &(b: curl_lock_data): curl_lock_data = a & b
       inline def |(b: curl_lock_data): curl_lock_data = a | b
@@ -2003,7 +2003,7 @@ object enumerations:
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
   */
   opaque type curl_proxytype = CUnsignedInt
-  object curl_proxytype extends CEnumU[curl_proxytype]:
+  object curl_proxytype extends _BindgenEnumCUnsignedInt[curl_proxytype]:
     given _tag: Tag[curl_proxytype] = Tag.UInt
     inline def define(inline a: Long): curl_proxytype = a.toUInt
     val CURLPROXY_HTTP = define(0)
@@ -2024,7 +2024,7 @@ object enumerations:
         case CURLPROXY_SOCKS5 => Some("CURLPROXY_SOCKS5")
         case CURLPROXY_SOCKS4A => Some("CURLPROXY_SOCKS4A")
         case CURLPROXY_SOCKS5_HOSTNAME => Some("CURLPROXY_SOCKS5_HOSTNAME")
-        case _ => None
+        case _ => _root_.scala.None
     extension (a: curl_proxytype)
       inline def &(b: curl_proxytype): curl_proxytype = a & b
       inline def |(b: curl_proxytype): curl_proxytype = a | b
@@ -2034,7 +2034,7 @@ object enumerations:
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
   */
   opaque type curl_sslbackend = CUnsignedInt
-  object curl_sslbackend extends CEnumU[curl_sslbackend]:
+  object curl_sslbackend extends _BindgenEnumCUnsignedInt[curl_sslbackend]:
     given _tag: Tag[curl_sslbackend] = Tag.UInt
     inline def define(inline a: Long): curl_sslbackend = a.toUInt
     val CURLSSLBACKEND_NONE = define(0)
@@ -2069,7 +2069,7 @@ object enumerations:
         case CURLSSLBACKEND_MESALINK => Some("CURLSSLBACKEND_MESALINK")
         case CURLSSLBACKEND_BEARSSL => Some("CURLSSLBACKEND_BEARSSL")
         case CURLSSLBACKEND_RUSTLS => Some("CURLSSLBACKEND_RUSTLS")
-        case _ => None
+        case _ => _root_.scala.None
     extension (a: curl_sslbackend)
       inline def &(b: curl_sslbackend): curl_sslbackend = a & b
       inline def |(b: curl_sslbackend): curl_sslbackend = a | b
@@ -2079,7 +2079,7 @@ object enumerations:
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
   */
   opaque type curl_usessl = CUnsignedInt
-  object curl_usessl extends CEnumU[curl_usessl]:
+  object curl_usessl extends _BindgenEnumCUnsignedInt[curl_usessl]:
     given _tag: Tag[curl_usessl] = Tag.UInt
     inline def define(inline a: Long): curl_usessl = a.toUInt
     val CURLUSESSL_NONE = define(0)
@@ -2094,7 +2094,7 @@ object enumerations:
         case CURLUSESSL_CONTROL => Some("CURLUSESSL_CONTROL")
         case CURLUSESSL_ALL => Some("CURLUSESSL_ALL")
         case CURLUSESSL_LAST => Some("CURLUSESSL_LAST")
-        case _ => None
+        case _ => _root_.scala.None
     extension (a: curl_usessl)
       inline def &(b: curl_usessl): curl_usessl = a & b
       inline def |(b: curl_usessl): curl_usessl = a | b
@@ -2104,7 +2104,7 @@ object enumerations:
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
   */
   opaque type curlfiletype = CUnsignedInt
-  object curlfiletype extends CEnumU[curlfiletype]:
+  object curlfiletype extends _BindgenEnumCUnsignedInt[curlfiletype]:
     given _tag: Tag[curlfiletype] = Tag.UInt
     inline def define(inline a: Long): curlfiletype = a.toUInt
     val CURLFILETYPE_FILE = define(0)
@@ -2127,7 +2127,7 @@ object enumerations:
         case CURLFILETYPE_SOCKET => Some("CURLFILETYPE_SOCKET")
         case CURLFILETYPE_DOOR => Some("CURLFILETYPE_DOOR")
         case CURLFILETYPE_UNKNOWN => Some("CURLFILETYPE_UNKNOWN")
-        case _ => None
+        case _ => _root_.scala.None
     extension (a: curlfiletype)
       inline def &(b: curlfiletype): curlfiletype = a & b
       inline def |(b: curlfiletype): curlfiletype = a | b
@@ -2137,7 +2137,7 @@ object enumerations:
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
   */
   opaque type curliocmd = CUnsignedInt
-  object curliocmd extends CEnumU[curliocmd]:
+  object curliocmd extends _BindgenEnumCUnsignedInt[curliocmd]:
     given _tag: Tag[curliocmd] = Tag.UInt
     inline def define(inline a: Long): curliocmd = a.toUInt
     val CURLIOCMD_NOP = define(0)
@@ -2148,7 +2148,7 @@ object enumerations:
         case CURLIOCMD_NOP => Some("CURLIOCMD_NOP")
         case CURLIOCMD_RESTARTREAD => Some("CURLIOCMD_RESTARTREAD")
         case CURLIOCMD_LAST => Some("CURLIOCMD_LAST")
-        case _ => None
+        case _ => _root_.scala.None
     extension (a: curliocmd)
       inline def &(b: curliocmd): curliocmd = a & b
       inline def |(b: curliocmd): curliocmd = a | b
@@ -2158,7 +2158,7 @@ object enumerations:
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
   */
   opaque type curlioerr = CUnsignedInt
-  object curlioerr extends CEnumU[curlioerr]:
+  object curlioerr extends _BindgenEnumCUnsignedInt[curlioerr]:
     given _tag: Tag[curlioerr] = Tag.UInt
     inline def define(inline a: Long): curlioerr = a.toUInt
     val CURLIOE_OK = define(0)
@@ -2171,7 +2171,7 @@ object enumerations:
         case CURLIOE_UNKNOWNCMD => Some("CURLIOE_UNKNOWNCMD")
         case CURLIOE_FAILRESTART => Some("CURLIOE_FAILRESTART")
         case CURLIOE_LAST => Some("CURLIOE_LAST")
-        case _ => None
+        case _ => _root_.scala.None
     extension (a: curlioerr)
       inline def &(b: curlioerr): curlioerr = a & b
       inline def |(b: curlioerr): curlioerr = a | b
@@ -2181,7 +2181,7 @@ object enumerations:
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
   */
   opaque type curlsocktype = CUnsignedInt
-  object curlsocktype extends CEnumU[curlsocktype]:
+  object curlsocktype extends _BindgenEnumCUnsignedInt[curlsocktype]:
     given _tag: Tag[curlsocktype] = Tag.UInt
     inline def define(inline a: Long): curlsocktype = a.toUInt
     val CURLSOCKTYPE_IPCXN = define(0)
@@ -2192,7 +2192,7 @@ object enumerations:
         case CURLSOCKTYPE_IPCXN => Some("CURLSOCKTYPE_IPCXN")
         case CURLSOCKTYPE_ACCEPT => Some("CURLSOCKTYPE_ACCEPT")
         case CURLSOCKTYPE_LAST => Some("CURLSOCKTYPE_LAST")
-        case _ => None
+        case _ => _root_.scala.None
     extension (a: curlsocktype)
       inline def &(b: curlsocktype): curlsocktype = a & b
       inline def |(b: curlsocktype): curlsocktype = a | b
@@ -2200,9 +2200,9 @@ object enumerations:
 
 object aliases:
   import _root_.curl.enumerations.*
+  import _root_.curl.predef.*
   import _root_.curl.aliases.*
   import _root_.curl.structs.*
-
   /**
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
   */
@@ -2233,15 +2233,24 @@ object aliases:
     extension (v: CURLSH)
       inline def value: Unit = v
 
+  type FILE = libc.stdio.FILE
+  object FILE: 
+    val _tag: Tag[FILE] = summon[Tag[libc.stdio.FILE]]
+    inline def apply(inline o: libc.stdio.FILE): FILE = o
+    extension (v: FILE)
+      inline def value: libc.stdio.FILE = v
+
   /**
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
   */
   opaque type curl_calloc_callback = CFuncPtr2[size_t, size_t, Ptr[Byte]]
   object curl_calloc_callback: 
     given _tag: Tag[curl_calloc_callback] = Tag.materializeCFuncPtr2[size_t, size_t, Ptr[Byte]]
+    inline def fromPtr(ptr: Ptr[Byte] | CVoidPtr): curl_calloc_callback = CFuncPtr.fromPtr(ptr.asInstanceOf[Ptr[Byte]])
     inline def apply(inline o: CFuncPtr2[size_t, size_t, Ptr[Byte]]): curl_calloc_callback = o
     extension (v: curl_calloc_callback)
       inline def value: CFuncPtr2[size_t, size_t, Ptr[Byte]] = v
+      inline def toPtr: CVoidPtr = CFuncPtr.toPtr(v)
 
   /**
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
@@ -2249,9 +2258,11 @@ object aliases:
   opaque type curl_chunk_bgn_callback = CFuncPtr3[Ptr[Byte], Ptr[Byte], CInt, CLongInt]
   object curl_chunk_bgn_callback: 
     given _tag: Tag[curl_chunk_bgn_callback] = Tag.materializeCFuncPtr3[Ptr[Byte], Ptr[Byte], CInt, CLongInt]
+    inline def fromPtr(ptr: Ptr[Byte] | CVoidPtr): curl_chunk_bgn_callback = CFuncPtr.fromPtr(ptr.asInstanceOf[Ptr[Byte]])
     inline def apply(inline o: CFuncPtr3[Ptr[Byte], Ptr[Byte], CInt, CLongInt]): curl_chunk_bgn_callback = o
     extension (v: curl_chunk_bgn_callback)
       inline def value: CFuncPtr3[Ptr[Byte], Ptr[Byte], CInt, CLongInt] = v
+      inline def toPtr: CVoidPtr = CFuncPtr.toPtr(v)
 
   /**
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
@@ -2259,9 +2270,11 @@ object aliases:
   opaque type curl_chunk_end_callback = CFuncPtr1[Ptr[Byte], CLongInt]
   object curl_chunk_end_callback: 
     given _tag: Tag[curl_chunk_end_callback] = Tag.materializeCFuncPtr1[Ptr[Byte], CLongInt]
+    inline def fromPtr(ptr: Ptr[Byte] | CVoidPtr): curl_chunk_end_callback = CFuncPtr.fromPtr(ptr.asInstanceOf[Ptr[Byte]])
     inline def apply(inline o: CFuncPtr1[Ptr[Byte], CLongInt]): curl_chunk_end_callback = o
     extension (v: curl_chunk_end_callback)
       inline def value: CFuncPtr1[Ptr[Byte], CLongInt] = v
+      inline def toPtr: CVoidPtr = CFuncPtr.toPtr(v)
 
   /**
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
@@ -2269,9 +2282,11 @@ object aliases:
   opaque type curl_closesocket_callback = CFuncPtr2[Ptr[Byte], curl_socket_t, CInt]
   object curl_closesocket_callback: 
     given _tag: Tag[curl_closesocket_callback] = Tag.materializeCFuncPtr2[Ptr[Byte], curl_socket_t, CInt]
+    inline def fromPtr(ptr: Ptr[Byte] | CVoidPtr): curl_closesocket_callback = CFuncPtr.fromPtr(ptr.asInstanceOf[Ptr[Byte]])
     inline def apply(inline o: CFuncPtr2[Ptr[Byte], curl_socket_t, CInt]): curl_closesocket_callback = o
     extension (v: curl_closesocket_callback)
       inline def value: CFuncPtr2[Ptr[Byte], curl_socket_t, CInt] = v
+      inline def toPtr: CVoidPtr = CFuncPtr.toPtr(v)
 
   /**
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
@@ -2279,9 +2294,11 @@ object aliases:
   opaque type curl_conv_callback = CFuncPtr2[CString, size_t, CURLcode]
   object curl_conv_callback: 
     given _tag: Tag[curl_conv_callback] = Tag.materializeCFuncPtr2[CString, size_t, CURLcode]
+    inline def fromPtr(ptr: Ptr[Byte] | CVoidPtr): curl_conv_callback = CFuncPtr.fromPtr(ptr.asInstanceOf[Ptr[Byte]])
     inline def apply(inline o: CFuncPtr2[CString, size_t, CURLcode]): curl_conv_callback = o
     extension (v: curl_conv_callback)
       inline def value: CFuncPtr2[CString, size_t, CURLcode] = v
+      inline def toPtr: CVoidPtr = CFuncPtr.toPtr(v)
 
   /**
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
@@ -2289,9 +2306,11 @@ object aliases:
   opaque type curl_debug_callback = CFuncPtr5[Ptr[CURL], curl_infotype, CString, size_t, Ptr[Byte], CInt]
   object curl_debug_callback: 
     given _tag: Tag[curl_debug_callback] = Tag.materializeCFuncPtr5[Ptr[CURL], curl_infotype, CString, size_t, Ptr[Byte], CInt]
+    inline def fromPtr(ptr: Ptr[Byte] | CVoidPtr): curl_debug_callback = CFuncPtr.fromPtr(ptr.asInstanceOf[Ptr[Byte]])
     inline def apply(inline o: CFuncPtr5[Ptr[CURL], curl_infotype, CString, size_t, Ptr[Byte], CInt]): curl_debug_callback = o
     extension (v: curl_debug_callback)
       inline def value: CFuncPtr5[Ptr[CURL], curl_infotype, CString, size_t, Ptr[Byte], CInt] = v
+      inline def toPtr: CVoidPtr = CFuncPtr.toPtr(v)
 
   /**
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
@@ -2299,9 +2318,11 @@ object aliases:
   opaque type curl_fnmatch_callback = CFuncPtr3[Ptr[Byte], CString, CString, CInt]
   object curl_fnmatch_callback: 
     given _tag: Tag[curl_fnmatch_callback] = Tag.materializeCFuncPtr3[Ptr[Byte], CString, CString, CInt]
+    inline def fromPtr(ptr: Ptr[Byte] | CVoidPtr): curl_fnmatch_callback = CFuncPtr.fromPtr(ptr.asInstanceOf[Ptr[Byte]])
     inline def apply(inline o: CFuncPtr3[Ptr[Byte], CString, CString, CInt]): curl_fnmatch_callback = o
     extension (v: curl_fnmatch_callback)
       inline def value: CFuncPtr3[Ptr[Byte], CString, CString, CInt] = v
+      inline def toPtr: CVoidPtr = CFuncPtr.toPtr(v)
 
   /**
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
@@ -2309,9 +2330,11 @@ object aliases:
   opaque type curl_formget_callback = CFuncPtr3[Ptr[Byte], CString, size_t, size_t]
   object curl_formget_callback: 
     given _tag: Tag[curl_formget_callback] = Tag.materializeCFuncPtr3[Ptr[Byte], CString, size_t, size_t]
+    inline def fromPtr(ptr: Ptr[Byte] | CVoidPtr): curl_formget_callback = CFuncPtr.fromPtr(ptr.asInstanceOf[Ptr[Byte]])
     inline def apply(inline o: CFuncPtr3[Ptr[Byte], CString, size_t, size_t]): curl_formget_callback = o
     extension (v: curl_formget_callback)
       inline def value: CFuncPtr3[Ptr[Byte], CString, size_t, size_t] = v
+      inline def toPtr: CVoidPtr = CFuncPtr.toPtr(v)
 
   /**
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
@@ -2319,9 +2342,11 @@ object aliases:
   opaque type curl_free_callback = CFuncPtr1[Ptr[Byte], Unit]
   object curl_free_callback: 
     given _tag: Tag[curl_free_callback] = Tag.materializeCFuncPtr1[Ptr[Byte], Unit]
+    inline def fromPtr(ptr: Ptr[Byte] | CVoidPtr): curl_free_callback = CFuncPtr.fromPtr(ptr.asInstanceOf[Ptr[Byte]])
     inline def apply(inline o: CFuncPtr1[Ptr[Byte], Unit]): curl_free_callback = o
     extension (v: curl_free_callback)
       inline def value: CFuncPtr1[Ptr[Byte], Unit] = v
+      inline def toPtr: CVoidPtr = CFuncPtr.toPtr(v)
 
   /**
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
@@ -2329,9 +2354,11 @@ object aliases:
   opaque type curl_hstsread_callback = CFuncPtr3[Ptr[CURL], Ptr[curl_hstsentry], Ptr[Byte], CURLSTScode]
   object curl_hstsread_callback: 
     given _tag: Tag[curl_hstsread_callback] = Tag.materializeCFuncPtr3[Ptr[CURL], Ptr[curl_hstsentry], Ptr[Byte], CURLSTScode]
+    inline def fromPtr(ptr: Ptr[Byte] | CVoidPtr): curl_hstsread_callback = CFuncPtr.fromPtr(ptr.asInstanceOf[Ptr[Byte]])
     inline def apply(inline o: CFuncPtr3[Ptr[CURL], Ptr[curl_hstsentry], Ptr[Byte], CURLSTScode]): curl_hstsread_callback = o
     extension (v: curl_hstsread_callback)
       inline def value: CFuncPtr3[Ptr[CURL], Ptr[curl_hstsentry], Ptr[Byte], CURLSTScode] = v
+      inline def toPtr: CVoidPtr = CFuncPtr.toPtr(v)
 
   /**
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
@@ -2339,9 +2366,11 @@ object aliases:
   opaque type curl_hstswrite_callback = CFuncPtr4[Ptr[CURL], Ptr[curl_hstsentry], Ptr[curl_index], Ptr[Byte], CURLSTScode]
   object curl_hstswrite_callback: 
     given _tag: Tag[curl_hstswrite_callback] = Tag.materializeCFuncPtr4[Ptr[CURL], Ptr[curl_hstsentry], Ptr[curl_index], Ptr[Byte], CURLSTScode]
+    inline def fromPtr(ptr: Ptr[Byte] | CVoidPtr): curl_hstswrite_callback = CFuncPtr.fromPtr(ptr.asInstanceOf[Ptr[Byte]])
     inline def apply(inline o: CFuncPtr4[Ptr[CURL], Ptr[curl_hstsentry], Ptr[curl_index], Ptr[Byte], CURLSTScode]): curl_hstswrite_callback = o
     extension (v: curl_hstswrite_callback)
       inline def value: CFuncPtr4[Ptr[CURL], Ptr[curl_hstsentry], Ptr[curl_index], Ptr[Byte], CURLSTScode] = v
+      inline def toPtr: CVoidPtr = CFuncPtr.toPtr(v)
 
   /**
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
@@ -2349,9 +2378,11 @@ object aliases:
   opaque type curl_ioctl_callback = CFuncPtr3[Ptr[CURL], CInt, Ptr[Byte], curlioerr]
   object curl_ioctl_callback: 
     given _tag: Tag[curl_ioctl_callback] = Tag.materializeCFuncPtr3[Ptr[CURL], CInt, Ptr[Byte], curlioerr]
+    inline def fromPtr(ptr: Ptr[Byte] | CVoidPtr): curl_ioctl_callback = CFuncPtr.fromPtr(ptr.asInstanceOf[Ptr[Byte]])
     inline def apply(inline o: CFuncPtr3[Ptr[CURL], CInt, Ptr[Byte], curlioerr]): curl_ioctl_callback = o
     extension (v: curl_ioctl_callback)
       inline def value: CFuncPtr3[Ptr[CURL], CInt, Ptr[Byte], curlioerr] = v
+      inline def toPtr: CVoidPtr = CFuncPtr.toPtr(v)
 
   /**
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
@@ -2359,9 +2390,11 @@ object aliases:
   opaque type curl_lock_function = CFuncPtr4[Ptr[CURL], curl_lock_data, curl_lock_access, Ptr[Byte], Unit]
   object curl_lock_function: 
     given _tag: Tag[curl_lock_function] = Tag.materializeCFuncPtr4[Ptr[CURL], curl_lock_data, curl_lock_access, Ptr[Byte], Unit]
+    inline def fromPtr(ptr: Ptr[Byte] | CVoidPtr): curl_lock_function = CFuncPtr.fromPtr(ptr.asInstanceOf[Ptr[Byte]])
     inline def apply(inline o: CFuncPtr4[Ptr[CURL], curl_lock_data, curl_lock_access, Ptr[Byte], Unit]): curl_lock_function = o
     extension (v: curl_lock_function)
       inline def value: CFuncPtr4[Ptr[CURL], curl_lock_data, curl_lock_access, Ptr[Byte], Unit] = v
+      inline def toPtr: CVoidPtr = CFuncPtr.toPtr(v)
 
   /**
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
@@ -2369,9 +2402,11 @@ object aliases:
   opaque type curl_malloc_callback = CFuncPtr1[size_t, Ptr[Byte]]
   object curl_malloc_callback: 
     given _tag: Tag[curl_malloc_callback] = Tag.materializeCFuncPtr1[size_t, Ptr[Byte]]
+    inline def fromPtr(ptr: Ptr[Byte] | CVoidPtr): curl_malloc_callback = CFuncPtr.fromPtr(ptr.asInstanceOf[Ptr[Byte]])
     inline def apply(inline o: CFuncPtr1[size_t, Ptr[Byte]]): curl_malloc_callback = o
     extension (v: curl_malloc_callback)
       inline def value: CFuncPtr1[size_t, Ptr[Byte]] = v
+      inline def toPtr: CVoidPtr = CFuncPtr.toPtr(v)
 
   /**
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/multi.h
@@ -2379,16 +2414,18 @@ object aliases:
   opaque type curl_multi_timer_callback = CFuncPtr3[Ptr[CURLM], CLongInt, Ptr[Byte], CInt]
   object curl_multi_timer_callback: 
     given _tag: Tag[curl_multi_timer_callback] = Tag.materializeCFuncPtr3[Ptr[CURLM], CLongInt, Ptr[Byte], CInt]
+    inline def fromPtr(ptr: Ptr[Byte] | CVoidPtr): curl_multi_timer_callback = CFuncPtr.fromPtr(ptr.asInstanceOf[Ptr[Byte]])
     inline def apply(inline o: CFuncPtr3[Ptr[CURLM], CLongInt, Ptr[Byte], CInt]): curl_multi_timer_callback = o
     extension (v: curl_multi_timer_callback)
       inline def value: CFuncPtr3[Ptr[CURLM], CLongInt, Ptr[Byte], CInt] = v
+      inline def toPtr: CVoidPtr = CFuncPtr.toPtr(v)
 
   /**
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/system.h
   */
   opaque type curl_off_t = CLongInt
   object curl_off_t: 
-    given _tag: Tag[curl_off_t] = Tag.Long
+    given _tag: Tag[curl_off_t] = Tag.Size
     inline def apply(inline o: CLongInt): curl_off_t = o
     extension (v: curl_off_t)
       inline def value: CLongInt = v
@@ -2399,9 +2436,11 @@ object aliases:
   opaque type curl_opensocket_callback = CFuncPtr3[Ptr[Byte], curlsocktype, Ptr[curl_sockaddr], curl_socket_t]
   object curl_opensocket_callback: 
     given _tag: Tag[curl_opensocket_callback] = Tag.materializeCFuncPtr3[Ptr[Byte], curlsocktype, Ptr[curl_sockaddr], curl_socket_t]
+    inline def fromPtr(ptr: Ptr[Byte] | CVoidPtr): curl_opensocket_callback = CFuncPtr.fromPtr(ptr.asInstanceOf[Ptr[Byte]])
     inline def apply(inline o: CFuncPtr3[Ptr[Byte], curlsocktype, Ptr[curl_sockaddr], curl_socket_t]): curl_opensocket_callback = o
     extension (v: curl_opensocket_callback)
       inline def value: CFuncPtr3[Ptr[Byte], curlsocktype, Ptr[curl_sockaddr], curl_socket_t] = v
+      inline def toPtr: CVoidPtr = CFuncPtr.toPtr(v)
 
   /**
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
@@ -2409,9 +2448,11 @@ object aliases:
   opaque type curl_prereq_callback = CFuncPtr5[Ptr[Byte], CString, CString, CInt, CInt, CInt]
   object curl_prereq_callback: 
     given _tag: Tag[curl_prereq_callback] = Tag.materializeCFuncPtr5[Ptr[Byte], CString, CString, CInt, CInt, CInt]
+    inline def fromPtr(ptr: Ptr[Byte] | CVoidPtr): curl_prereq_callback = CFuncPtr.fromPtr(ptr.asInstanceOf[Ptr[Byte]])
     inline def apply(inline o: CFuncPtr5[Ptr[Byte], CString, CString, CInt, CInt, CInt]): curl_prereq_callback = o
     extension (v: curl_prereq_callback)
       inline def value: CFuncPtr5[Ptr[Byte], CString, CString, CInt, CInt, CInt] = v
+      inline def toPtr: CVoidPtr = CFuncPtr.toPtr(v)
 
   /**
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
@@ -2419,9 +2460,11 @@ object aliases:
   opaque type curl_progress_callback = CFuncPtr5[Ptr[Byte], Double, Double, Double, Double, CInt]
   object curl_progress_callback: 
     given _tag: Tag[curl_progress_callback] = Tag.materializeCFuncPtr5[Ptr[Byte], Double, Double, Double, Double, CInt]
+    inline def fromPtr(ptr: Ptr[Byte] | CVoidPtr): curl_progress_callback = CFuncPtr.fromPtr(ptr.asInstanceOf[Ptr[Byte]])
     inline def apply(inline o: CFuncPtr5[Ptr[Byte], Double, Double, Double, Double, CInt]): curl_progress_callback = o
     extension (v: curl_progress_callback)
       inline def value: CFuncPtr5[Ptr[Byte], Double, Double, Double, Double, CInt] = v
+      inline def toPtr: CVoidPtr = CFuncPtr.toPtr(v)
 
   /**
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/multi.h
@@ -2429,9 +2472,11 @@ object aliases:
   opaque type curl_push_callback = CFuncPtr5[Ptr[CURL], Ptr[CURL], size_t, Ptr[curl_pushheaders], Ptr[Byte], CInt]
   object curl_push_callback: 
     given _tag: Tag[curl_push_callback] = Tag.materializeCFuncPtr5[Ptr[CURL], Ptr[CURL], size_t, Ptr[curl_pushheaders], Ptr[Byte], CInt]
+    inline def fromPtr(ptr: Ptr[Byte] | CVoidPtr): curl_push_callback = CFuncPtr.fromPtr(ptr.asInstanceOf[Ptr[Byte]])
     inline def apply(inline o: CFuncPtr5[Ptr[CURL], Ptr[CURL], size_t, Ptr[curl_pushheaders], Ptr[Byte], CInt]): curl_push_callback = o
     extension (v: curl_push_callback)
       inline def value: CFuncPtr5[Ptr[CURL], Ptr[CURL], size_t, Ptr[curl_pushheaders], Ptr[Byte], CInt] = v
+      inline def toPtr: CVoidPtr = CFuncPtr.toPtr(v)
 
   /**
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
@@ -2439,9 +2484,11 @@ object aliases:
   opaque type curl_read_callback = CFuncPtr4[CString, size_t, size_t, Ptr[Byte], size_t]
   object curl_read_callback: 
     given _tag: Tag[curl_read_callback] = Tag.materializeCFuncPtr4[CString, size_t, size_t, Ptr[Byte], size_t]
+    inline def fromPtr(ptr: Ptr[Byte] | CVoidPtr): curl_read_callback = CFuncPtr.fromPtr(ptr.asInstanceOf[Ptr[Byte]])
     inline def apply(inline o: CFuncPtr4[CString, size_t, size_t, Ptr[Byte], size_t]): curl_read_callback = o
     extension (v: curl_read_callback)
       inline def value: CFuncPtr4[CString, size_t, size_t, Ptr[Byte], size_t] = v
+      inline def toPtr: CVoidPtr = CFuncPtr.toPtr(v)
 
   /**
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
@@ -2449,9 +2496,11 @@ object aliases:
   opaque type curl_realloc_callback = CFuncPtr2[Ptr[Byte], size_t, Ptr[Byte]]
   object curl_realloc_callback: 
     given _tag: Tag[curl_realloc_callback] = Tag.materializeCFuncPtr2[Ptr[Byte], size_t, Ptr[Byte]]
+    inline def fromPtr(ptr: Ptr[Byte] | CVoidPtr): curl_realloc_callback = CFuncPtr.fromPtr(ptr.asInstanceOf[Ptr[Byte]])
     inline def apply(inline o: CFuncPtr2[Ptr[Byte], size_t, Ptr[Byte]]): curl_realloc_callback = o
     extension (v: curl_realloc_callback)
       inline def value: CFuncPtr2[Ptr[Byte], size_t, Ptr[Byte]] = v
+      inline def toPtr: CVoidPtr = CFuncPtr.toPtr(v)
 
   /**
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
@@ -2459,9 +2508,11 @@ object aliases:
   opaque type curl_resolver_start_callback = CFuncPtr3[Ptr[Byte], Ptr[Byte], Ptr[Byte], CInt]
   object curl_resolver_start_callback: 
     given _tag: Tag[curl_resolver_start_callback] = Tag.materializeCFuncPtr3[Ptr[Byte], Ptr[Byte], Ptr[Byte], CInt]
+    inline def fromPtr(ptr: Ptr[Byte] | CVoidPtr): curl_resolver_start_callback = CFuncPtr.fromPtr(ptr.asInstanceOf[Ptr[Byte]])
     inline def apply(inline o: CFuncPtr3[Ptr[Byte], Ptr[Byte], Ptr[Byte], CInt]): curl_resolver_start_callback = o
     extension (v: curl_resolver_start_callback)
       inline def value: CFuncPtr3[Ptr[Byte], Ptr[Byte], Ptr[Byte], CInt] = v
+      inline def toPtr: CVoidPtr = CFuncPtr.toPtr(v)
 
   /**
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
@@ -2469,9 +2520,11 @@ object aliases:
   opaque type curl_seek_callback = CFuncPtr3[Ptr[Byte], curl_off_t, CInt, CInt]
   object curl_seek_callback: 
     given _tag: Tag[curl_seek_callback] = Tag.materializeCFuncPtr3[Ptr[Byte], curl_off_t, CInt, CInt]
+    inline def fromPtr(ptr: Ptr[Byte] | CVoidPtr): curl_seek_callback = CFuncPtr.fromPtr(ptr.asInstanceOf[Ptr[Byte]])
     inline def apply(inline o: CFuncPtr3[Ptr[Byte], curl_off_t, CInt, CInt]): curl_seek_callback = o
     extension (v: curl_seek_callback)
       inline def value: CFuncPtr3[Ptr[Byte], curl_off_t, CInt, CInt] = v
+      inline def toPtr: CVoidPtr = CFuncPtr.toPtr(v)
 
   /**
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/multi.h
@@ -2479,9 +2532,11 @@ object aliases:
   opaque type curl_socket_callback = CFuncPtr5[Ptr[CURL], curl_socket_t, CInt, Ptr[Byte], Ptr[Byte], CInt]
   object curl_socket_callback: 
     given _tag: Tag[curl_socket_callback] = Tag.materializeCFuncPtr5[Ptr[CURL], curl_socket_t, CInt, Ptr[Byte], Ptr[Byte], CInt]
+    inline def fromPtr(ptr: Ptr[Byte] | CVoidPtr): curl_socket_callback = CFuncPtr.fromPtr(ptr.asInstanceOf[Ptr[Byte]])
     inline def apply(inline o: CFuncPtr5[Ptr[CURL], curl_socket_t, CInt, Ptr[Byte], Ptr[Byte], CInt]): curl_socket_callback = o
     extension (v: curl_socket_callback)
       inline def value: CFuncPtr5[Ptr[CURL], curl_socket_t, CInt, Ptr[Byte], Ptr[Byte], CInt] = v
+      inline def toPtr: CVoidPtr = CFuncPtr.toPtr(v)
 
   /**
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
@@ -2509,9 +2564,11 @@ object aliases:
   opaque type curl_sockopt_callback = CFuncPtr3[Ptr[Byte], curl_socket_t, curlsocktype, CInt]
   object curl_sockopt_callback: 
     given _tag: Tag[curl_sockopt_callback] = Tag.materializeCFuncPtr3[Ptr[Byte], curl_socket_t, curlsocktype, CInt]
+    inline def fromPtr(ptr: Ptr[Byte] | CVoidPtr): curl_sockopt_callback = CFuncPtr.fromPtr(ptr.asInstanceOf[Ptr[Byte]])
     inline def apply(inline o: CFuncPtr3[Ptr[Byte], curl_socket_t, curlsocktype, CInt]): curl_sockopt_callback = o
     extension (v: curl_sockopt_callback)
       inline def value: CFuncPtr3[Ptr[Byte], curl_socket_t, curlsocktype, CInt] = v
+      inline def toPtr: CVoidPtr = CFuncPtr.toPtr(v)
 
   /**
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
@@ -2519,9 +2576,11 @@ object aliases:
   opaque type curl_sshhostkeycallback = CFuncPtr4[Ptr[Byte], CInt, CString, size_t, CInt]
   object curl_sshhostkeycallback: 
     given _tag: Tag[curl_sshhostkeycallback] = Tag.materializeCFuncPtr4[Ptr[Byte], CInt, CString, size_t, CInt]
+    inline def fromPtr(ptr: Ptr[Byte] | CVoidPtr): curl_sshhostkeycallback = CFuncPtr.fromPtr(ptr.asInstanceOf[Ptr[Byte]])
     inline def apply(inline o: CFuncPtr4[Ptr[Byte], CInt, CString, size_t, CInt]): curl_sshhostkeycallback = o
     extension (v: curl_sshhostkeycallback)
       inline def value: CFuncPtr4[Ptr[Byte], CInt, CString, size_t, CInt] = v
+      inline def toPtr: CVoidPtr = CFuncPtr.toPtr(v)
 
   /**
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
@@ -2529,9 +2588,11 @@ object aliases:
   opaque type curl_sshkeycallback = CFuncPtr5[Ptr[CURL], Ptr[curl_khkey], Ptr[curl_khkey], curl_khmatch, Ptr[Byte], CInt]
   object curl_sshkeycallback: 
     given _tag: Tag[curl_sshkeycallback] = Tag.materializeCFuncPtr5[Ptr[CURL], Ptr[curl_khkey], Ptr[curl_khkey], curl_khmatch, Ptr[Byte], CInt]
+    inline def fromPtr(ptr: Ptr[Byte] | CVoidPtr): curl_sshkeycallback = CFuncPtr.fromPtr(ptr.asInstanceOf[Ptr[Byte]])
     inline def apply(inline o: CFuncPtr5[Ptr[CURL], Ptr[curl_khkey], Ptr[curl_khkey], curl_khmatch, Ptr[Byte], CInt]): curl_sshkeycallback = o
     extension (v: curl_sshkeycallback)
       inline def value: CFuncPtr5[Ptr[CURL], Ptr[curl_khkey], Ptr[curl_khkey], curl_khmatch, Ptr[Byte], CInt] = v
+      inline def toPtr: CVoidPtr = CFuncPtr.toPtr(v)
 
   /**
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
@@ -2539,9 +2600,11 @@ object aliases:
   opaque type curl_ssl_ctx_callback = CFuncPtr3[Ptr[CURL], Ptr[Byte], Ptr[Byte], CURLcode]
   object curl_ssl_ctx_callback: 
     given _tag: Tag[curl_ssl_ctx_callback] = Tag.materializeCFuncPtr3[Ptr[CURL], Ptr[Byte], Ptr[Byte], CURLcode]
+    inline def fromPtr(ptr: Ptr[Byte] | CVoidPtr): curl_ssl_ctx_callback = CFuncPtr.fromPtr(ptr.asInstanceOf[Ptr[Byte]])
     inline def apply(inline o: CFuncPtr3[Ptr[CURL], Ptr[Byte], Ptr[Byte], CURLcode]): curl_ssl_ctx_callback = o
     extension (v: curl_ssl_ctx_callback)
       inline def value: CFuncPtr3[Ptr[CURL], Ptr[Byte], Ptr[Byte], CURLcode] = v
+      inline def toPtr: CVoidPtr = CFuncPtr.toPtr(v)
 
   /**
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
@@ -2549,9 +2612,11 @@ object aliases:
   opaque type curl_strdup_callback = CFuncPtr1[CString, CString]
   object curl_strdup_callback: 
     given _tag: Tag[curl_strdup_callback] = Tag.materializeCFuncPtr1[CString, CString]
+    inline def fromPtr(ptr: Ptr[Byte] | CVoidPtr): curl_strdup_callback = CFuncPtr.fromPtr(ptr.asInstanceOf[Ptr[Byte]])
     inline def apply(inline o: CFuncPtr1[CString, CString]): curl_strdup_callback = o
     extension (v: curl_strdup_callback)
       inline def value: CFuncPtr1[CString, CString] = v
+      inline def toPtr: CVoidPtr = CFuncPtr.toPtr(v)
 
   /**
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
@@ -2559,9 +2624,11 @@ object aliases:
   opaque type curl_trailer_callback = CFuncPtr2[Ptr[Ptr[curl_slist]], Ptr[Byte], CInt]
   object curl_trailer_callback: 
     given _tag: Tag[curl_trailer_callback] = Tag.materializeCFuncPtr2[Ptr[Ptr[curl_slist]], Ptr[Byte], CInt]
+    inline def fromPtr(ptr: Ptr[Byte] | CVoidPtr): curl_trailer_callback = CFuncPtr.fromPtr(ptr.asInstanceOf[Ptr[Byte]])
     inline def apply(inline o: CFuncPtr2[Ptr[Ptr[curl_slist]], Ptr[Byte], CInt]): curl_trailer_callback = o
     extension (v: curl_trailer_callback)
       inline def value: CFuncPtr2[Ptr[Ptr[curl_slist]], Ptr[Byte], CInt] = v
+      inline def toPtr: CVoidPtr = CFuncPtr.toPtr(v)
 
   /**
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
@@ -2569,9 +2636,11 @@ object aliases:
   opaque type curl_unlock_function = CFuncPtr3[Ptr[CURL], curl_lock_data, Ptr[Byte], Unit]
   object curl_unlock_function: 
     given _tag: Tag[curl_unlock_function] = Tag.materializeCFuncPtr3[Ptr[CURL], curl_lock_data, Ptr[Byte], Unit]
+    inline def fromPtr(ptr: Ptr[Byte] | CVoidPtr): curl_unlock_function = CFuncPtr.fromPtr(ptr.asInstanceOf[Ptr[Byte]])
     inline def apply(inline o: CFuncPtr3[Ptr[CURL], curl_lock_data, Ptr[Byte], Unit]): curl_unlock_function = o
     extension (v: curl_unlock_function)
       inline def value: CFuncPtr3[Ptr[CURL], curl_lock_data, Ptr[Byte], Unit] = v
+      inline def toPtr: CVoidPtr = CFuncPtr.toPtr(v)
 
   /**
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
@@ -2579,9 +2648,11 @@ object aliases:
   opaque type curl_write_callback = CFuncPtr4[CString, size_t, size_t, Ptr[Byte], size_t]
   object curl_write_callback: 
     given _tag: Tag[curl_write_callback] = Tag.materializeCFuncPtr4[CString, size_t, size_t, Ptr[Byte], size_t]
+    inline def fromPtr(ptr: Ptr[Byte] | CVoidPtr): curl_write_callback = CFuncPtr.fromPtr(ptr.asInstanceOf[Ptr[Byte]])
     inline def apply(inline o: CFuncPtr4[CString, size_t, size_t, Ptr[Byte], size_t]): curl_write_callback = o
     extension (v: curl_write_callback)
       inline def value: CFuncPtr4[CString, size_t, size_t, Ptr[Byte], size_t] = v
+      inline def toPtr: CVoidPtr = CFuncPtr.toPtr(v)
 
   /**
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
@@ -2589,9 +2660,11 @@ object aliases:
   opaque type curl_xferinfo_callback = CFuncPtr5[Ptr[Byte], curl_off_t, curl_off_t, curl_off_t, curl_off_t, CInt]
   object curl_xferinfo_callback: 
     given _tag: Tag[curl_xferinfo_callback] = Tag.materializeCFuncPtr5[Ptr[Byte], curl_off_t, curl_off_t, curl_off_t, curl_off_t, CInt]
+    inline def fromPtr(ptr: Ptr[Byte] | CVoidPtr): curl_xferinfo_callback = CFuncPtr.fromPtr(ptr.asInstanceOf[Ptr[Byte]])
     inline def apply(inline o: CFuncPtr5[Ptr[Byte], curl_off_t, curl_off_t, curl_off_t, curl_off_t, CInt]): curl_xferinfo_callback = o
     extension (v: curl_xferinfo_callback)
       inline def value: CFuncPtr5[Ptr[Byte], curl_off_t, curl_off_t, curl_off_t, curl_off_t, CInt] = v
+      inline def toPtr: CVoidPtr = CFuncPtr.toPtr(v)
 
   type fd_set = posix.sys.select.fd_set
   object fd_set: 
@@ -2628,11 +2701,18 @@ object aliases:
     extension (v: time_t)
       inline def value: posix.sys.types.time_t = v
 
+  type va_list = unsafe.CVarArgList
+  object va_list: 
+    val _tag: Tag[va_list] = summon[Tag[unsafe.CVarArgList]]
+    inline def apply(inline o: unsafe.CVarArgList): va_list = o
+    extension (v: va_list)
+      inline def value: unsafe.CVarArgList = v
+
 object structs:
   import _root_.curl.enumerations.*
+  import _root_.curl.predef.*
   import _root_.curl.aliases.*
   import _root_.curl.structs.*
-
   /**
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/multi.h
   */
@@ -2909,7 +2989,7 @@ object structs:
   /**
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
   */
-  opaque type curl_httppost = CStruct14[Ptr[Byte], CString, CLongInt, CString, CLongInt, CString, CLongInt, CString, Ptr[Byte], Ptr[Byte], CLongInt, CString, Ptr[Byte], curl_off_t]
+  opaque type curl_httppost = CStruct15[Ptr[Byte], CString, CLongInt, CString, CLongInt, CString, CLongInt, CString, CStruct0, Ptr[Byte], Ptr[Byte], CLongInt, CString, Ptr[Byte], curl_off_t]
   object curl_httppost:
     /**
      * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
@@ -2917,7 +2997,7 @@ object structs:
     opaque type Struct0 = CStruct0
     object Struct0:
       given _tag: Tag[Struct0] = Tag.materializeCStruct0Tag
-    given _tag: Tag[curl_httppost] = Tag.materializeCStruct14Tag[Ptr[Byte], CString, CLongInt, CString, CLongInt, CString, CLongInt, CString, Ptr[Byte], Ptr[Byte], CLongInt, CString, Ptr[Byte], curl_off_t]
+    given _tag: Tag[curl_httppost] = Tag.materializeCStruct15Tag[Ptr[Byte], CString, CLongInt, CString, CLongInt, CString, CLongInt, CString, CStruct0, Ptr[Byte], Ptr[Byte], CLongInt, CString, Ptr[Byte], curl_off_t]
     def apply()(using Zone): Ptr[curl_httppost] = scala.scalanative.unsafe.alloc[curl_httppost](1)
     def apply(next : Ptr[curl_httppost], name : CString, namelength : CLongInt, contents : CString, contentslength : CLongInt, buffer : CString, bufferlength : CLongInt, contenttype : CString, contentheader : Ptr[curl_slist], more : Ptr[curl_httppost], flags : CLongInt, showfilename : CString, userp : Ptr[Byte], contentlen : curl_off_t)(using Zone): Ptr[curl_httppost] = 
       val ____ptr = apply()
@@ -2953,18 +3033,18 @@ object structs:
       def bufferlength_=(value: CLongInt): Unit = !struct.at7 = value
       def contenttype : CString = struct._8
       def contenttype_=(value: CString): Unit = !struct.at8 = value
-      def contentheader : Ptr[curl_slist] = struct._9.asInstanceOf[Ptr[curl_slist]]
-      def contentheader_=(value: Ptr[curl_slist]): Unit = !struct.at9 = value.asInstanceOf[Ptr[Byte]]
-      def more : Ptr[curl_httppost] = struct._10.asInstanceOf[Ptr[curl_httppost]]
-      def more_=(value: Ptr[curl_httppost]): Unit = !struct.at10 = value.asInstanceOf[Ptr[Byte]]
-      def flags : CLongInt = struct._11
-      def flags_=(value: CLongInt): Unit = !struct.at11 = value
-      def showfilename : CString = struct._12
-      def showfilename_=(value: CString): Unit = !struct.at12 = value
-      def userp : Ptr[Byte] = struct._13
-      def userp_=(value: Ptr[Byte]): Unit = !struct.at13 = value
-      def contentlen : curl_off_t = struct._14
-      def contentlen_=(value: curl_off_t): Unit = !struct.at14 = value
+      def contentheader : Ptr[curl_slist] = struct._10.asInstanceOf[Ptr[curl_slist]]
+      def contentheader_=(value: Ptr[curl_slist]): Unit = !struct.at10 = value.asInstanceOf[Ptr[Byte]]
+      def more : Ptr[curl_httppost] = struct._11.asInstanceOf[Ptr[curl_httppost]]
+      def more_=(value: Ptr[curl_httppost]): Unit = !struct.at11 = value.asInstanceOf[Ptr[Byte]]
+      def flags : CLongInt = struct._12
+      def flags_=(value: CLongInt): Unit = !struct.at12 = value
+      def showfilename : CString = struct._13
+      def showfilename_=(value: CString): Unit = !struct.at13 = value
+      def userp : Ptr[Byte] = struct._14
+      def userp_=(value: Ptr[Byte]): Unit = !struct.at14 = value
+      def contentlen : curl_off_t = struct._15
+      def contentlen_=(value: curl_off_t): Unit = !struct.at15 = value
 
   /**
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
@@ -3144,58 +3224,96 @@ object structs:
       (!____ptr).feature_names = feature_names
       ____ptr
     extension (struct: curl_version_info_data)
-      def age: CURLversion = !struct.at(0).asInstanceOf[Ptr[CURLversion]]
-      def age_=(value: CURLversion): Unit = !struct.at(0).asInstanceOf[Ptr[CURLversion]] = value
-      def version: CString = !struct.at(8).asInstanceOf[Ptr[CString]]
-      def version_=(value: CString): Unit = !struct.at(8).asInstanceOf[Ptr[CString]] = value
-      def version_num: CUnsignedInt = !struct.at(16).asInstanceOf[Ptr[CUnsignedInt]]
-      def version_num_=(value: CUnsignedInt): Unit = !struct.at(16).asInstanceOf[Ptr[CUnsignedInt]] = value
-      def host: CString = !struct.at(24).asInstanceOf[Ptr[CString]]
-      def host_=(value: CString): Unit = !struct.at(24).asInstanceOf[Ptr[CString]] = value
-      def features: CInt = !struct.at(32).asInstanceOf[Ptr[CInt]]
-      def features_=(value: CInt): Unit = !struct.at(32).asInstanceOf[Ptr[CInt]] = value
-      def ssl_version: CString = !struct.at(40).asInstanceOf[Ptr[CString]]
-      def ssl_version_=(value: CString): Unit = !struct.at(40).asInstanceOf[Ptr[CString]] = value
-      def ssl_version_num: CLongInt = !struct.at(48).asInstanceOf[Ptr[CLongInt]]
-      def ssl_version_num_=(value: CLongInt): Unit = !struct.at(48).asInstanceOf[Ptr[CLongInt]] = value
-      def libz_version: CString = !struct.at(56).asInstanceOf[Ptr[CString]]
-      def libz_version_=(value: CString): Unit = !struct.at(56).asInstanceOf[Ptr[CString]] = value
-      def protocols: Ptr[CString] = !struct.at(64).asInstanceOf[Ptr[Ptr[CString]]]
-      def protocols_=(value: Ptr[CString]): Unit = !struct.at(64).asInstanceOf[Ptr[Ptr[CString]]] = value
-      def ares: CString = !struct.at(72).asInstanceOf[Ptr[CString]]
-      def ares_=(value: CString): Unit = !struct.at(72).asInstanceOf[Ptr[CString]] = value
-      def ares_num: CInt = !struct.at(80).asInstanceOf[Ptr[CInt]]
-      def ares_num_=(value: CInt): Unit = !struct.at(80).asInstanceOf[Ptr[CInt]] = value
-      def libidn: CString = !struct.at(88).asInstanceOf[Ptr[CString]]
-      def libidn_=(value: CString): Unit = !struct.at(88).asInstanceOf[Ptr[CString]] = value
-      def iconv_ver_num: CInt = !struct.at(96).asInstanceOf[Ptr[CInt]]
-      def iconv_ver_num_=(value: CInt): Unit = !struct.at(96).asInstanceOf[Ptr[CInt]] = value
-      def libssh_version: CString = !struct.at(104).asInstanceOf[Ptr[CString]]
-      def libssh_version_=(value: CString): Unit = !struct.at(104).asInstanceOf[Ptr[CString]] = value
-      def brotli_ver_num: CUnsignedInt = !struct.at(112).asInstanceOf[Ptr[CUnsignedInt]]
-      def brotli_ver_num_=(value: CUnsignedInt): Unit = !struct.at(112).asInstanceOf[Ptr[CUnsignedInt]] = value
-      def brotli_version: CString = !struct.at(120).asInstanceOf[Ptr[CString]]
-      def brotli_version_=(value: CString): Unit = !struct.at(120).asInstanceOf[Ptr[CString]] = value
-      def nghttp2_ver_num: CUnsignedInt = !struct.at(128).asInstanceOf[Ptr[CUnsignedInt]]
-      def nghttp2_ver_num_=(value: CUnsignedInt): Unit = !struct.at(128).asInstanceOf[Ptr[CUnsignedInt]] = value
-      def nghttp2_version: CString = !struct.at(136).asInstanceOf[Ptr[CString]]
-      def nghttp2_version_=(value: CString): Unit = !struct.at(136).asInstanceOf[Ptr[CString]] = value
-      def quic_version: CString = !struct.at(144).asInstanceOf[Ptr[CString]]
-      def quic_version_=(value: CString): Unit = !struct.at(144).asInstanceOf[Ptr[CString]] = value
-      def cainfo: CString = !struct.at(152).asInstanceOf[Ptr[CString]]
-      def cainfo_=(value: CString): Unit = !struct.at(152).asInstanceOf[Ptr[CString]] = value
-      def capath: CString = !struct.at(160).asInstanceOf[Ptr[CString]]
-      def capath_=(value: CString): Unit = !struct.at(160).asInstanceOf[Ptr[CString]] = value
-      def zstd_ver_num: CUnsignedInt = !struct.at(168).asInstanceOf[Ptr[CUnsignedInt]]
-      def zstd_ver_num_=(value: CUnsignedInt): Unit = !struct.at(168).asInstanceOf[Ptr[CUnsignedInt]] = value
-      def zstd_version: CString = !struct.at(176).asInstanceOf[Ptr[CString]]
-      def zstd_version_=(value: CString): Unit = !struct.at(176).asInstanceOf[Ptr[CString]] = value
-      def hyper_version: CString = !struct.at(184).asInstanceOf[Ptr[CString]]
-      def hyper_version_=(value: CString): Unit = !struct.at(184).asInstanceOf[Ptr[CString]] = value
-      def gsasl_version: CString = !struct.at(192).asInstanceOf[Ptr[CString]]
-      def gsasl_version_=(value: CString): Unit = !struct.at(192).asInstanceOf[Ptr[CString]] = value
-      def feature_names: Ptr[CString] = !struct.at(200).asInstanceOf[Ptr[Ptr[CString]]]
-      def feature_names_=(value: Ptr[CString]): Unit = !struct.at(200).asInstanceOf[Ptr[Ptr[CString]]] = value
+      def age: CURLversion = !struct.at(offsets(0)).asInstanceOf[Ptr[CURLversion]]
+      def age_=(value: CURLversion): Unit = !struct.at(offsets(0)).asInstanceOf[Ptr[CURLversion]] = value
+      def version: CString = !struct.at(offsets(1)).asInstanceOf[Ptr[CString]]
+      def version_=(value: CString): Unit = !struct.at(offsets(1)).asInstanceOf[Ptr[CString]] = value
+      def version_num: CUnsignedInt = !struct.at(offsets(2)).asInstanceOf[Ptr[CUnsignedInt]]
+      def version_num_=(value: CUnsignedInt): Unit = !struct.at(offsets(2)).asInstanceOf[Ptr[CUnsignedInt]] = value
+      def host: CString = !struct.at(offsets(3)).asInstanceOf[Ptr[CString]]
+      def host_=(value: CString): Unit = !struct.at(offsets(3)).asInstanceOf[Ptr[CString]] = value
+      def features: CInt = !struct.at(offsets(4)).asInstanceOf[Ptr[CInt]]
+      def features_=(value: CInt): Unit = !struct.at(offsets(4)).asInstanceOf[Ptr[CInt]] = value
+      def ssl_version: CString = !struct.at(offsets(5)).asInstanceOf[Ptr[CString]]
+      def ssl_version_=(value: CString): Unit = !struct.at(offsets(5)).asInstanceOf[Ptr[CString]] = value
+      def ssl_version_num: CLongInt = !struct.at(offsets(6)).asInstanceOf[Ptr[CLongInt]]
+      def ssl_version_num_=(value: CLongInt): Unit = !struct.at(offsets(6)).asInstanceOf[Ptr[CLongInt]] = value
+      def libz_version: CString = !struct.at(offsets(7)).asInstanceOf[Ptr[CString]]
+      def libz_version_=(value: CString): Unit = !struct.at(offsets(7)).asInstanceOf[Ptr[CString]] = value
+      def protocols: Ptr[CString] = !struct.at(offsets(8)).asInstanceOf[Ptr[Ptr[CString]]]
+      def protocols_=(value: Ptr[CString]): Unit = !struct.at(offsets(8)).asInstanceOf[Ptr[Ptr[CString]]] = value
+      def ares: CString = !struct.at(offsets(9)).asInstanceOf[Ptr[CString]]
+      def ares_=(value: CString): Unit = !struct.at(offsets(9)).asInstanceOf[Ptr[CString]] = value
+      def ares_num: CInt = !struct.at(offsets(10)).asInstanceOf[Ptr[CInt]]
+      def ares_num_=(value: CInt): Unit = !struct.at(offsets(10)).asInstanceOf[Ptr[CInt]] = value
+      def libidn: CString = !struct.at(offsets(11)).asInstanceOf[Ptr[CString]]
+      def libidn_=(value: CString): Unit = !struct.at(offsets(11)).asInstanceOf[Ptr[CString]] = value
+      def iconv_ver_num: CInt = !struct.at(offsets(12)).asInstanceOf[Ptr[CInt]]
+      def iconv_ver_num_=(value: CInt): Unit = !struct.at(offsets(12)).asInstanceOf[Ptr[CInt]] = value
+      def libssh_version: CString = !struct.at(offsets(13)).asInstanceOf[Ptr[CString]]
+      def libssh_version_=(value: CString): Unit = !struct.at(offsets(13)).asInstanceOf[Ptr[CString]] = value
+      def brotli_ver_num: CUnsignedInt = !struct.at(offsets(14)).asInstanceOf[Ptr[CUnsignedInt]]
+      def brotli_ver_num_=(value: CUnsignedInt): Unit = !struct.at(offsets(14)).asInstanceOf[Ptr[CUnsignedInt]] = value
+      def brotli_version: CString = !struct.at(offsets(15)).asInstanceOf[Ptr[CString]]
+      def brotli_version_=(value: CString): Unit = !struct.at(offsets(15)).asInstanceOf[Ptr[CString]] = value
+      def nghttp2_ver_num: CUnsignedInt = !struct.at(offsets(16)).asInstanceOf[Ptr[CUnsignedInt]]
+      def nghttp2_ver_num_=(value: CUnsignedInt): Unit = !struct.at(offsets(16)).asInstanceOf[Ptr[CUnsignedInt]] = value
+      def nghttp2_version: CString = !struct.at(offsets(17)).asInstanceOf[Ptr[CString]]
+      def nghttp2_version_=(value: CString): Unit = !struct.at(offsets(17)).asInstanceOf[Ptr[CString]] = value
+      def quic_version: CString = !struct.at(offsets(18)).asInstanceOf[Ptr[CString]]
+      def quic_version_=(value: CString): Unit = !struct.at(offsets(18)).asInstanceOf[Ptr[CString]] = value
+      def cainfo: CString = !struct.at(offsets(19)).asInstanceOf[Ptr[CString]]
+      def cainfo_=(value: CString): Unit = !struct.at(offsets(19)).asInstanceOf[Ptr[CString]] = value
+      def capath: CString = !struct.at(offsets(20)).asInstanceOf[Ptr[CString]]
+      def capath_=(value: CString): Unit = !struct.at(offsets(20)).asInstanceOf[Ptr[CString]] = value
+      def zstd_ver_num: CUnsignedInt = !struct.at(offsets(21)).asInstanceOf[Ptr[CUnsignedInt]]
+      def zstd_ver_num_=(value: CUnsignedInt): Unit = !struct.at(offsets(21)).asInstanceOf[Ptr[CUnsignedInt]] = value
+      def zstd_version: CString = !struct.at(offsets(22)).asInstanceOf[Ptr[CString]]
+      def zstd_version_=(value: CString): Unit = !struct.at(offsets(22)).asInstanceOf[Ptr[CString]] = value
+      def hyper_version: CString = !struct.at(offsets(23)).asInstanceOf[Ptr[CString]]
+      def hyper_version_=(value: CString): Unit = !struct.at(offsets(23)).asInstanceOf[Ptr[CString]] = value
+      def gsasl_version: CString = !struct.at(offsets(24)).asInstanceOf[Ptr[CString]]
+      def gsasl_version_=(value: CString): Unit = !struct.at(offsets(24)).asInstanceOf[Ptr[CString]] = value
+      def feature_names: Ptr[CString] = !struct.at(offsets(25)).asInstanceOf[Ptr[Ptr[CString]]]
+      def feature_names_=(value: Ptr[CString]): Unit = !struct.at(offsets(25)).asInstanceOf[Ptr[Ptr[CString]]] = value
+    val offsets: Array[Int] = 
+      val res = Array.ofDim[Int](26)
+      def align(offset: Int, alignment: Int) = {
+        val alignmentMask = alignment - 1
+        val padding =
+          if ((offset & alignmentMask) == 0) 0
+          else alignment - (offset & alignmentMask)
+        offset + padding
+      }
+      
+      res(0) = align(0, alignmentof[CURLversion].toInt)
+      res(1) = align(res(0) + sizeof[CURLversion].toInt, alignmentof[CString].toInt)
+      res(2) = align(res(1) + sizeof[CString].toInt, alignmentof[CUnsignedInt].toInt)
+      res(3) = align(res(2) + sizeof[CUnsignedInt].toInt, alignmentof[CString].toInt)
+      res(4) = align(res(3) + sizeof[CString].toInt, alignmentof[CInt].toInt)
+      res(5) = align(res(4) + sizeof[CInt].toInt, alignmentof[CString].toInt)
+      res(6) = align(res(5) + sizeof[CString].toInt, alignmentof[CLongInt].toInt)
+      res(7) = align(res(6) + sizeof[CLongInt].toInt, alignmentof[CString].toInt)
+      res(8) = align(res(7) + sizeof[CString].toInt, alignmentof[Ptr[CString]].toInt)
+      res(9) = align(res(8) + sizeof[Ptr[CString]].toInt, alignmentof[CString].toInt)
+      res(10) = align(res(9) + sizeof[CString].toInt, alignmentof[CInt].toInt)
+      res(11) = align(res(10) + sizeof[CInt].toInt, alignmentof[CString].toInt)
+      res(12) = align(res(11) + sizeof[CString].toInt, alignmentof[CInt].toInt)
+      res(13) = align(res(12) + sizeof[CInt].toInt, alignmentof[CString].toInt)
+      res(14) = align(res(13) + sizeof[CString].toInt, alignmentof[CUnsignedInt].toInt)
+      res(15) = align(res(14) + sizeof[CUnsignedInt].toInt, alignmentof[CString].toInt)
+      res(16) = align(res(15) + sizeof[CString].toInt, alignmentof[CUnsignedInt].toInt)
+      res(17) = align(res(16) + sizeof[CUnsignedInt].toInt, alignmentof[CString].toInt)
+      res(18) = align(res(17) + sizeof[CString].toInt, alignmentof[CString].toInt)
+      res(19) = align(res(18) + sizeof[CString].toInt, alignmentof[CString].toInt)
+      res(20) = align(res(19) + sizeof[CString].toInt, alignmentof[CString].toInt)
+      res(21) = align(res(20) + sizeof[CString].toInt, alignmentof[CUnsignedInt].toInt)
+      res(22) = align(res(21) + sizeof[CUnsignedInt].toInt, alignmentof[CString].toInt)
+      res(23) = align(res(22) + sizeof[CString].toInt, alignmentof[CString].toInt)
+      res(24) = align(res(23) + sizeof[CString].toInt, alignmentof[CString].toInt)
+      res(25) = align(res(24) + sizeof[CString].toInt, alignmentof[Ptr[CString]].toInt)
+      res
+    end offsets
 
   /**
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/multi.h
@@ -3249,9 +3367,9 @@ object structs:
 @extern
 private[curl] object extern_functions:
   import _root_.curl.enumerations.*
+  import _root_.curl.predef.*
   import _root_.curl.aliases.*
   import _root_.curl.structs.*
-
   /**
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/easy.h
   */
@@ -3405,6 +3523,21 @@ private[curl] object extern_functions:
   /**
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
   */
+  def curl_global_trace(config : CString): CURLcode = extern
+
+  /**
+   * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/mprintf.h
+  */
+  def curl_maprintf(format : CString, rest: Any*): CString = extern
+
+  /**
+   * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/mprintf.h
+  */
+  def curl_mfprintf(fd : Ptr[FILE], format : CString, rest: Any*): CInt = extern
+
+  /**
+   * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/curl.h
+  */
   def curl_mime_addpart(mime : Ptr[curl_mime]): Ptr[curl_mimepart] = extern
 
   /**
@@ -3463,6 +3596,21 @@ private[curl] object extern_functions:
   def curl_mime_type(part : Ptr[curl_mimepart], mimetype : CString): CURLcode = extern
 
   /**
+   * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/mprintf.h
+  */
+  def curl_mprintf(format : CString, rest: Any*): CInt = extern
+
+  /**
+   * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/mprintf.h
+  */
+  def curl_msnprintf(buffer : CString, maxlength : size_t, format : CString, rest: Any*): CInt = extern
+
+  /**
+   * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/mprintf.h
+  */
+  def curl_msprintf(buffer : CString, format : CString, rest: Any*): CInt = extern
+
+  /**
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/multi.h
   */
   def curl_multi_add_handle(multi_handle : Ptr[CURLM], curl_handle : Ptr[CURL]): CURLMcode = extern
@@ -3481,6 +3629,11 @@ private[curl] object extern_functions:
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/multi.h
   */
   def curl_multi_fdset(multi_handle : Ptr[CURLM], read_fd_set : Ptr[fd_set], write_fd_set : Ptr[fd_set], exc_fd_set : Ptr[fd_set], max_fd : Ptr[CInt]): CURLMcode = extern
+
+  /**
+   * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/multi.h
+  */
+  def curl_multi_get_handles(multi_handle : Ptr[CURLM]): Ptr[Ptr[CURL]] = extern
 
   /**
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/multi.h
@@ -3546,6 +3699,31 @@ private[curl] object extern_functions:
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/multi.h
   */
   def curl_multi_wakeup(multi_handle : Ptr[CURLM]): CURLMcode = extern
+
+  /**
+   * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/mprintf.h
+  */
+  def curl_mvaprintf(format : CString, args : va_list): CString = extern
+
+  /**
+   * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/mprintf.h
+  */
+  def curl_mvfprintf(fd : Ptr[FILE], format : CString, args : va_list): CInt = extern
+
+  /**
+   * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/mprintf.h
+  */
+  def curl_mvprintf(format : CString, args : va_list): CInt = extern
+
+  /**
+   * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/mprintf.h
+  */
+  def curl_mvsnprintf(buffer : CString, maxlength : size_t, format : CString, args : va_list): CInt = extern
+
+  /**
+   * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/mprintf.h
+  */
+  def curl_mvsprintf(buffer : CString, format : CString, args : va_list): CInt = extern
 
   /**
    * [bindgen] header: /Users/velvetbaldmime/Library/Caches/sbt-vcpkg/vcpkg/packages/curl_arm64-osx/include/curl/multi.h
@@ -3660,9 +3838,9 @@ private[curl] object extern_functions:
 
 object functions:
   import _root_.curl.enumerations.*
+  import _root_.curl.predef.*
   import _root_.curl.aliases.*
   import _root_.curl.structs.*
-
   import extern_functions.*
   export extern_functions.*
 
@@ -3757,6 +3935,7 @@ object all:
   export _root_.curl.aliases.CURL
   export _root_.curl.aliases.CURLM
   export _root_.curl.aliases.CURLSH
+  export _root_.curl.aliases.FILE
   export _root_.curl.aliases.curl_calloc_callback
   export _root_.curl.aliases.curl_chunk_bgn_callback
   export _root_.curl.aliases.curl_chunk_end_callback
@@ -3798,6 +3977,7 @@ object all:
   export _root_.curl.aliases.sockaddr
   export _root_.curl.aliases.socklen_t
   export _root_.curl.aliases.time_t
+  export _root_.curl.aliases.va_list
   export _root_.curl.structs.CURLMsg
   export _root_.curl.structs.CURLU
   export _root_.curl.structs.Curl_URL
@@ -3851,6 +4031,9 @@ object all:
   export _root_.curl.functions.curl_global_init
   export _root_.curl.functions.curl_global_init_mem
   export _root_.curl.functions.curl_global_sslset
+  export _root_.curl.functions.curl_global_trace
+  export _root_.curl.functions.curl_maprintf
+  export _root_.curl.functions.curl_mfprintf
   export _root_.curl.functions.curl_mime_addpart
   export _root_.curl.functions.curl_mime_data
   export _root_.curl.functions.curl_mime_data_cb
@@ -3863,10 +4046,14 @@ object all:
   export _root_.curl.functions.curl_mime_name
   export _root_.curl.functions.curl_mime_subparts
   export _root_.curl.functions.curl_mime_type
+  export _root_.curl.functions.curl_mprintf
+  export _root_.curl.functions.curl_msnprintf
+  export _root_.curl.functions.curl_msprintf
   export _root_.curl.functions.curl_multi_add_handle
   export _root_.curl.functions.curl_multi_assign
   export _root_.curl.functions.curl_multi_cleanup
   export _root_.curl.functions.curl_multi_fdset
+  export _root_.curl.functions.curl_multi_get_handles
   export _root_.curl.functions.curl_multi_info_read
   export _root_.curl.functions.curl_multi_init
   export _root_.curl.functions.curl_multi_perform
@@ -3880,6 +4067,11 @@ object all:
   export _root_.curl.functions.curl_multi_timeout
   export _root_.curl.functions.curl_multi_wait
   export _root_.curl.functions.curl_multi_wakeup
+  export _root_.curl.functions.curl_mvaprintf
+  export _root_.curl.functions.curl_mvfprintf
+  export _root_.curl.functions.curl_mvprintf
+  export _root_.curl.functions.curl_mvsnprintf
+  export _root_.curl.functions.curl_mvsprintf
   export _root_.curl.functions.curl_pushheader_byname
   export _root_.curl.functions.curl_pushheader_bynum
   export _root_.curl.functions.curl_share_cleanup

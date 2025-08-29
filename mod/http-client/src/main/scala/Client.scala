@@ -1,11 +1,11 @@
 package scalaboot.client
 
-import sttp.tapir.client.sttp.SttpClientInterpreter
 import scalaboot.protocol.*
-import scalaboot.curl.CurlBackend
 import sttp.model.Uri
-import sttp.client3.SttpBackend
 import scala.util.control.NonFatal
+import sttp.tapir.client.sttp4.SttpClientInterpreter
+import sttp.client4.curl.*
+import sttp.client4.*
 
 trait Client:
   def search(query: String): List[SearchResult]
@@ -63,7 +63,7 @@ object Client:
         wrap(repos.delete.showShort, self.delete(id))
 
   private class ClientImpl(
-      backend: SttpBackend[sttp.client3.Identity, Any],
+      backend: SyncBackend,
       interp: SttpClientInterpreter,
       base: Uri,
       token: Option[String] = None

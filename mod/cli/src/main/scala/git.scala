@@ -7,7 +7,7 @@ import scala.scalanative.unsigned.*
 
 def clone(local: os.Path, remote: String, branch: Option[String] = None) =
   import libgit.all.*
-  Zone { implicit z =>
+  Zone:
     val repo = alloc[Ptr[git_repository]]()
     val opts = alloc[git_clone_options]()
 
@@ -31,5 +31,4 @@ def clone(local: os.Path, remote: String, branch: Option[String] = None) =
       git_clone(repo, toCString(remote), toCString(local.toString), opts),
       "Failed to clone"
     )
-  }
 end clone

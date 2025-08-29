@@ -11,38 +11,38 @@ object Err:
 
   def apply(msg: String): Err = new Err(msg)
   def raise(msg: String): Nothing = throw apply(msg)
-  def raise(msg: String, source: Source, pos: Option[Pos] = None): Nothing =
-    val withContext = source match
-      case Source.Str(text) => msg
-      case Source.File(path, origin) =>
-        val lineAndCol =
-          pos.map { p =>
+  // def raise(msg: String, source: Source, pos: Option[Pos] = None): Nothing =
+  //   val withContext = source match
+  //     case Source.Str(text) => msg
+  //     case Source.File(path, origin) =>
+  //       val lineAndCol =
+  //         pos.map { p =>
 
-            var line = 0
-            var col = 0
-            val contents = os.read(path)
+  //           var line = 0
+  //           var col = 0
+  //           val contents = os.read(path)
 
-            var stop = false
-            var i = 0
-            while !stop do
-              contents(i) match
-                case '\n' => line += 1; col = 0
-                case _    => col += 1
+  //           var stop = false
+  //           var i = 0
+  //           while !stop do
+  //             contents(i) match
+  //               case '\n' => line += 1; col = 0
+  //               case _    => col += 1
 
-              i += 1
-              stop = i >= p.toInt || i >= contents.length
-            val remote = origin match
-              case FileOrigin.Local => ""
-              case FileOrigin.FromURL(base, relative) =>
-                s"\n $base/$relative"
+  //             i += 1
+  //             stop = i >= p.toInt || i >= contents.length
+  //           val remote = origin match
+  //             case FileOrigin.Local => ""
+  //             case FileOrigin.FromURL(base, relative) =>
+  //               s"\n $base/$relative"
 
-            s"\n line $line column $col$remote"
-          }
+  //           s"\n line $line column $col$remote"
+  //         }
 
-        msg + s"\n  at [$path]" + lineAndCol.getOrElse("")
+  //       msg + s"\n  at [$path]" + lineAndCol.getOrElse("")
 
-    throw apply(withContext)
-  end raise
+  //   throw apply(withContext)
+  // end raise
 
   def assert(cond: Boolean, msg: => String): Unit =
     if !cond then Err.raise(msg)

@@ -1,6 +1,11 @@
+import scala.scalanative.build.SourceLevelDebuggingConfig
 import scala.scalanative.build.Mode
 import bindgen.plugin.BindgenMode
 import bindgen.interface.Binding
+
+import java.nio.file.StandardCopyOption
+import java.nio.file.CopyOption
+import java.nio.file.Files
 
 def NAME = "scala-boot"
 
@@ -9,7 +14,6 @@ def proj(id: String) =
     .apply(id, file(s"mod/$id"))
     .settings(scalaVersion := Versions.Scala)
     .settings(scalacOptions += "-Wunused:all")
-
 
 def projApp(subfolder: String) =
   proj(subfolder)
@@ -20,17 +24,19 @@ def projApp(subfolder: String) =
     })
 
 val Versions = new {
-  val Scala = "3.6.3"
+  val Scala = "3.7.1"
 
   val scribe = "3.16.0"
   val osLib = "0.11.3"
   val pprint = "0.9.0"
   val mainargs = "0.7.6"
-  val sttp = "4.0.0-M24"
+  val sttp = "4.0.8"
   val roach = "0.1.0"
   val ujson = "3.3.1"
   val snunit = "0.10.3"
-  val tapir = "1.11.3"
+  val tapir = "1.11.29+14-346b25e7-SNAPSHOT"
+  val munit = "1.1.1"
+  val declineDerive = "0.3.1"
 }
 
 lazy val root =
@@ -40,9 +46,11 @@ lazy val root =
       cli,
       libgit2Bindings,
       repoIndexer,
-      libcurlBindings,
+      // libcurlBindings,
       server,
-      curlSttpBackend,
+      // curlTapirClient,
+      // TODO: reenable when sttp is published for SN 0.5
+      // curlSttpBackend,
       httpClient
     )
     .aggregate(httpProtocol.projectRefs*)
@@ -52,14 +60,22 @@ lazy val scalaTemplate = projectMatrix
   .withId("scala-template")
   .in(file("mod/scala-template"))
   .nativePlatform(Seq(Versions.Scala))
+  .jvmPlatform(Seq(Versions.Scala))
   .settings(
     libraryDependencies ++= Seq(
-      "com.outr" %%% "scribe" % Versions.scribe,
       "com.lihaoyi" %%% "pprint" % Versions.pprint,
-      "com.lihaoyi" %%% "os-lib" % Versions.osLib
-    )
+      "com.github.j-mie6" %%% "parsley" % "5.0.0-M15",
+      "org.scalameta" %%% "munit" % Versions.munit % Test
+    ),
+    nativeConfig ~= (_.withIncrementalCompilation(true))
   )
-// .jsPlatform(Seq(Versions.Scala))
+  .settings(
+    snapshotsPackageName := "scalaboot.template",
+    snapshotsIntegrations += SnapshotIntegration.MUnit,
+    snapshotsForceOverwrite := !sys.env.contains("CI")
+  )
+  .enablePlugins(SnapshotsPlugin)
+  .jsPlatform(Seq(Versions.Scala))
 
 lazy val httpProtocol = projectMatrix
   .withId("http-protocol")
@@ -68,14 +84,13 @@ lazy val httpProtocol = projectMatrix
   // .jsPlatform(Seq(Versions.Scala))
   .settings(
     libraryDependencies ++= Seq(
-      "com.lihaoyi" %%% "ujson" % Versions.ujson,
       "com.softwaremill.sttp.tapir" %%% "tapir-core" % Versions.tapir,
       "com.softwaremill.sttp.tapir" %%% "tapir-json-upickle" % Versions.tapir
     )
   )
 
 lazy val httpClient = projApp("http-client")
-  .dependsOn(curlSttpBackend, httpProtocol.native(Versions.Scala))
+  .dependsOn(httpProtocol.native(Versions.Scala))
   .settings(
     vcpkgDependencies := VcpkgDependencies(
       "curl",
@@ -83,22 +98,37 @@ lazy val httpClient = projApp("http-client")
     ),
     vcpkgNativeConfig ~= { _.addRenamedLibrary("curl", "libcurl") },
     libraryDependencies ++= Seq(
-      "com.softwaremill.sttp.tapir" %%% "tapir-sttp-client" % Versions.tapir
+      "com.softwaremill.sttp.client4" %%% "core" % Versions.sttp,
+      "com.softwaremill.sttp.tapir" %%% "tapir-sttp-client4" % Versions.tapir
     )
   )
 
-lazy val curlSttpBackend = projApp("curl-sttp-backend")
-  .dependsOn(libcurlBindings)
-  .settings(
-    vcpkgDependencies := VcpkgDependencies(
-      "curl",
-      "libidn2"
-    ),
-    vcpkgNativeConfig ~= { _.addRenamedLibrary("curl", "libcurl") },
-    libraryDependencies ++= Seq(
-      "com.softwaremill.sttp.client4" %%% "core" % Versions.sttp
-    )
-  )
+// lazy val curlSttpBackend = projApp("curl-sttp-backend")
+//   .dependsOn(libcurlBindings)
+//   .settings(
+//     vcpkgDependencies := VcpkgDependencies(
+//       "curl",
+//       "libidn2"
+//     ),
+//     vcpkgNativeConfig ~= { _.addRenamedLibrary("curl", "libcurl") },
+//     libraryDependencies ++= Seq(
+//       "com.softwaremill.sttp.client4" %%% "core" % Versions.sttp,
+//     "com.softwaremill.sttp.tapir" %% "tapir-client" % Versions.tapir
+//     )
+//   )
+
+// lazy val curlTapirClient = projApp("curl-tapir-client")
+//   .dependsOn(libcurlBindings)
+//   .settings(
+//     vcpkgDependencies := VcpkgDependencies(
+//       "curl",
+//       "libidn2"
+//     ),
+//     vcpkgNativeConfig ~= { _.addRenamedLibrary("curl", "libcurl") },
+//     libraryDependencies ++= Seq(
+//       "com.softwaremill.sttp.tapir" %% "tapir-client" % Versions.tapir
+//     )
+//   )
 
 lazy val server = projApp("server")
   .dependsOn(httpProtocol.native(Versions.Scala))
@@ -129,8 +159,12 @@ lazy val cli = projApp("cli")
       "com.outr" %%% "scribe" % Versions.scribe,
       "com.lihaoyi" %%% "pprint" % Versions.pprint,
       "com.lihaoyi" %%% "os-lib" % Versions.osLib,
-      "com.lihaoyi" %%% "mainargs" % Versions.mainargs
-    )
+      // "com.lihaoyi" %%% "mainargs" % Versions.mainargs,
+      "com.indoorvivants" %%% "decline-derive" % Versions.declineDerive
+    ),
+    nativeConfig ~= (_.withSourceLevelDebuggingConfig(
+      SourceLevelDebuggingConfig.enabled
+    ))
   )
 
 lazy val repoIndexer = projApp("repo-indexer")
@@ -146,32 +180,29 @@ lazy val repoIndexer = projApp("repo-indexer")
       "com.lihaoyi" %%% "pprint" % Versions.pprint,
       "com.lihaoyi" %%% "os-lib" % Versions.osLib,
       "com.lihaoyi" %%% "mainargs" % Versions.mainargs,
-      "com.lihaoyi" %%% "ujson" % Versions.ujson,
-      "com.softwaremill.sttp.client4" %%% "core" % Versions.sttp,
-      "com.softwaremill.sttp.client4" %%% "upickle" % Versions.sttp
-    ),
-    libraryDependencySchemes += "com.lihaoyi" % "upickle_native0.4_3" % VersionScheme.Always
-  )
-
-lazy val libcurlBindings = proj("libcurl-bindings")
-  .enablePlugins(BindgenPlugin, ScalaNativePlugin, VcpkgPlugin)
-  .settings(
-    vcpkgDependencies := VcpkgDependencies(
-      "curl"
-    ),
-    bindgenBindings +=
-      Binding
-        .builder(
-          vcpkgConfigurator.value.includes("curl") / "curl" / "curl.h",
-          "curl"
-        )
-        .addCImport("curl/curl.h")
-        .build,
-    bindgenMode := BindgenMode.Manual(
-      sourceDirectory.value / "main" / "scala" / "generated",
-      (Compile / resourceDirectory).value / "scala-native"
+      "com.lihaoyi" %%% "upickle" % Versions.ujson
     )
   )
+
+// lazy val libcurlBindings = proj("libcurl-bindings")
+//   .enablePlugins(BindgenPlugin, ScalaNativePlugin, VcpkgPlugin)
+//   .settings(
+//     vcpkgDependencies := VcpkgDependencies(
+//       "curl"
+//     ),
+//     bindgenBindings +=
+//       Binding
+//         .builder(
+//           vcpkgConfigurator.value.includes("curl") / "curl" / "curl.h",
+//           "curl"
+//         )
+//         .addCImport("curl/curl.h")
+//         .build,
+//     bindgenMode := BindgenMode.Manual(
+//       sourceDirectory.value / "main" / "scala" / "generated",
+//       (Compile / resourceDirectory).value / "scala-native"
+//     )
+//   )
 
 lazy val libgit2Bindings = proj("libgit2-bindings")
   .enablePlugins(BindgenPlugin, ScalaNativePlugin, VcpkgPlugin)
@@ -180,18 +211,16 @@ lazy val libgit2Bindings = proj("libgit2-bindings")
       "libgit2"
     ),
     bindgenBindings +=
-      Binding
-        .builder(
-          vcpkgConfigurator.value.includes("libgit2") / "git2.h",
-          "libgit"
-        )
+      Binding(
+        vcpkgConfigurator.value.includes("libgit2") / "git2.h",
+        "libgit"
+      )
         .addCImport("git2.h")
         .withClangFlags(
           vcpkgConfigurator.value.pkgConfig
             .updateCompilationFlags(List("-fsigned-char"), "libgit2")
             .toList
-        )
-        .build,
+        ),
     bindgenMode := BindgenMode.Manual(
       sourceDirectory.value / "main" / "scala" / "generated",
       (Compile / resourceDirectory).value / "scala-native"
@@ -237,10 +266,19 @@ lazy val buildCli = taskKey[File]("")
 buildCli := {
   val dest = (ThisBuild / baseDirectory).value / "build"
   IO.createDirectory(dest)
+
   val cliBinary = (cli / Compile / nativeLink).value
 
   val cliDestination = dest / NAME
-  IO.copyFile(cliBinary, cliDestination)
+  // IO.copyFile(cliBinary, cliDestination)
+  // IO.createDirectory(destinationDir)
+
+  Files.copy(
+    cliBinary.toPath(),
+    cliDestination.toPath(),
+    StandardCopyOption.COPY_ATTRIBUTES,
+    StandardCopyOption.REPLACE_EXISTING
+  )
 
   cliDestination
 }
@@ -284,13 +322,13 @@ logoColor := scala.Console.MAGENTA
 welcomeEnabled := !sys.env.contains("CI")
 logo :=
   s"""
-     |   ▄▄▄▄▄▄▄ ▄▄▄▄▄▄▄ ▄▄▄▄▄▄ ▄▄▄     ▄▄▄▄▄▄    ▄▄▄▄▄▄▄ ▄▄▄▄▄▄▄ ▄▄▄▄▄▄▄ ▄▄▄▄▄▄▄ 
+     |   ▄▄▄▄▄▄▄ ▄▄▄▄▄▄▄ ▄▄▄▄▄▄ ▄▄▄     ▄▄▄▄▄▄    ▄▄▄▄▄▄▄ ▄▄▄▄▄▄▄ ▄▄▄▄▄▄▄ ▄▄▄▄▄▄▄
      |  █       █       █      █   █   █      █  █  ▄    █       █       █       █
      |  █  ▄▄▄▄▄█       █  ▄   █   █   █  ▄   █  █ █▄█   █   ▄   █   ▄   █▄     ▄█
-     |  █ █▄▄▄▄▄█     ▄▄█ █▄█  █   █   █ █▄█  █  █       █  █ █  █  █ █  █ █   █  
-     |  █▄▄▄▄▄  █    █  █      █   █▄▄▄█      █  █  ▄   ██  █▄█  █  █▄█  █ █   █  
-     |   ▄▄▄▄▄█ █    █▄▄█  ▄   █       █  ▄   █  █ █▄█   █       █       █ █   █  
-     |  █▄▄▄▄▄▄▄█▄▄▄▄▄▄▄█▄█ █▄▄█▄▄▄▄▄▄▄█▄█ █▄▄█  █▄▄▄▄▄▄▄█▄▄▄▄▄▄▄█▄▄▄▄▄▄▄█ █▄▄▄█  
+     |  █ █▄▄▄▄▄█     ▄▄█ █▄█  █   █   █ █▄█  █  █       █  █ █  █  █ █  █ █   █
+     |  █▄▄▄▄▄  █    █  █      █   █▄▄▄█      █  █  ▄   ██  █▄█  █  █▄█  █ █   █
+     |   ▄▄▄▄▄█ █    █▄▄█  ▄   █       █  ▄   █  █ █▄█   █       █       █ █   █
+     |  █▄▄▄▄▄▄▄█▄▄▄▄▄▄▄█▄█ █▄▄█▄▄▄▄▄▄▄█▄█ █▄▄█  █▄▄▄▄▄▄▄█▄▄▄▄▄▄▄█▄▄▄▄▄▄▄█ █▄▄▄█
      | (name TBD)
      |
      |${version.value}
@@ -299,20 +337,20 @@ logo :=
      |
      |Pre-requisites for building/running:
      | All tools require Clang installed. It's installed by default on MacOS.
-     | First run will bootstrap Vcpkg and build a lot of native dependencies 
+     | First run will bootstrap Vcpkg and build a lot of native dependencies
      | from scratch. This will take a while, and then it will become much quicker
-     |  
+     |
      |  Server:
      |    1. Install Unitd: https://unit.nginx.org/installation/#homebrew
      |    2. Postgres running with password "mysecretpassword"
-     |       In Docker: 
+     |       In Docker:
      |       docker run -p 5432:5432 -e POSTGRES_PASSWORD=mysecretpassword -d postgres
      |
      |Sample commands:
      | ${scala.Console.BOLD}cli/run go softwaremill/tapir.g8${scala.Console.RESET} - template a repository
      | ${scala.Console.BOLD}cli/run search 'akka http' --api http://localhost:8080${scala.Console.RESET} - search against a locally running server
-     | ${scala.Console.BOLD}~dev-server/reStart${scala.Console.RESET} - continuously restard the unitd server on changes. 
-     |    Note: this process won't be interactive, the server binary needs to be relinked if it ever changes 
+     | ${scala.Console.BOLD}~dev-server/reStart${scala.Console.RESET} - continuously restard the unitd server on changes.
+     |    Note: this process won't be interactive, the server binary needs to be relinked if it ever changes
      |          and that takes a relatively long time.
      |          Still, this is useful for running a server in the background while you use the SBT shell to issue commands to it.
      |

@@ -1,5 +1,6 @@
 *.class
 *.tasty
+*.key
 .metals
 .bloop
 .bsp

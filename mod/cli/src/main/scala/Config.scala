@@ -1,43 +1,66 @@
 package scalaboot
 
-import mainargs.{main, arg, ParserForClass, Flag}
-import mainargs.TokensReader
+// import mainargs.{main, arg, ParserForClass, Flag}
+// import mainargs.TokensReader
 
-@main
-case class Config(
-    @arg(positional = true)
-    template: String,
-    @arg(short = 'b', doc = "Resolve a template within a given branch")
-    branch: Option[String] = None,
-    @arg(short = 't', doc = "Resolve a template within a given tag")
-    tag: Option[String] = None,
-    @arg(short = 'o', doc = "Output directory")
-    out: Option[os.Path] = None,
-    @arg(short = 'y', doc = "Use default values")
-    yes: Flag
-)
-object Config:
-  given ParserForClass[Config] = ParserForClass[Config]
+import decline_derive.*
+import com.monovore.decline.Argument
+import os.Path
+import cats.data.ValidatedNel
+import cats.data.Validated
 
-given TokensReader.Simple[os.Path] with
-  def shortName = "path"
-  def read(strs: Seq[String]) = Right(os.Path(strs.head, os.pwd))
+enum CLI derives CommandApplication:
+  case Go(
+      @Positional("template")
+      @Help("Github coordinates of the template (e.g. scala/scala3.g8)")
+      template: String,
+      @Short("b")
+      @Help("Resolve a template within a given branch")
+      branch: Option[String] = None,
+      @Short("t")
+      @Help("Resolve a template within a given tag")
+      tag: Option[String] = None,
+      @Short("o")
+      @Help("Output directory")
+      out: Option[os.Path] = None,
+      @Short("y")
+      @Flag(false)
+      yes: Boolean,
+      @Short("v")
+      @Help("Enable verbose (really verbose) logging")
+      @Flag(false)
+      verbose: Boolean
+  )
+  case Search(
+      @Positional("query")
+      query: String,
+      @Help("URI of the Scala Boot server")
+      api: Option[String] = None,
+      @Help("Interactively select a template to apply")
+      @Flag(true)
+      interactive: Boolean,
+      @Short("a")
+      @Help("Show all results instead of the top 5")
+      all: Boolean,
+      @Short("y")
+      @Help(
+        "When template is selected in interactive mode, apply it with defaults"
+      )
+      @Flag(false)
+      yes: Boolean,
+      @Short("v")
+      @Help("Enable verbose (really verbose) logging")
+      @Flag(false)
+      verbose: Boolean
+  )
+end CLI
 
-@main
-case class SearchConfig(
-    @arg(positional = true, doc = "search query")
-    query: String,
-    @arg(doc = "URI of the Scala Boot server")
-    api: Option[String] = None,
-    @arg(short = 'i', doc = "Interactively select a template to apply")
-    interactive: Flag,
-    @arg(short = 'a', doc = "Show all results instead of the top 5")
-    all: Flag,
-    @arg(short = 'y', doc = "When template is selected in interactive mode, apply it with defaults")
-    yes: Flag,
-    @arg(short = 'v', doc = "Enable verbose (really verbose) logging")
-    verbose: Flag,
+object CLI:
+  given Argument[os.Path] with
+    override def defaultMetavar: String = "path"
+    override def read(string: String): ValidatedNel[String, Path] =
+      Validated.validNel(os.Path(string, os.pwd))
 
-)
-object SearchConfig:
-  given ParserForClass[SearchConfig] = ParserForClass[SearchConfig]
+enum FileOrigin:
+  case Local, None
+  case FromURL(base: String, relative: os.RelPath)

@@ -1,6 +1,5 @@
 package scalaboot.repo_indexer
 
-import curl.all.*
 import mainargs.ParserForClass
 import scalaboot.client.Client
 import scalaboot.client.Retries
@@ -13,7 +12,7 @@ import scala.util.control.NonFatal
 
 import protocol.*
 import scalanative.unsafe.*
-import sttp.client3.SttpBackend
+import sttp.client4.SttpBackend
 
 inline def zone[A](inline f: Zone ?=> A) = Zone { z => f(using z) }
 
