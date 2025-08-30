@@ -16,7 +16,7 @@ def readProperties(file: os.Path) =
   val propsBuilder = List.newBuilder[(String, Tokenized)]
   val names = props.stringPropertyNames()
   names.forEach { name =>
-    propsBuilder.addOne(name -> tokenize(Source.Str(props.getProperty(name))))
+    propsBuilder.addOne(name -> tokenizeSource(Source.Str(props.getProperty(name))))
   }
   Props(
     propsBuilder.result().toMap,

@@ -16,7 +16,7 @@ def fillFile(
       s"File [$file] exists and cannot be overwritten"
     )
   scribe.debug(s"Filling file [$destination] using [$file] as template")
-  val tokenized = tokenize(Source.Stream(file.getInputStream))
+  val tokenized = tokenizeSource(Source.Stream(file.getInputStream))
   val filled = fillString(tokenized, settings)
 
   os.makeDir.all(destination / os.up)
@@ -42,7 +42,7 @@ def fillDirectory(
   val processed = collection.mutable.Set.empty[os.Path]
 
   os.list(input).filterNot(skip).foreach { path =>
-    val newLast = fillString(tokenize(Source.Str(path.last)), settings)
+    val newLast = fillString(tokenizeSource(Source.Str(path.last)), settings)
     if newLast.nonEmpty then
       val rp = path.relativeTo(input) / os.up / newLast
       if os.isDir(path) then
