@@ -15,6 +15,7 @@ class ScalaTemplateTest extends FunSuite, MunitSnapshotsIntegration:
       |$if(isSummer.truthy)$Prepare to be picnic'd to death$else$We'll think of a less season specific death$endif$
       |$hello__packaged$ $hello__package$
       |$hello__Camel$ $hello__Package$
+      |
       |test("HelloWorld returns status code 200") {
       |      assertIO(retHelloWorld.flatMap(_.as[String]), "{\"message\":\"Hello, world\"}")
       |}

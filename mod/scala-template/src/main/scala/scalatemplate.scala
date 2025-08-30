@@ -4,6 +4,8 @@ import util.chaining.*
 import scala.util.boundary, boundary.break
 import scala.annotation.tailrec
 
+import parsley.debug, debug.*
+
 object Parsers:
   import parsley as p, p.quick.*, p.syntax.character.*
   val formatterName =
@@ -53,7 +55,9 @@ object Parsers:
   private def token[A](p: Parsley[A]): Parsley[A] = lexeme(atomic(p))
   private def symbol(str: String): Parsley[String] = atomic(string(str))
 
-  val lit = some("\\$" | satisfy(_ != '$')).span.map(StringTemplateExpr.Lit(_))
+  val lit =
+    some(token("\\$") | satisfy(_ != '$')).span
+      .map(StringTemplateExpr.Lit(_))
   val boolExpr =
     import parsley.expr.chain
 
@@ -87,7 +91,9 @@ object Parsers:
   end ifExpr
 
   lazy val sq: Parsley[StringTemplateExpr] = many(
-    ifExpr | interpolate | lit
+    ifExpr |
+      interpolate |
+      lit
   ).map(StringTemplateExpr.Many(_)) <~ eof
 end Parsers
 
