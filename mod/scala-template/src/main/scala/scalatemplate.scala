@@ -17,11 +17,10 @@ object Parsers:
       .reduce(_ | _)
       .mapFilter(Formatter.from)
 
+  val listOfFormats = sepBy1(formatterName, ',')
+
   val modifierField =
-    (stringOfMany(letterOrDigit) <~ '=' <~> ('"' ~> sepBy1(
-      formatterName,
-      ','
-    ) <~ '"'))
+    (stringOfMany(letterOrDigit) <~ '=' <~> ('"' ~> listOfFormats <~ '"'))
       .collect:
         case ("format", labels) => Modifier.Format(labels)
 
@@ -31,7 +30,7 @@ object Parsers:
       .map(StringTemplateExpr.Variable(_, _))
 
   val underscoreModifiers =
-    (symbol("__") ~> formatterName).map(f => List(Modifier.Format(Seq(f))))
+    (symbol("__") ~> listOfFormats).map(f => List(Modifier.Format(f)))
 
   val variableName = stringOfMany(letterOrDigit)
 

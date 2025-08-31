@@ -12,7 +12,7 @@ def commandGo(config: CLI.Go) =
     val g8Sources = clone_dest / "src" / "main" / "g8"
     Err.assert(
       g8Sources.toIO.isDirectory(),
-      s"Path [src/main/g8] doesn't exist in the template. Are you sure it's a Giter8-compatible template?"
+      s"Path [src/main/g8] doesn't exist in the template (full path is [$g8Sources]). Are you sure it's a Giter8-compatible template?"
     )
     scribe.debug(s"G8 sources discovered at [${g8Sources.toString}]")
     val props = readProperties(g8Sources / "default.properties")

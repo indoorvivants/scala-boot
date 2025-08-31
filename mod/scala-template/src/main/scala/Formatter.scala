@@ -21,7 +21,7 @@ enum Formatter:
     case Start        => value.split(" ").map(_.capitalize).mkString(" ")
     case Snake        => value.replace(" ", "_").replace(".", "_")
     case Package      => value.replace(" ", ".")
-    case Packaged     => value.replace(" ", "/")
+    case Packaged     => value.replace(" ", ".").replace(".", "/")
 end Formatter
 
 object Formatter:

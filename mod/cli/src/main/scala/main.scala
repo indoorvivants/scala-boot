@@ -1,13 +1,8 @@
 package scalaboot
 
-import template.*
-
-import scalaboot.client.Client
-import scalaboot.client.Retries
-import scribe.Level
-
-import scala.concurrent.duration.*
 import decline_derive.CommandApplication
+
+import template.*
 
 def readProperties(file: os.Path) =
   val props = java.util.Properties()
@@ -16,7 +11,9 @@ def readProperties(file: os.Path) =
   val propsBuilder = List.newBuilder[(String, Tokenized)]
   val names = props.stringPropertyNames()
   names.forEach { name =>
-    propsBuilder.addOne(name -> tokenizeSource(Source.Str(props.getProperty(name))))
+    propsBuilder.addOne(
+      name -> tokenizeSource(Source.Str(props.getProperty(name)))
+    )
   }
   Props(
     propsBuilder.result().toMap,

@@ -43,8 +43,11 @@ def fillDirectory(
 
   os.list(input).filterNot(skip).foreach { path =>
     val newLast = FillString(tokenizeSource(Source.Str(path.last)), settings)
+    scribe.debug(
+      s"Filling $path, changing last to $newLast, tokens are ${tokenizeSource(Source.Str(path.last))}"
+    )
     if newLast.nonEmpty then
-      val rp = path.relativeTo(input) / os.up / newLast
+      val rp = path.relativeTo(input) / os.up / os.RelPath(newLast)
       if os.isDir(path) then
         processed ++=
           fillDirectory(
