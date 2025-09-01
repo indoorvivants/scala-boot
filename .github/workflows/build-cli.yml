@@ -34,8 +34,21 @@ jobs:
       - uses: sbt/setup-sbt@v1
 
 
+
       - name: HACK publish Tapir
         run: cd .tapir && sbt "coreNative3/publishLocal; circeJsonNative3/publishLocal; clientCoreNative3/publishLocal; sttpClient4Native3/publishLocal"
+
+
+      - run: brew install autoconf
+
+      - name: Cache vcpkg
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/Library/Caches/sbt-vcpkg/vcpkg-install
+            ~/.cache/sbt-vcpkg/vcpkg-install
+            ~/.cache/sbt-vcpkg/vcpkg
+          key: ${{ matrix.OS }}-sbt-vcpkg
 
       - name: Build the binary
         run: sbt buildPlatformCLI
@@ -70,6 +83,15 @@ jobs:
 
       - name: HACK publish Tapir
         run: cd .tapir && sbt "coreNative3/publishLocal; circeJsonNative3/publishLocal; clientCoreNative3/publishLocal; sttpClient4Native3/publishLocal"
+
+      - name: Cache vcpkg
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/Library/Caches/sbt-vcpkg/vcpkg-install
+            ~/.cache/sbt-vcpkg/vcpkg-install
+            ~/.cache/sbt-vcpkg/vcpkg
+          key: ${{ matrix.OS }}-sbt-vcpkg
 
       - name: Build the binary
         run: sbt buildPlatformCLI

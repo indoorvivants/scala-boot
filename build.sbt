@@ -153,10 +153,7 @@ lazy val repoIndexer = projApp("repo-indexer")
       "com.outr" %%% "scribe" % Versions.scribe,
       "com.lihaoyi" %%% "pprint" % Versions.pprint,
       "com.lihaoyi" %%% "os-lib" % Versions.osLib,
-      // "com.lihaoyi" %%% "mainargs" % Versions.mainargs,
-
       "com.indoorvivants" %%% "decline-derive" % Versions.declineDerive
-      // "com.lihaoyi" %%% "upickle" % Versions.ujson
     )
   )
   .settings(configurePlatform())
@@ -189,9 +186,8 @@ lazy val devServer = proj("dev-server")
   .settings(
     fork := true,
     envVars ++= Map(
-      "SCALABOOT_SERVER_BINARY" -> (ThisBuild / buildServer).value.toString,
       "SCALABOOT_UNITD_COMMAND" -> UNITD_LOCAL_COMMAND,
-      "SCALABOOT_SERVER_CWD" -> ((ThisBuild / baseDirectory).value / "build").toString,
+      "SCALABOOT_SERVER_CWD" -> (ThisBuild / buildServer).value.toString,
       "PG_DB" -> "scala_boot"
     )
   )
@@ -223,23 +219,26 @@ ThisBuild / buildServer := {
 
   IO.createDirectory(statedir)
 
-  IO.copyFile((ThisBuild / baseDirectory).value/ "conf.json", statedir / "conf.json")
+  IO.copyFile(
+    (ThisBuild / baseDirectory).value / "conf.json",
+    statedir / "conf.json"
+  )
 
   dest
 }
 
 lazy val buildServerRelease = taskKey[File]("")
-ThisBuild / buildServer := {
-  val dest = (ThisBuild / baseDirectory).value / "build"
-  val statedir = dest / "statedir"
-  IO.createDirectory(dest)
-  val serverBinary = (server / Compile / nativeLink).value
+// ThisBuild / buildServer := {
+//   val dest = (ThisBuild / baseDirectory).value / "build"
+//   val statedir = dest / "statedir"
+//   IO.createDirectory(dest)
+//   val serverBinary = (server / Compile / nativeLink).value
 
-  IO.copyFile(serverBinary, dest / "server")
-  IO.copyFile(dest.getParentFile() / "conf.json", statedir / "conf.json")
+//   IO.copyFile(serverBinary, dest / "server")
+//   IO.copyFile(dest.getParentFile() / "conf.json", statedir / "conf.json")
 
-  dest
-}
+//   dest
+// }
 
 lazy val buildCLI = taskKey[File]("")
 buildCLI := {
@@ -308,8 +307,11 @@ buildAll := {
   buildServer.value
 }
 
-def UNITD_LOCAL_COMMAND =
-  "unitd --statedir statedir --log /dev/stderr --no-daemon --control 127.0.0.1:9000"
+def UNITD_LOCAL_COMMAND = {
+  import sys.process.*
+  val proc = Process("which unitd").!!
+  s"$proc --statedir statedir --log /dev/stderr --no-daemon --control 127.0.0.1:9000"
+}
 
 lazy val runServer = taskKey[Unit]("")
 runServer := {
@@ -317,7 +319,7 @@ runServer := {
 
   import sys.process.*
 
-  val proc = Process(UNITD_LOCAL_COMMAND, cwd = dest)
+  val proc = Process(UNITD_LOCAL_COMMAND, cwd = dest, "PG_DB" -> "scala_boot")
 
   proc.!
 }
