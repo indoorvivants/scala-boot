@@ -1,6 +1,5 @@
 package scalaboot.repo_indexer
 
-import mainargs.ParserForClass
 import scalaboot.client.Client
 import scalaboot.client.Retries
 import scalaboot.protocol
@@ -34,7 +33,7 @@ case class RepoRevision(
 
 def init(config: Config) =
   Zone:
-    if config.verbose.value then
+    if config.verbose then
       scribe.Logger.root.withMinimumLevel(Level.Debug).replace()
 
     val backend = CurlBackend()
