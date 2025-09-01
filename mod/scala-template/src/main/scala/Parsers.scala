@@ -5,6 +5,7 @@ import scala.util.boundary, boundary.break
 import scala.annotation.tailrec
 
 import parsley.debug, debug.*
+import scalaboot.template.Parsers.functionCall
 
 object Parsers:
   import parsley as p, p.quick.*, p.syntax.character.*
@@ -32,7 +33,7 @@ object Parsers:
   val underscoreModifiers =
     (symbol("__") ~> listOfFormats).map(f => List(Modifier.Format(f)))
 
-  val variableName = stringOfMany(letterOrDigit)
+  val variableName = stringOfMany(letterOrDigit | '_')
 
   val variableModifiers = underscoreModifiers | modifiers
 
@@ -89,6 +90,15 @@ object Parsers:
           StringTemplateExpr.If(bool, lit, elsif, elseExpr)
   end ifExpr
 
+  val functionCall =
+    val arg = stringOfMany(letterOrDigit | '.' | '_' | '-')
+    val argList = sepBy(arg, token(",")).map(
+      _.map(s => (Param.Str, s.asInstanceOf[Any]))
+    )
+    val funcName = token(stringOfMany(letterOrDigit))
+
+    (funcName <~ token("(") <~> argList <~ ")").map(FuncCall.apply)
+
   lazy val sq: Parsley[StringTemplateExpr] = many(
     ifExpr |
       interpolate |
@@ -99,11 +109,24 @@ end Parsers
 case class Error(message: String) extends Throwable(message)
 
 case class Tokenized(tokens: Vector[StringTemplateExpr], source: Source)
-case class Props(properties: Map[String, Tokenized], ordering: Map[String, Int])
+case class Props(
+    properties: Map[String, FuncCall | Tokenized],
+    ordering: Map[String, Int]
+)
 case class Settings(
     values: Map[String, PropertyValue],
     ordering: Map[String, Int]
 )
+
+def tokenizePropertyValue(s: String): FuncCall | Tokenized =
+
+  val p: parsley.Parsley[FuncCall | Tokenized] =
+    parsley.quick.atomic(Parsers.functionCall) | Parsers.sq
+      .map(Vector.apply(_))
+      .map(t => Tokenized(t, Source.Str(s)))
+  val result = p.parse(s)
+  result.fold(Err.raise(_), identity)
+end tokenizePropertyValue
 
 def tokenizeSource(s: Source): Tokenized =
   val result =

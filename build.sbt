@@ -117,14 +117,15 @@ lazy val server = projApp("server")
   .settings(configurePlatform())
 
 lazy val cli = projApp("cli")
-  .dependsOn(libgit2Bindings, httpClient, scalaTemplate.native(Versions.Scala))
+  .dependsOn(libgit2Bindings, mxmlBindings, httpClient, scalaTemplate.native(Versions.Scala))
   .settings(
     vcpkgDependencies := VcpkgDependencies(
       "libgit2",
+      "mxml",
       "curl",
       "libidn2"
     ),
-    vcpkgNativeConfig ~= { _.addRenamedLibrary("curl", "libcurl") },
+    vcpkgNativeConfig ~= { _.addRenamedLibrary("curl", "libcurl").addRenamedLibrary("mxml", "mxml4") },
     libraryDependencies ++= Seq(
       "com.outr" %%% "scribe" % Versions.scribe,
       "com.lihaoyi" %%% "pprint" % Versions.pprint,
@@ -178,6 +179,32 @@ lazy val libgit2Bindings = proj("libgit2-bindings")
       (Compile / resourceDirectory).value / "scala-native"
     )
   )
+
+
+lazy val mxmlBindings = proj("mxml-bindings")
+  .enablePlugins(BindgenPlugin, ScalaNativePlugin, VcpkgPlugin)
+  .settings(
+    vcpkgDependencies := VcpkgDependencies(
+      "mxml"
+    ),
+    bindgenBindings +=
+      Binding(
+        vcpkgConfigurator.value.includes("mxml") / "mxml.h",
+        "mxml"
+      )
+        .addCImport("mxml.h")
+        .withNoLocation(true)
+        .withClangFlags(
+          vcpkgConfigurator.value.pkgConfig
+            .updateCompilationFlags(List("-fsigned-char"), "mxml4")
+            .toList
+        ),
+    bindgenMode := BindgenMode.Manual(
+      sourceDirectory.value / "main" / "scala" / "generated",
+      (Compile / resourceDirectory).value / "scala-native"
+    )
+  )
+
 
 lazy val devServer = proj("dev-server")
   .enablePlugins(RevolverPlugin)

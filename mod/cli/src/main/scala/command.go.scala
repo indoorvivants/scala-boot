@@ -17,7 +17,7 @@ def commandGo(config: CLI.Go) =
     scribe.debug(s"G8 sources discovered at [${g8Sources.toString}]")
     val props = readProperties(g8Sources / "default.properties")
     scribe.debug(s"Properties: $props")
-    val defaults = MakeDefaults(props)
+    val defaults = MakeDefaults(props, MavenFunc.all)
     scribe.debug(s"Defaults: $defaults")
     val settings = if config.yes then defaults else interactive(defaults)
     Err.assert(

@@ -5,17 +5,42 @@ import scala.util.boundary, boundary.break
 import scala.annotation.tailrec
 
 object MakeDefaults:
-  def apply(props: Props) =
+  def apply(props: Props, functions: Seq[Func] = Seq.empty) =
     val lst = props.properties.toList.sortBy(_._1)
+
+    def findFunc(f: Seq[Func], call: FuncCall) =
+      val args = call.params.map(_._1).toList
+      f.find: func =>
+        call.name == func.name && args == func.prototype.toList
 
     @tailrec
     def go(
-        rem: List[(String, Tokenized)],
+        rem: List[(String, Tokenized | FuncCall)],
         acc: Map[String, PropertyValue],
         visited: List[String],
         iterations: Int
     ): (Map[String, PropertyValue], Int) =
       rem match
+        case (name, fc: FuncCall) :: next =>
+          val func = findFunc(functions, fc).getOrElse(
+            Err.raise(s"No function found matching the call $fc")
+          )
+
+          val value = func
+            .apply(func.fromArgs(fc.params.map(_._2).toArray))
+            .fold(
+              err =>
+                Err.raise(s"Function call $fc failed: ${err.getMessage()}"),
+              identity
+            )
+
+          go(
+            next,
+            acc.updated(name, PropertyValue.Str(value)),
+            name :: visited,
+            iterations + 1
+          )
+
         case (currentKVPair @ (name, Tokenized(tokens, source))) :: next =>
           tokens match
             case Vector(StringTemplateExpr.Lit(single)) =>
@@ -27,7 +52,6 @@ object MakeDefaults:
               go(next, newAcc, Nil, iterations + 1)
             case other =>
               val hasUnresolved = tokens.exists {
-                // case Token(Fragment.Inject(Interpolation.Variable(interp, _)), _)
                 case StringTemplateExpr.Variable(interp, _)
                     if !acc.contains(interp) =>
                   if props.properties.contains(interp) then true
@@ -111,3 +135,4 @@ object MakeDefaults:
     Settings(result, props.ordering)
   end apply
 end MakeDefaults
+

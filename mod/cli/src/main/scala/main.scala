@@ -5,20 +5,7 @@ import decline_derive.CommandApplication
 import template.*
 
 def readProperties(file: os.Path) =
-  val props = java.util.Properties()
-  props.load(file.getInputStream)
-
-  val propsBuilder = List.newBuilder[(String, Tokenized)]
-  val names = props.stringPropertyNames()
-  names.forEach { name =>
-    propsBuilder.addOne(
-      name -> tokenizeSource(Source.Str(props.getProperty(name)))
-    )
-  }
-  Props(
-    propsBuilder.result().toMap,
-    propsBuilder.result().map(_._1).zipWithIndex.toMap
-  )
+  ReadProperties(file.getInputStream)
 end readProperties
 
 def bold(s: String) =

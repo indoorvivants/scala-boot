@@ -2,6 +2,8 @@ package scalaboot.template
 
 import munit.*
 import com.indoorvivants.snapshots.munit_integration.MunitSnapshotsIntegration
+import scala.util.Try
+import java.io.StringBufferInputStream
 
 class ScalaTemplateTest extends FunSuite, MunitSnapshotsIntegration:
   test("basic interpolation"):
@@ -29,6 +31,43 @@ class ScalaTemplateTest extends FunSuite, MunitSnapshotsIntegration:
       "hello" -> PropertyValue.Str("my stuff")
     )
     assertSnapshot("basic interpolation", interpolateAll(newValue, newValue1))
+
+  test("reading properties"):
+    val maven2Args = Func
+      .builder("maven")
+      .withArg(Param.Str)
+      .withArg(Param.Str)
+      .withApply((org, artifact) => Try(s"Resolving $org/$artifact"))
+
+    val maven3Args = Func
+      .builder("maven")
+      .withArg(Param.Str)
+      .withArg(Param.Str)
+      .withArg(Param.Str)
+      .withApply((org, artifact, stability) =>
+        Try(s"Resolving $org/$artifact in $stability")
+      )
+
+    val propsFile =
+      """
+      |hello  = world
+      |version  = maven(ws.unfiltered, unfiltered_2.11)
+      |version_stable  = maven(ws.unfiltered, unfiltered_2.11, stable)
+      """.stripMargin
+
+    val props = ReadProperties(new StringBufferInputStream(propsFile))
+
+    val defaults = MakeDefaults(props, Seq(maven2Args, maven3Args)).values
+
+    assertEquals(
+      defaults("version").stringValue,
+      "Resolving ws.unfiltered/unfiltered_2.11"
+    )
+    assertEquals(
+      defaults("version_stable").stringValue,
+      "Resolving ws.unfiltered/unfiltered_2.11 in stable"
+    )
+    assertEquals(defaults("hello").stringValue, "world")
 
 end ScalaTemplateTest
 
