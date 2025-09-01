@@ -38,6 +38,7 @@ jobs:
             ~/.cache/sbt-vcpkg/vcpkg
           key: ${{ runner.os }}-sbt-vcpkg
 
+      - uses: sbt/setup-sbt@v1
 
       - name: HACK publish Tapir
         run: cd .tapir && sbt "coreNative3/publishLocal; circeJsonNative3/publishLocal; clientCoreNative3/publishLocal; sttpClient4Native3/publishLocal"
