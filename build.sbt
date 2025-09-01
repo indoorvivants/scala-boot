@@ -6,6 +6,7 @@ import bindgen.interface.Binding
 import java.nio.file.StandardCopyOption
 import java.nio.file.CopyOption
 import java.nio.file.Files
+import com.indoorvivants.detective.*, Platform.*
 
 def NAME = "scala-boot"
 
@@ -25,6 +26,7 @@ def projApp(subfolder: String) =
 
 val Versions = new {
   val Scala = "3.7.1"
+  val Scala_LTS = "3.3.6"
 
   val scribe = "3.16.0"
   val osLib = "0.11.3"
@@ -46,11 +48,7 @@ lazy val root =
       cli,
       libgit2Bindings,
       repoIndexer,
-      // libcurlBindings,
       server,
-      // curlTapirClient,
-      // TODO: reenable when sttp is published for SN 0.5
-      // curlSttpBackend,
       httpClient
     )
     .aggregate(httpProtocol.projectRefs*)
@@ -85,7 +83,7 @@ lazy val httpProtocol = projectMatrix
   .settings(
     libraryDependencies ++= Seq(
       "com.softwaremill.sttp.tapir" %%% "tapir-core" % Versions.tapir,
-      "com.softwaremill.sttp.tapir" %%% "tapir-json-upickle" % Versions.tapir
+      "com.softwaremill.sttp.tapir" %%% "tapir-json-circe" % Versions.tapir
     )
   )
 
@@ -103,33 +101,6 @@ lazy val httpClient = projApp("http-client")
     )
   )
 
-// lazy val curlSttpBackend = projApp("curl-sttp-backend")
-//   .dependsOn(libcurlBindings)
-//   .settings(
-//     vcpkgDependencies := VcpkgDependencies(
-//       "curl",
-//       "libidn2"
-//     ),
-//     vcpkgNativeConfig ~= { _.addRenamedLibrary("curl", "libcurl") },
-//     libraryDependencies ++= Seq(
-//       "com.softwaremill.sttp.client4" %%% "core" % Versions.sttp,
-//     "com.softwaremill.sttp.tapir" %% "tapir-client" % Versions.tapir
-//     )
-//   )
-
-// lazy val curlTapirClient = projApp("curl-tapir-client")
-//   .dependsOn(libcurlBindings)
-//   .settings(
-//     vcpkgDependencies := VcpkgDependencies(
-//       "curl",
-//       "libidn2"
-//     ),
-//     vcpkgNativeConfig ~= { _.addRenamedLibrary("curl", "libcurl") },
-//     libraryDependencies ++= Seq(
-//       "com.softwaremill.sttp.tapir" %% "tapir-client" % Versions.tapir
-//     )
-//   )
-
 lazy val server = projApp("server")
   .dependsOn(httpProtocol.native(Versions.Scala))
   .settings(
@@ -141,10 +112,11 @@ lazy val server = projApp("server")
       "com.outr" %%% "scribe" % Versions.scribe,
       "com.lihaoyi" %%% "mainargs" % Versions.mainargs,
       "com.indoorvivants.roach" %%% "core" % Versions.roach,
-      "com.indoorvivants.roach" %%% "upickle" % Versions.roach
+      "com.indoorvivants.roach" %%% "circe" % Versions.roach
     ),
     nativeConfig ~= { _.withEmbedResources(true) }
   )
+  .settings(configurePlatform())
 
 lazy val cli = projApp("cli")
   .dependsOn(libgit2Bindings, httpClient, scalaTemplate.native(Versions.Scala))
@@ -159,13 +131,13 @@ lazy val cli = projApp("cli")
       "com.outr" %%% "scribe" % Versions.scribe,
       "com.lihaoyi" %%% "pprint" % Versions.pprint,
       "com.lihaoyi" %%% "os-lib" % Versions.osLib,
-      // "com.lihaoyi" %%% "mainargs" % Versions.mainargs,
       "com.indoorvivants" %%% "decline-derive" % Versions.declineDerive
     ),
     nativeConfig ~= (_.withSourceLevelDebuggingConfig(
       SourceLevelDebuggingConfig.enabled
     ))
   )
+  .settings(configurePlatform())
 
 lazy val repoIndexer = projApp("repo-indexer")
   .dependsOn(httpClient)
@@ -176,33 +148,17 @@ lazy val repoIndexer = projApp("repo-indexer")
     ),
     vcpkgNativeConfig ~= { _.addRenamedLibrary("curl", "libcurl") },
     libraryDependencies ++= Seq(
+      "com.softwaremill.sttp.client4" %%% "circe" % Versions.sttp,
       "com.outr" %%% "scribe" % Versions.scribe,
       "com.lihaoyi" %%% "pprint" % Versions.pprint,
       "com.lihaoyi" %%% "os-lib" % Versions.osLib,
-      "com.lihaoyi" %%% "mainargs" % Versions.mainargs,
-      "com.lihaoyi" %%% "upickle" % Versions.ujson
+      // "com.lihaoyi" %%% "mainargs" % Versions.mainargs,
+
+      "com.indoorvivants" %%% "decline-derive" % Versions.declineDerive
+      // "com.lihaoyi" %%% "upickle" % Versions.ujson
     )
   )
-
-// lazy val libcurlBindings = proj("libcurl-bindings")
-//   .enablePlugins(BindgenPlugin, ScalaNativePlugin, VcpkgPlugin)
-//   .settings(
-//     vcpkgDependencies := VcpkgDependencies(
-//       "curl"
-//     ),
-//     bindgenBindings +=
-//       Binding
-//         .builder(
-//           vcpkgConfigurator.value.includes("curl") / "curl" / "curl.h",
-//           "curl"
-//         )
-//         .addCImport("curl/curl.h")
-//         .build,
-//     bindgenMode := BindgenMode.Manual(
-//       sourceDirectory.value / "main" / "scala" / "generated",
-//       (Compile / resourceDirectory).value / "scala-native"
-//     )
-//   )
+  .settings(configurePlatform())
 
 lazy val libgit2Bindings = proj("libgit2-bindings")
   .enablePlugins(BindgenPlugin, ScalaNativePlugin, VcpkgPlugin)
@@ -262,42 +218,69 @@ ThisBuild / buildServer := {
   dest
 }
 
-lazy val buildCli = taskKey[File]("")
-buildCli := {
-  val dest = (ThisBuild / baseDirectory).value / "build"
-  IO.createDirectory(dest)
-
-  val cliBinary = (cli / Compile / nativeLink).value
-
-  val cliDestination = dest / NAME
-  // IO.copyFile(cliBinary, cliDestination)
-  // IO.createDirectory(destinationDir)
-
-  Files.copy(
-    cliBinary.toPath(),
-    cliDestination.toPath(),
-    StandardCopyOption.COPY_ATTRIBUTES,
-    StandardCopyOption.REPLACE_EXISTING
+lazy val buildCLI = taskKey[File]("")
+buildCLI := {
+  writeBinary(
+    source = (cli / Compile / nativeLink).value,
+    destinationDir = (ThisBuild / baseDirectory).value / "out" / "debug",
+    log = sLog.value,
+    platform = None,
+    debug = true,
+    name = "scala-boot"
   )
+}
 
-  cliDestination
+lazy val buildReleaseCLI = taskKey[File]("")
+buildReleaseCLI := {
+  writeBinary(
+    source = (cli / Compile / nativeLinkReleaseFast).value,
+    destinationDir = (ThisBuild / baseDirectory).value / "out" / "release",
+    log = sLog.value,
+    platform = None,
+    debug = false,
+    name = "scala-boot"
+  )
+}
+
+lazy val buildPlatformCLI = taskKey[File]("")
+buildPlatformCLI := {
+  writeBinary(
+    source = (cli / Compile / nativeLinkReleaseFast).value,
+    destinationDir = (ThisBuild / baseDirectory).value / "out" / "release",
+    log = sLog.value,
+    platform = Some(Platform.target),
+    debug = false,
+    name = "scala-boot"
+  )
 }
 
 lazy val buildRepoIndexer = taskKey[File]("")
 buildRepoIndexer := {
-  val dest = (ThisBuild / baseDirectory).value / "build"
-  IO.createDirectory(dest)
-  val cliBinary = (repoIndexer / Compile / nativeLink).value
+  writeBinary(
+    source = (repoIndexer / Compile / nativeLink).value,
+    destinationDir = (ThisBuild / baseDirectory).value / "out" / "release",
+    log = sLog.value,
+    platform = Some(Platform.target),
+    debug = true,
+    name = "repo-indexer"
+  )
+}
 
-  val cliDestination = dest / s"${NAME}-repo-indexer"
-  IO.copyFile(cliBinary, cliDestination)
-
-  cliDestination
+lazy val buildRepoIndexerRelease = taskKey[File]("")
+buildRepoIndexerRelease := {
+  writeBinary(
+    source = (cli / Compile / nativeLinkReleaseFast).value,
+    destinationDir = (ThisBuild / baseDirectory).value / "out" / "release",
+    log = sLog.value,
+    platform = None,
+    debug = false,
+    name = "repo-indexer"
+  )
 }
 
 lazy val buildAll = taskKey[File]("")
 buildAll := {
-  buildCli.value
+  buildCLI.value
   buildRepoIndexer.value
   buildServer.value
 }
@@ -397,3 +380,71 @@ addCommandAlias(
 )
 addCommandAlias("localSearch", "cli/run search --api http://localhost:8080 ")
 addCommandAlias("runDevServer", "dev-server/reStart")
+
+def configurePlatform(
+    rename: String => String = identity
+) =
+  Seq(
+    nativeConfig := {
+      import Platform.OS.*
+      val conf =
+        nativeConfig.value
+      val arch64 =
+        if (
+          Platform.os == MacOS && Platform.arch == Platform.Arch.Arm && Platform.bits == Platform.Bits.x64
+        )
+          List("-arch", "arm64")
+        else Nil
+
+      conf
+        .withLinkingOptions(
+          conf.linkingOptions ++ arch64
+        )
+        .withCompileOptions(
+          conf.compileOptions ++ arch64
+        )
+    }
+  )
+
+def writeBinary(
+    source: File,
+    destinationDir: File,
+    log: sbt.Logger,
+    platform: Option[Platform.Target],
+    debug: Boolean,
+    name: String
+): File = {
+
+  import java.nio.file.*
+
+  val fullName = platform match {
+    case None         => name
+    case Some(target) =>
+      val ext = target.os match {
+        case Platform.OS.Windows => ".exe"
+        case _                   => ""
+      }
+
+      name + "-" + ArtifactNames.coursierString(target) + ext
+  }
+
+  val dest = destinationDir / fullName
+
+  Files.createDirectories(destinationDir.toPath())
+
+  Files.copy(
+    source.toPath(),
+    dest.toPath(),
+    StandardCopyOption.COPY_ATTRIBUTES,
+    StandardCopyOption.REPLACE_EXISTING
+  )
+
+  import scala.sys.process.*
+
+  if (debug && platform.exists(_.os == Platform.OS.MacOS))
+    s"dsymutil $dest".!!
+
+  log.info(s"Binary [$name] built in ${dest}")
+
+  dest
+}

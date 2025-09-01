@@ -13,3 +13,5 @@ addSbtPlugin("io.spray" % "sbt-revolver" % "0.10.0")
 addSbtPlugin("com.indoorvivants.snapshots" % "sbt-snapshots" % "0.0.11")
 
 addSbtPlugin("org.scala-js" % "sbt-scalajs" % "1.19.0")
+
+addSbtPlugin("com.github.duhemm" % "sbt-errors-summary" % "0.6.5")

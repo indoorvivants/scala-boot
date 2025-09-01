@@ -65,7 +65,7 @@ def commandSearch(config: CLI.Search) =
       "Please enter a number or press Enter to choose first one: "
 
     def go(prompt: String): Int =
-      io.StdIn.readLine(prompt).trim() match
+      scala.io.StdIn.readLine(prompt).trim() match
         case "" =>
           0
         case other =>

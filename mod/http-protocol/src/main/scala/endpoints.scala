@@ -1,15 +1,14 @@
 package scalaboot.protocol
 
 import sttp.tapir.*
-import sttp.tapir.json.upickle.*
 import sttp.tapir.generic.auto.*
-
-import upickle.default.ReadWriter as JSON
+import sttp.tapir.json.circe.*
+import io.circe.Codec as CirceCodec
 
 private[scalaboot] inline def SCALABOOT_PRODUCTION =
   "https://scala-boot.fly.dev"
 
-case class Metadata() derives JSON
+case class Metadata() derives CirceCodec.AsObject
 
 case class RepositoryInfo(
     name: String,
@@ -19,16 +18,16 @@ case class RepositoryInfo(
     headline: Option[String] = None,
     summary: Option[String] = None,
     stars: Int
-) derives JSON
-case class SearchResult(repo: RepositorySummary, rank: Float) derives JSON
-case class SavedRepository(id: Int, info: RepositoryInfo) derives JSON
-case class DeleteRepository(id: Int) derives JSON
+) derives CirceCodec.AsObject
+case class SearchResult(repo: RepositorySummary, rank: Float) derives CirceCodec.AsObject
+case class SavedRepository(id: Int, info: RepositoryInfo) derives CirceCodec.AsObject
+case class DeleteRepository(id: Int) derives CirceCodec.AsObject
 case class RepositorySummary(
     name: String,
     headline: Option[String],
     summary: Option[String],
     stars: Int
-) derives JSON
+) derives CirceCodec.AsObject
 
 case class UpdateRepository(
     id: Int,
@@ -37,7 +36,7 @@ case class UpdateRepository(
     headline: Option[String] = None,
     summary: Option[String] = None,
     stars: Option[Int] = None
-) derives JSON
+) derives CirceCodec.AsObject
 
 object repos:
 
