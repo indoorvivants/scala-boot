@@ -68,7 +68,7 @@ def interactive(defaults: Settings) =
           )
           .render
 
-      val newValue = io.StdIn.readLine(prompt).trim() match
+      val newValue = scala.io.StdIn.readLine(prompt).trim() match
         case "" =>
           default
         case other => PropertyValue.Str(other)

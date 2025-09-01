@@ -104,9 +104,10 @@ lazy val httpClient = projApp("http-client")
 lazy val server = projApp("server")
   .dependsOn(httpProtocol.native(Versions.Scala))
   .settings(
-    vcpkgDependencies := VcpkgDependencies(
-      (ThisBuild / baseDirectory).value / "server-vcpkg.json"
-    ),
+    // vcpkgDependencies := VcpkgDependencies(
+    //   (ThisBuild / baseDirectory).value / "server-vcpkg.json"
+    // ),
+    vcpkgDependencies := VcpkgDependencies("libpq", "libidn2"),
     libraryDependencies ++= Seq(
       "com.github.lolgab" %%% "snunit-tapir" % Versions.snunit,
       "com.outr" %%% "scribe" % Versions.scribe,
