@@ -1,14 +1,13 @@
 package scalaboot.repo_indexer
 
-import mainargs.{main, arg, Flag}
+import decline_derive.*
 
-@main(name = "scala-boot/repo-indexer")
 case class Config(
-    @arg(doc = "Github org to find teampltes in")
+    @Help("Github org to find templates in")
     org: String,
-    @arg(short = 'v', doc = "Enable verbose (really verbose logging)")
-    verbose: Flag,
-    @arg(doc = "Address of Scala Boot service")
-    api: Option[String] = None,
-
-)
+    @Flag(default = false)
+    @Short("v")
+    verbose: Boolean,
+    @Help("Address of Scala Boot service")
+    api: Option[String] = None
+) derives CommandApplication

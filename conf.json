@@ -2,7 +2,7 @@
   "applications": {
     "app": {
       "type": "external",
-      "executable": "server",
+      "executable": "scala-boot-server",
       "processes": {
         "spare": 2,
         "max": 8

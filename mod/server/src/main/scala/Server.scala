@@ -5,8 +5,6 @@ import scalaboot.protocol
 import scala.scalanative.unsafe.Zone
 import scribe.Level
 
-inline def zone[A](inline f: Zone ?=> A) = Zone { z => f(using z) }
-
 def connection_string() =
   sys.env.getOrElse(
     "DATABASE_URL", {
@@ -21,7 +19,7 @@ def connection_string() =
   )
 
 @main def server =
-  zone {
+  Zone {
     scribe.Logger.root
       .clearHandlers()
       .withHandler(
@@ -45,15 +43,14 @@ def connection_string() =
 
       val auth = (key: Option[String]) =>
         (apiKeySet, key) match
-          case (None, None)      => Right(())
-          case (Some(str), None) => Left("API key missing")
+          case (None, None | Some(_))      => Right(())
+          case (Some(_), None) => Left("API key missing")
           case (Some(expected), Some(provided)) =>
             if expected.trim() == provided.trim() then Right(())
             else Left("Provided API key is incorrect")
-          case (None, Some(_)) => Right(())
 
       val handlers = List(
-        repos.all.serverLogic[Id](name => Right(db.getAllRepos.toList)),
+        repos.all.serverLogic[Id](_ => Right(db.getAllRepos.toList)),
         repos.search.serverLogic[Id] { query =>
           Right(db.search(query).toList)
         },

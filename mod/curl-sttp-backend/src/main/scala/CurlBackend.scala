@@ -1,12 +1,12 @@
 package scalaboot.curl
 
-import sttp.client3.ws.{GotAWebSocketException, NotAWebSocketException}
+import sttp.client4.ws.{GotAWebSocketException, NotAWebSocketException}
 import sttp.model.*
 import sttp.monad.MonadError
 import sttp.monad.syntax.*
-import sttp.client3.*
+import sttp.client4.*
 import sttp.capabilities.Effect
-import sttp.client3.monad.IdMonad
+import sttp.client4.monad.IdMonad
 import sttp.monad.TryMonad
 import scala.util.Try
 
@@ -14,8 +14,8 @@ import _root_.curl.all.*
 import scala.scalanative.unsafe.*
 import scala.collection.mutable.ArrayBuilder
 import scala.scalanative.posix.string
-import sttp.client3.internal.BodyFromResponseAs
-import sttp.client3.internal.SttpFile
+import sttp.client4.internal.BodyFromResponseAs
+import sttp.client4.internal.SttpFile
 import _root_.curl.enumerations.CURLoption.CURLOPT_POSTFIELDS
 import scala.io.Source
 

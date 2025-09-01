@@ -1,7 +1,5 @@
 package scalaboot.repo_indexer
 
-import curl.all.*
-import mainargs.ParserForClass
 import scalaboot.client.Client
 import scalaboot.client.Retries
 import scalaboot.protocol
@@ -13,24 +11,12 @@ import scala.util.control.NonFatal
 
 import protocol.*
 import scalanative.unsafe.*
-import sttp.client3.SttpBackend
-
-inline def zone[A](inline f: Zone ?=> A) = Zone { z => f(using z) }
+import sttp.client4.curl.*
+import sttp.client4.*
+import decline_derive.CommandApplication
 
 @main def repoIndexer(args: String*) =
-  val config: Config =
-    ParserForClass[Config].constructEither(
-      args,
-      allowPositional = true,
-      sorted = false
-    ) match
-      case Left(msg) =>
-        System.err.println(msg)
-        sys.exit(1)
-      case Right(value) =>
-        value.asInstanceOf[Config]
-
-  init(config)
+  init(CommandApplication.parseOrExit[Config](args))
 end repoIndexer
 
 case class GithubRepoSnapshot(repo: GithubRepo, revision: RepoRevision)
@@ -46,11 +32,11 @@ case class RepoRevision(
 )
 
 def init(config: Config) =
-  zone {
-    if config.verbose.value then
+  Zone:
+    if config.verbose then
       scribe.Logger.root.withMinimumLevel(Level.Debug).replace()
 
-    val backend = scalaboot.curl.CurlBackend()
+    val backend = CurlBackend()
     val apiKey = sys.env.get("SCALABOOT_API_KEY")
     if apiKey.isEmpty then
       scribe.warn(
@@ -182,8 +168,6 @@ def init(config: Config) =
       )
     }
 
-  }
-
 def printRepos(msg: String, repos: Seq[String]) =
   scribe.info(
     msg + ": " + repos
@@ -195,7 +179,7 @@ class Token(val value: String):
   override def toString(): String = "Token[redacted]"
 
 class GithubApi(
-    client: SttpBackend[sttp.client3.Identity, Any],
+    client: SyncBackend,
     token: Option[Token]
 ):
   val tokHeader = token.map { token =>
@@ -207,8 +191,11 @@ class GithubApi(
     "User-agent" -> "Scala Boot Repo Indexer"
   ) ++ tokHeader
 
-  import sttp.client3.*
-  import sttp.client3.upicklejson.*
+  import sttp.client4.*
+  import sttp.client4.circe.*
+
+  case class GithubRepoAPI(full_name: String, stargazers_count: Int)
+      derives io.circe.Codec.AsObject
 
   def templateRepos(org: String)(using Zone) =
     def go(url: String, result: List[GithubRepo]): List[GithubRepo] =
@@ -216,7 +203,7 @@ class GithubApi(
       val response = basicRequest
         .get(Uri.unsafeParse(url))
         .headers(github)
-        .response(asJson[ujson.Value])
+        .response(asJson[List[GithubRepoAPI]])
         .send(client)
 
       val nextPageUrl =
@@ -228,12 +215,10 @@ class GithubApi(
 
       val reposList = response.body
         .fold(throw _, identity)
-        .arr
-        .map(_.obj)
         .map(r =>
           GithubRepo(
-            slug = r("full_name").str,
-            stars = r("stargazers_count").num.toInt
+            slug = r.full_name,
+            stars = r.stargazers_count
           )
         )
 
@@ -254,6 +239,8 @@ class GithubApi(
     templateRepos
   end templateRepos
 
+  case class HasSha(sha: String) derives io.circe.Codec.AsObject
+
   def latestCommit(repo: String)(using Zone) =
     basicRequest
       .get(
@@ -262,12 +249,11 @@ class GithubApi(
         )
       )
       .headers(github)
-      .response(asJson[ujson.Value])
+      .response(asJson[List[HasSha]])
       .send(client)
       .body
       .fold(throw _, identity)
-      .arr
-      .map(_.obj("sha").str)
+      .map(_.sha)
       .head
 
   def readFile(repo: String, sha: String, file: String)(using

@@ -2,7 +2,7 @@ package scalaboot.server
 
 import roach.*
 import roach.codecs.*
-import roach.upickle.jsonOf as roach_json
+import roach.circe.jsonOf as roach_json
 import scala.scalanative.unsafe.Zone
 import scalaboot.protocol.*
 import scalanative.unsafe.*

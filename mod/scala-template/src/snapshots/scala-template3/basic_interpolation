@@ -1,0 +1,14 @@
+
+
+asdas
+Hello, I'm my name is tony-soprano
+I am here representing my client, John Doe
+Prepare to be whacked 
+Prepare for ice fishing
+We'll think of a less season specific death
+my/stuff my-stuff
+MyStuff my.stuff
+
+test("HelloWorld returns status code 200") {
+      assertIO(retHelloWorld.flatMap(_.as[String]), "{\"message\":\"Hello, world\"}")
+}

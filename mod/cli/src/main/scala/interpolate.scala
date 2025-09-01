@@ -3,20 +3,21 @@ package scalaboot
 import template.*
 
 def fillFile(
-    file: Source.File,
+    file: os.Path,
+    origin: FileOrigin,
     destination: os.Path,
     settings: Settings,
     overwrite: Boolean = false
 ): os.Path =
-  Err.assert(file.path.toIO.isFile(), s"File [$file] doesn't exist")
+  Err.assert(file.toIO.isFile(), s"File [$file] doesn't exist")
   if !overwrite && destination.toIO.exists() then
     Err.assert(
       destination.toIO.isFile(),
       s"File [$file] exists and cannot be overwritten"
     )
   scribe.debug(s"Filling file [$destination] using [$file] as template")
-  val tokenized = tokenize(file)
-  val filled = fillString(tokenized, settings)
+  val tokenized = tokenizeSource(Source.Stream(file.getInputStream))
+  val filled = FillString(tokenized, settings)
 
   os.makeDir.all(destination / os.up)
 
@@ -41,9 +42,12 @@ def fillDirectory(
   val processed = collection.mutable.Set.empty[os.Path]
 
   os.list(input).filterNot(skip).foreach { path =>
-    val newLast = fillString(tokenize(Source.Str(path.last)), settings)
+    val newLast = FillString(tokenizeSource(Source.Str(path.last)), settings)
+    scribe.debug(
+      s"Filling $path, changing last to $newLast, tokens are ${tokenizeSource(Source.Str(path.last))}"
+    )
     if newLast.nonEmpty then
-      val rp = path.relativeTo(input) / os.up / newLast
+      val rp = path.relativeTo(input) / os.up / os.RelPath(newLast)
       if os.isDir(path) then
         processed ++=
           fillDirectory(
@@ -57,7 +61,8 @@ def fillDirectory(
       else
         processed +=
           fillFile(
-            file = Source.File(path, makeOrigin(rp)),
+            file = path,
+            origin = makeOrigin(rp),
             destination = output / rp,
             settings = settings,
             overwrite = overwrite
