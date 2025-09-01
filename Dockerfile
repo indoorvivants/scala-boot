@@ -18,26 +18,28 @@ RUN sn-vcpkg bootstrap
 
 COPY server-vcpkg.json .
 ENV VCPKG_FORCE_SYSTEM_BINARIES=1
-RUN apt-get install -y flex
+RUN apt-get install -y bison flex
 RUN sn-vcpkg install --manifest server-vcpkg.json
 
 COPY . .
 
-RUN ./sbt buildServerRelease
+# TODO: remove when tapir is published
+RUN cd .tapir && git status && git clean -dfx . && git checkout -- . && sbt "coreNative3/publishLocal; circeJsonNative3/publishLocal; clientCoreNative3/publishLocal; sttpClient4Native3/publishLocal"
+RUN sbt buildServerRelease
 
 RUN mkdir empty_dir
 RUN cat /etc/passwd | grep unit > passwd
 RUN cat /etc/group | grep unit > group
 
-RUN chown unit:unit out/release/scala-boot-server
-RUN chmod 0777 out/release/scala-boot-server
+RUN chown unit:unit out/release/server/scala-boot-server
+RUN chmod 0777 out/release/server/scala-boot-server
 
 FROM scratch
 
 WORKDIR /workdir
 
-COPY --from=dev /workdir/out/release/statedir /workdir/statedir
-COPY --from=dev /workdir/out/release/scala-boot-server /workdir/scala-boot-server
+COPY --from=dev /workdir/out/release/server/statedir /workdir/statedir
+COPY --from=dev /workdir/out/release/server/scala-boot-server /workdir/scala-boot-server
 
 # unitd dependencies
 COPY --from=dev /usr/sbin/unitd /usr/sbin/unitd
