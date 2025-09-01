@@ -32,6 +32,10 @@ jobs:
 
       - uses: sbt/setup-sbt@v1
 
+
+      - name: HACK publish Tapir
+        run: cd .tapir && sbt "coreNative3/publishLocal; circeJsonNative3/publishLocal; clientCoreNative3/publishLocal; sttpClient4Native3/publishLocal"
+
       - name: Build the binary
         run: sbt buildPlatformCLI
 
@@ -61,6 +65,9 @@ jobs:
           cache: "sbt"
 
       - uses: sbt/setup-sbt@v1
+
+      - name: HACK publish Tapir
+        run: cd .tapir && sbt "coreNative3/publishLocal; circeJsonNative3/publishLocal; clientCoreNative3/publishLocal; sttpClient4Native3/publishLocal"
 
       - name: Build the binary
         run: sbt buildPlatformCLI
@@ -115,6 +122,9 @@ jobs:
           choco install llvm --version="$Env:LLVM_VERSION" --allow-downgrade
           choco install sbt --version=1.11.5
           clang --version
+
+      - name: HACK publish Tapir
+        run: cd .tapir && sbt "coreNative3/publishLocal; circeJsonNative3/publishLocal; clientCoreNative3/publishLocal; sttpClient4Native3/publishLocal"
 
       - name: Build binary (windows)
         run: sbt buildPlatformCLI

@@ -36,7 +36,7 @@ val Versions = new {
   val roach = "0.1.0"
   val ujson = "3.3.1"
   val snunit = "0.10.3"
-  val tapir = "1.11.29+14-346b25e7-SNAPSHOT"
+  val tapir = "1.11.31+142-54cc665d-SNAPSHOT"
   val munit = "1.1.1"
   val declineDerive = "0.3.1"
 }
@@ -207,6 +207,28 @@ writeCompileCommands := {
 
 lazy val buildServer = taskKey[File]("")
 ThisBuild / buildServer := {
+  val dest = (ThisBuild / baseDirectory).value / "out" / "debug" / "server"
+
+  val serverBinary = writeBinary(
+    source = (server / Compile / nativeLink).value,
+    destinationDir = dest,
+    log = sLog.value,
+    platform = None,
+    debug = true,
+    name = "scala-boot-server"
+  )
+
+  val statedir = dest / "statedir"
+
+  IO.createDirectory(statedir)
+
+  IO.copyFile((ThisBuild / baseDirectory).value/ "conf.json", statedir / "conf.json")
+
+  dest
+}
+
+lazy val buildServerRelease = taskKey[File]("")
+ThisBuild / buildServer := {
   val dest = (ThisBuild / baseDirectory).value / "build"
   val statedir = dest / "statedir"
   IO.createDirectory(dest)
@@ -341,7 +363,7 @@ logo :=
 
 usefulTasks := Seq(
   UsefulTask(
-    "buildCli",
+    "buildCLI",
     s"Build ./build/$NAME CLI (search and templating)"
   ),
   UsefulTask(
