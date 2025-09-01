@@ -8,16 +8,17 @@ RUN apt-get update && \
     echo 'deb [signed-by=/usr/share/keyrings/nginx-keyring.gpg] https://packages.nginx.org/unit/ubuntu/ jammy unit \
           deb-src [signed-by=/usr/share/keyrings/nginx-keyring.gpg] https://packages.nginx.org/unit/ubuntu/ jammy unit' >> /etc/apt/sources.list.d/unit.list && \
     apt-get update && \
-    apt-get install -y unit unit-dev
+    apt-get install -y unit unit-dev bison
 
 WORKDIR /workdir
 
-# pre-download SBT
 RUN sbt --sbt-create version
+
+RUN sn-vcpkg bootstrap
 
 COPY server-vcpkg.json .
 ENV VCPKG_FORCE_SYSTEM_BINARIES=1
-RUN apt-get install -y bison
+RUN apt-get install -y flex
 RUN sn-vcpkg install --manifest server-vcpkg.json
 
 COPY . .
