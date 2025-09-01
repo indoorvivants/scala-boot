@@ -19,11 +19,14 @@ jobs:
       SCALABOOT_API_KEY: ${{ secrets.SCALABOOT_API_KEY }}
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          submodules: true
 
       - uses: actions/setup-java@v3
         with:
           distribution: "temurin"
-          java-version: "17"
+          java-version: "21"
           cache: "sbt"
 
       - name: Cache vcpkg
@@ -34,6 +37,10 @@ jobs:
             ~/.cache/sbt-vcpkg/vcpkg-install
             ~/.cache/sbt-vcpkg/vcpkg
           key: ${{ runner.os }}-sbt-vcpkg
+
+
+      - name: HACK publish Tapir
+        run: cd .tapir && sbt "coreNative3/publishLocal; circeJsonNative3/publishLocal; clientCoreNative3/publishLocal; sttpClient4Native3/publishLocal"
 
       - run: sbt buildRepoIndexerRelease
 
