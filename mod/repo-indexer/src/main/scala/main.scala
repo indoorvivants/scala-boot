@@ -14,21 +14,10 @@ import protocol.*
 import scalanative.unsafe.*
 import sttp.client4.curl.*
 import sttp.client4.*
+import decline_derive.CommandApplication
 
 @main def repoIndexer(args: String*) =
-  val config: Config =
-    ParserForClass[Config].constructEither(
-      args,
-      allowPositional = true,
-      sorted = false
-    ) match
-      case Left(msg) =>
-        System.err.println(msg)
-        sys.exit(1)
-      case Right(value) =>
-        value.asInstanceOf[Config]
-
-  init(config)
+  init(CommandApplication.parseOrExit[Config](args))
 end repoIndexer
 
 case class GithubRepoSnapshot(repo: GithubRepo, revision: RepoRevision)
