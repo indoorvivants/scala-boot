@@ -17,32 +17,26 @@ RUN sbt --sbt-create version
 
 COPY server-vcpkg.json .
 ENV VCPKG_FORCE_SYSTEM_BINARIES=1
+RUN apt-get install -y bison
 RUN sn-vcpkg install --manifest server-vcpkg.json
 
 COPY . .
 
-ARG scalanative_mode=release-fast
-ARG scalanative_lto=thin
-
-ENV SCALANATIVE_MODE=${scalanative_mode}
-ENV SCALANATIVE_LTO=${scalanative_lto}
-ENV CI=true
-
-RUN ./sbt buildServer
+RUN ./sbt buildServerRelease
 
 RUN mkdir empty_dir
 RUN cat /etc/passwd | grep unit > passwd
 RUN cat /etc/group | grep unit > group
 
-RUN chown unit:unit build/server
-RUN chmod 0777 build/server
+RUN chown unit:unit out/release/scala-boot-server
+RUN chmod 0777 out/release/scala-boot-server
 
 FROM scratch
 
 WORKDIR /workdir
 
-COPY --from=dev /workdir/build/statedir /workdir/statedir
-COPY --from=dev /workdir/build/server /workdir/server
+COPY --from=dev /workdir/out/release/statedir /workdir/statedir
+COPY --from=dev /workdir/out/release/scala-boot-server /workdir/scala-boot-server
 
 # unitd dependencies
 COPY --from=dev /usr/sbin/unitd /usr/sbin/unitd

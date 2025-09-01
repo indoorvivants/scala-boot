@@ -34,12 +34,12 @@ jobs:
       - uses: sbt/setup-sbt@v1
 
 
+      - run: brew install autoconf automake ninja libtool
 
       - name: HACK publish Tapir
         run: cd .tapir && sbt "coreNative3/publishLocal; circeJsonNative3/publishLocal; clientCoreNative3/publishLocal; sttpClient4Native3/publishLocal"
 
 
-      - run: brew install autoconf automake ninja
 
       - name: Cache vcpkg
         uses: actions/cache@v3
