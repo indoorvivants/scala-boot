@@ -49,33 +49,21 @@ def bootstrap(template: String): BootstrapResult =
   end match
 end bootstrap
 
-// TODO: use cue4s here
 def interactive(defaults: Settings) =
   val settings = Map.newBuilder[String, PropertyValue]
 
   println(fansi.Underlined.On("Customise this template:"))
 
-  defaults.values.toList.sortBy((k, _) => defaults.ordering.apply(k)).foreach {
-    case (field, default) =>
-      val prompt =
-        fansi
-          .Str(
-            "- ",
-            fansi.Bold.On(field),
-            " (",
-            fansi.Back.White(fansi.Color.Black(default.stringValue)),
-            "): "
-          )
-          .render
+  import cue4s.*
 
-      val newValue = scala.io.StdIn.readLine(prompt).trim() match
-        case "" =>
-          default
-        case other => PropertyValue.Str(other)
-
-      settings.addOne(field -> newValue)
-
-  }
+  Prompts.sync.use: prompts =>
+    defaults.values.toList
+      .sortBy((k, _) => defaults.ordering.apply(k))
+      .foreach { case (field, default) =>
+        val value =
+          prompts.text(s"$field", _.default(default.stringValue)).getOrThrow
+        settings.addOne(field -> PropertyValue.Str(value))
+      }
 
   Settings(settings.result(), defaults.ordering)
 end interactive

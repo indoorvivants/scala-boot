@@ -25,8 +25,7 @@ def projApp(subfolder: String) =
     })
 
 val Versions = new {
-  val Scala = "3.7.1"
-  val Scala_LTS = "3.3.6"
+  val Scala = "3.7.2"
 
   val scribe = "3.16.0"
   val osLib = "0.11.3"
@@ -35,10 +34,11 @@ val Versions = new {
   val sttp = "4.0.8"
   val roach = "0.1.0"
   val ujson = "3.3.1"
-  val snunit = "0.10.4"
+  val snunit = "0.10.3"
   val tapir = "1.11.31+142-54cc665d-SNAPSHOT"
   val munit = "1.1.1"
   val declineDerive = "0.3.1"
+  val cue4s = "0.0.9"
 }
 
 lazy val root =
@@ -129,7 +129,8 @@ lazy val cli = projApp("cli")
       "com.outr" %%% "scribe" % Versions.scribe,
       "com.lihaoyi" %%% "pprint" % Versions.pprint,
       "com.lihaoyi" %%% "os-lib" % Versions.osLib,
-      "com.indoorvivants" %%% "decline-derive" % Versions.declineDerive
+      "com.indoorvivants" %%% "decline-derive" % Versions.declineDerive,
+      "tech.neander" %%% "cue4s" % Versions.cue4s,
     ),
     nativeConfig ~= (_.withSourceLevelDebuggingConfig(
       SourceLevelDebuggingConfig.enabled
@@ -224,18 +225,32 @@ ThisBuild / buildServer := {
   dest
 }
 
+
+
 lazy val buildServerRelease = taskKey[File]("")
-// ThisBuild / buildServer := {
-//   val dest = (ThisBuild / baseDirectory).value / "build"
-//   val statedir = dest / "statedir"
-//   IO.createDirectory(dest)
-//   val serverBinary = (server / Compile / nativeLink).value
+ThisBuild / buildServerRelease := {
+  val dest = (ThisBuild / baseDirectory).value / "out" / "release" / "server"
 
-//   IO.copyFile(serverBinary, dest / "server")
-//   IO.copyFile(dest.getParentFile() / "conf.json", statedir / "conf.json")
+  val serverBinary = writeBinary(
+    source = (server / Compile / nativeLinkReleaseFast).value,
+    destinationDir = dest,
+    log = sLog.value,
+    platform = None,
+    debug = true,
+    name = "scala-boot-server"
+  )
 
-//   dest
-// }
+  val statedir = dest / "statedir"
+
+  IO.createDirectory(statedir)
+
+  IO.copyFile(
+    (ThisBuild / baseDirectory).value / "conf.json",
+    statedir / "conf.json"
+  )
+
+  dest
+}
 
 lazy val buildCLI = taskKey[File]("")
 buildCLI := {
@@ -272,6 +287,7 @@ buildPlatformCLI := {
     name = "scala-boot"
   )
 }
+
 
 lazy val buildRepoIndexer = taskKey[File]("")
 buildRepoIndexer := {
