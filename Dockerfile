@@ -8,7 +8,7 @@ RUN apt-get update && \
     echo 'deb [signed-by=/usr/share/keyrings/nginx-keyring.gpg] https://packages.nginx.org/unit/ubuntu/ jammy unit \
           deb-src [signed-by=/usr/share/keyrings/nginx-keyring.gpg] https://packages.nginx.org/unit/ubuntu/ jammy unit' >> /etc/apt/sources.list.d/unit.list && \
     apt-get update && \
-    apt-get install -y unit unit-dev bison
+    apt-get install -y unit unit-dev bison flex
 
 WORKDIR /workdir
 
@@ -16,15 +16,16 @@ RUN sbt --sbt-create version
 
 RUN sn-vcpkg bootstrap
 
-COPY server-vcpkg.json .
+COPY vcpkg.json .
 ENV VCPKG_FORCE_SYSTEM_BINARIES=1
-RUN apt-get install -y bison flex
-RUN sn-vcpkg install --manifest server-vcpkg.json
+RUN sn-vcpkg install --manifest vcpkg.json
 
 COPY . .
+RUN cd .tapir && git status && git clean -dfx . && \
+    git checkout -- . && sbt "coreNative3/publishLocal; coreJS3/publishLocal; circeJsonNative3/publishLocal; clientCoreNative3/publishLocal; clientCoreJS3/publishLocal; sttpClient4Native3/publishLocal; sttpClient4JS3/publishLocal; circeJsonJS3/publishLocal"
+
 
 # TODO: remove when tapir is published
-RUN cd .tapir && git status && git clean -dfx . && git checkout -- . && sbt "coreNative3/publishLocal; circeJsonNative3/publishLocal; clientCoreNative3/publishLocal; sttpClient4Native3/publishLocal"
 RUN sbt buildServerRelease
 
 RUN mkdir empty_dir
@@ -34,12 +35,24 @@ RUN cat /etc/group | grep unit > group
 RUN chown unit:unit out/release/server/scala-boot-server
 RUN chmod 0777 out/release/server/scala-boot-server
 
+
+RUN if [ "$(uname -m)" = "x86_64" ]; then \
+    curl -Lo node-install.tar.xz https://nodejs.org/dist/v22.18.0/node-v22.18.0-linux-x64.tar.xz; \
+    else \
+    curl -Lo node-install.tar.xz https://nodejs.org/dist/v22.18.0/node-v22.18.0-linux-arm64.tar.xz; \
+    fi && \
+    tar -xf node-install.tar.xz && rm *.tar.xz && mv node-v22* node-install
+ENV PATH /workdir/node-install/bin:$PATH
+
+RUN sbt buildWebappRelease
+
 FROM scratch
 
 WORKDIR /workdir
 
 COPY --from=dev /workdir/out/release/server/statedir /workdir/statedir
 COPY --from=dev /workdir/out/release/server/scala-boot-server /workdir/scala-boot-server
+COPY --from=dev /workdir/out/release/server/static /workdir/static
 
 # unitd dependencies
 COPY --from=dev /usr/sbin/unitd /usr/sbin/unitd

@@ -79,7 +79,7 @@ lazy val httpProtocol = projectMatrix
   .withId("http-protocol")
   .in(file("mod/http-protocol"))
   .nativePlatform(Seq(Versions.Scala))
-  // .jsPlatform(Seq(Versions.Scala))
+  .jsPlatform(Seq(Versions.Scala))
   .settings(
     libraryDependencies ++= Seq(
       "com.softwaremill.sttp.tapir" %%% "tapir-core" % Versions.tapir,
@@ -117,7 +117,12 @@ lazy val server = projApp("server")
   .settings(configurePlatform())
 
 lazy val cli = projApp("cli")
-  .dependsOn(libgit2Bindings, mxmlBindings, httpClient, scalaTemplate.native(Versions.Scala))
+  .dependsOn(
+    libgit2Bindings,
+    mxmlBindings,
+    httpClient,
+    scalaTemplate.native(Versions.Scala)
+  )
   .settings(
     vcpkgDependencies := VcpkgDependencies(
       "libgit2",
@@ -125,13 +130,15 @@ lazy val cli = projApp("cli")
       "curl",
       "libidn2"
     ),
-    vcpkgNativeConfig ~= { _.addRenamedLibrary("curl", "libcurl").addRenamedLibrary("mxml", "mxml4") },
+    vcpkgNativeConfig ~= {
+      _.addRenamedLibrary("curl", "libcurl").addRenamedLibrary("mxml", "mxml4")
+    },
     libraryDependencies ++= Seq(
       "com.outr" %%% "scribe" % Versions.scribe,
       "com.lihaoyi" %%% "pprint" % Versions.pprint,
       "com.lihaoyi" %%% "os-lib" % Versions.osLib,
       "com.indoorvivants" %%% "decline-derive" % Versions.declineDerive,
-      "tech.neander" %%% "cue4s" % Versions.cue4s,
+      "tech.neander" %%% "cue4s" % Versions.cue4s
     ),
     nativeConfig ~= (_.withSourceLevelDebuggingConfig(
       SourceLevelDebuggingConfig.enabled
@@ -180,7 +187,6 @@ lazy val libgit2Bindings = proj("libgit2-bindings")
     )
   )
 
-
 lazy val mxmlBindings = proj("mxml-bindings")
   .enablePlugins(BindgenPlugin, ScalaNativePlugin, VcpkgPlugin)
   .settings(
@@ -205,6 +211,22 @@ lazy val mxmlBindings = proj("mxml-bindings")
     )
   )
 
+import org.scalajs.linker.interface.ModuleSplitStyle
+
+lazy val webapp = proj("webapp")
+  .enablePlugins(ScalaJSPlugin) // Enable the Scala.js plugin in this project
+  .dependsOn(httpProtocol.js(Versions.Scala))
+  .settings(
+    scalaJSUseMainModuleInitializer := true,
+    scalaJSLinkerConfig ~= {
+      _.withModuleKind(ModuleKind.ESModule)
+        .withModuleSplitStyle(
+          ModuleSplitStyle.SmallModulesFor(List("scalaboot"))
+        )
+    },
+    libraryDependencies += "com.raquo" %%% "laminar" % "17.2.1",
+    libraryDependencies += "com.softwaremill.sttp.tapir" %%% "tapir-sttp-client4" % Versions.tapir
+  )
 
 lazy val devServer = proj("dev-server")
   .enablePlugins(RevolverPlugin)
@@ -252,8 +274,6 @@ ThisBuild / buildServer := {
   dest
 }
 
-
-
 lazy val buildServerRelease = taskKey[File]("")
 ThisBuild / buildServerRelease := {
   val dest = (ThisBuild / baseDirectory).value / "out" / "release" / "server"
@@ -277,6 +297,43 @@ ThisBuild / buildServerRelease := {
   )
 
   dest
+}
+
+lazy val buildWebappRelease = taskKey[File]("")
+ThisBuild / buildWebappRelease := {
+  val dest = (ThisBuild / baseDirectory).value / "out" / "release" / "server"
+
+  import scala.sys.process.*
+
+  assert(
+    Process("npm install", cwd = file("./mod/webapp")).! == 0,
+    "Command [npm install] did not finish successfully"
+  )
+
+  assert(
+    Process("npm run build", cwd = file("./mod/webapp")).! == 0,
+    "Command [npm run build] did not finish successfully"
+  )
+
+  IO.copyDirectory(file("./mod/webapp/dist"), dest / "static")
+
+  dest / "static"
+}
+
+lazy val buildWebapp = taskKey[File]("")
+ThisBuild / buildWebapp := {
+  val dest = (ThisBuild / baseDirectory).value / "out" / "debug" / "server"
+
+  import scala.sys.process.*
+
+  assert(
+    Process("npm run build", cwd = file("./mod/webapp")).! == 0,
+    "Command [npm run build] did not finish successfully"
+  )
+
+  IO.copyDirectory(file("./mod/webapp/dist"), dest / "static")
+
+  dest / "static"
 }
 
 lazy val buildCLI = taskKey[File]("")
@@ -314,7 +371,6 @@ buildPlatformCLI := {
     name = "scala-boot"
   )
 }
-
 
 lazy val buildRepoIndexer = taskKey[File]("")
 buildRepoIndexer := {

@@ -9,9 +9,34 @@
       }
     }
   },
+  "routes": {
+    "web": [
+      {
+        "match": {
+          "uri": "/api/*"
+        },
+        "action": {
+          "pass": "applications/app"
+        }
+      },
+      {
+        "match": {
+          "uri": "~^((/(.*)\\.(js|css|html))|/)$"
+        },
+        "action": {
+          "share": "static$uri"
+        }
+      },
+      {
+        "action": {
+          "share": "static/index.html"
+        }
+      }
+    ]
+  },
   "listeners": {
     "*:8080": {
-      "pass": "applications/app"
+      "pass": "routes/web"
     }
   }
 }

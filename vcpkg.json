@@ -2,6 +2,6 @@
   "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg/master/scripts/vcpkg.schema.json",
   "name": "scala-boot-server",
   "dependencies": [
-    "libpq", "libidn2"
+    "libpq", "libidn2", "mxml", "curl", "libgit2"
   ]
 }

@@ -41,7 +41,7 @@ jobs:
       - uses: sbt/setup-sbt@v1
 
       - name: HACK publish Tapir
-        run: cd .tapir && sbt "coreNative3/publishLocal; circeJsonNative3/publishLocal; clientCoreNative3/publishLocal; sttpClient4Native3/publishLocal"
+        run: cd .tapir && sbt "coreNative3/publishLocal; coreJS3/publishLocal; circeJsonNative3/publishLocal; clientCoreNative3/publishLocal; clientCoreJS3/publishLocal; sttpClient4Native3/publishLocal; sttpClient4JS3/publishLocal; circeJsonJS3/publishLocal"
 
       - run: sbt buildRepoIndexerRelease
 

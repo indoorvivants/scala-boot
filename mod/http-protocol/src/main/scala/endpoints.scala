@@ -41,33 +41,33 @@ case class UpdateRepository(
 object repos:
 
   val all = endpoint
-    .in("repos" / "all")
+    .in("api" / "repos" / "all")
     .out(jsonBody[List[SavedRepository]])
     .errorOut(stringBody)
 
   val search = endpoint
-    .in("repos" / "search")
+    .in("api" / "repos" / "search")
     .in(query[String]("query"))
     .out(jsonBody[List[SearchResult]])
     .errorOut(stringBody)
 
   val add =
     endpoint.post
-      .in("repos" / "add")
+      .in("api" / "repos" / "add")
       .in(jsonBody[RepositoryInfo])
       .securityIn(auth.bearer[Option[String]]())
       .errorOut(stringBody)
 
   val delete =
     endpoint.delete
-      .in("repos" / "delete")
+      .in("api" / "repos" / "delete")
       .in(jsonBody[DeleteRepository])
       .securityIn(auth.bearer[Option[String]]())
       .errorOut(stringBody)
 
   val update =
     endpoint.post
-      .in("repos" / "update")
+      .in("api" / "repos" / "update")
       .in(jsonBody[UpdateRepository])
       .securityIn(auth.bearer[Option[String]]())
       .errorOut(stringBody)
