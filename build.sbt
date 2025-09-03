@@ -387,7 +387,7 @@ buildRepoIndexer := {
 lazy val buildRepoIndexerRelease = taskKey[File]("")
 buildRepoIndexerRelease := {
   writeBinary(
-    source = (cli / Compile / nativeLinkReleaseFast).value,
+    source = (repoIndexer / Compile / nativeLinkReleaseFast).value,
     destinationDir = (ThisBuild / baseDirectory).value / "out" / "release",
     log = sLog.value,
     platform = None,
@@ -463,15 +463,15 @@ logo :=
 usefulTasks := Seq(
   UsefulTask(
     "buildCLI",
-    s"Build ./build/$NAME CLI (search and templating)"
+    s"Build ./out/debug/$NAME CLI (search and templating)"
   ),
   UsefulTask(
     "buildServer",
-    "Build HTTP server at ./build/server"
+    "Build HTTP server at ./out/debug/server/scala-boot-server"
   ),
   UsefulTask(
     "buildRepoIndexer",
-    s"Build ./build/$NAME-repo-indexer CLI (repo indexing)"
+    s"Build ./out/debug/repo-indexer CLI (repository indexing)"
   ),
   UsefulTask(
     "runServer",
