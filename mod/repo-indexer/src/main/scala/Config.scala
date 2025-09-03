@@ -9,5 +9,8 @@ case class Config(
     @Short("v")
     verbose: Boolean,
     @Help("Address of Scala Boot service")
-    api: Option[String] = None
+    api: Option[String] = None,
+    @Name("github-token-env")
+    @Help("Name of the env variable containing github token. If empty, REST API won't use authentication")
+    githubTokenEnv: Option[String] = None
 ) derives CommandApplication

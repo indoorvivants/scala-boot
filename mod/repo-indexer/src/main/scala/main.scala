@@ -54,7 +54,15 @@ def init(config: Config) =
         )
     )
 
-    val token = sys.env.get("SCALABOOT_GITHUB_TOKEN").map(Token(_))
+    val token = config.githubTokenEnv.map(env =>
+      sys.env.getOrElse(
+        env,
+        sys.error(
+          s"--github-token-env option was explicitly set to $env, but this variable doesn't exist in the environment"
+        )
+      )
+    ).map(Token(_))
+
     val github = GithubApi(backend, token)
 
     val discoveredRepos = github

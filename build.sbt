@@ -376,9 +376,9 @@ lazy val buildRepoIndexer = taskKey[File]("")
 buildRepoIndexer := {
   writeBinary(
     source = (repoIndexer / Compile / nativeLink).value,
-    destinationDir = (ThisBuild / baseDirectory).value / "out" / "release",
+    destinationDir = (ThisBuild / baseDirectory).value / "out" / "debug",
     log = sLog.value,
-    platform = Some(Platform.target),
+    platform = None,
     debug = true,
     name = "repo-indexer"
   )
@@ -401,12 +401,6 @@ buildAll := {
   buildCLI.value
   buildRepoIndexer.value
   buildServer.value
-}
-
-def UNITD_LOCAL_COMMAND = {
-  import sys.process.*
-  val proc = Process("which unitd").!!
-  s"$proc --statedir statedir --log /dev/stderr --no-daemon --control 127.0.0.1:9000"
 }
 
 lazy val runServer = taskKey[Unit]("")
@@ -568,4 +562,10 @@ def writeBinary(
   log.info(s"Binary [$name] built in ${dest}")
 
   dest
+}
+
+def UNITD_LOCAL_COMMAND = {
+  import sys.process.*
+  val proc = Process("which unitd").!!
+  s"$proc --statedir statedir --log /dev/stderr --no-daemon --control 127.0.0.1:9000"
 }

@@ -49,4 +49,6 @@ jobs:
           set -eu
 
           cat .github/workflows/fixtures/orgs-to-index.txt | \
-            parallel -j 1 ./out/release/repo-indexer --org {}
+            parallel -j 1 ./out/release/repo-indexer --github-token-env GH_TOKEN --org {}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
