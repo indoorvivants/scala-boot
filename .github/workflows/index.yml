@@ -40,7 +40,7 @@ jobs:
 
       - uses: sbt/setup-sbt@v1
 
-      - run: sbt repoIndexer/buildBinaryRelease
+      - run: sbt repo-indexer/buildBinaryRelease
 
       - run: |
           set -eu
