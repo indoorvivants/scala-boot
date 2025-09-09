@@ -12,7 +12,9 @@ import java.io.File
 
   import sys.process.*
 
-  val bgProc = Process(unitdCommand, cwd = new File(cwd)).run()
+  val p = ProcessLogger(System.out.println(_), System.err.println(_))
+
+  val bgProc = Process(unitdCommand, cwd = new File(cwd)).run(p)
 
   sys.addShutdownHook {
     println("Caught shutdown, killing process")

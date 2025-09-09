@@ -1,6 +1,0 @@
-[submodule "tapir"]
-	path = tapir
-	url = git@github.com:keynmol/tapir.git
-[submodule ".tapir"]
-	path = .tapir
-	url = git@github.com:keynmol/tapir.git

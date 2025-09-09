@@ -35,10 +35,12 @@ val Versions = new {
   val roach = "0.1.0"
   val ujson = "3.3.1"
   val snunit = "0.10.3"
-  val tapir = "1.11.31+142-54cc665d-SNAPSHOT"
+  val tapir = "1.11.44"
   val munit = "1.1.1"
   val declineDerive = "0.3.1"
   val cue4s = "0.0.9"
+  val parsley = "5.0.0-M15"
+  val laminar = "17.2.1"
 }
 
 lazy val root =
@@ -62,7 +64,7 @@ lazy val scalaTemplate = projectMatrix
   .settings(
     libraryDependencies ++= Seq(
       "com.lihaoyi" %%% "pprint" % Versions.pprint,
-      "com.github.j-mie6" %%% "parsley" % "5.0.0-M15",
+      "com.github.j-mie6" %%% "parsley" % Versions.parsley,
       "org.scalameta" %%% "munit" % Versions.munit % Test
     ),
     nativeConfig ~= (_.withIncrementalCompilation(true))
@@ -117,6 +119,7 @@ lazy val server = projApp("server")
   .settings(configurePlatform())
 
 lazy val cli = projApp("cli")
+  .enablePlugins(NativeBinaryPlugin)
   .dependsOn(
     libgit2Bindings,
     mxmlBindings,
@@ -124,6 +127,7 @@ lazy val cli = projApp("cli")
     scalaTemplate.native(Versions.Scala)
   )
   .settings(
+    buildBinaryConfig ~= (_.withName("scala-boot")),
     vcpkgDependencies := VcpkgDependencies(
       "libgit2",
       "mxml",
@@ -147,8 +151,10 @@ lazy val cli = projApp("cli")
   .settings(configurePlatform())
 
 lazy val repoIndexer = projApp("repo-indexer")
+  .enablePlugins(NativeBinaryPlugin)
   .dependsOn(httpClient)
   .settings(
+    buildBinaryConfig ~= (_.withName("repo-indexer")),
     vcpkgDependencies := VcpkgDependencies(
       "curl",
       "libidn2"
@@ -224,7 +230,7 @@ lazy val webapp = proj("webapp")
           ModuleSplitStyle.SmallModulesFor(List("scalaboot"))
         )
     },
-    libraryDependencies += "com.raquo" %%% "laminar" % "17.2.1",
+    libraryDependencies += "com.raquo" %%% "laminar" % Versions.laminar,
     libraryDependencies += "com.softwaremill.sttp.tapir" %%% "tapir-sttp-client4" % Versions.tapir
   )
 
@@ -336,70 +342,10 @@ ThisBuild / buildWebapp := {
   dest / "static"
 }
 
-lazy val buildCLI = taskKey[File]("")
-buildCLI := {
-  writeBinary(
-    source = (cli / Compile / nativeLink).value,
-    destinationDir = (ThisBuild / baseDirectory).value / "out" / "debug",
-    log = sLog.value,
-    platform = None,
-    debug = true,
-    name = "scala-boot"
-  )
-}
-
-lazy val buildReleaseCLI = taskKey[File]("")
-buildReleaseCLI := {
-  writeBinary(
-    source = (cli / Compile / nativeLinkReleaseFast).value,
-    destinationDir = (ThisBuild / baseDirectory).value / "out" / "release",
-    log = sLog.value,
-    platform = None,
-    debug = false,
-    name = "scala-boot"
-  )
-}
-
-lazy val buildPlatformCLI = taskKey[File]("")
-buildPlatformCLI := {
-  writeBinary(
-    source = (cli / Compile / nativeLinkReleaseFast).value,
-    destinationDir = (ThisBuild / baseDirectory).value / "out" / "release",
-    log = sLog.value,
-    platform = Some(Platform.target),
-    debug = false,
-    name = "scala-boot"
-  )
-}
-
-lazy val buildRepoIndexer = taskKey[File]("")
-buildRepoIndexer := {
-  writeBinary(
-    source = (repoIndexer / Compile / nativeLink).value,
-    destinationDir = (ThisBuild / baseDirectory).value / "out" / "debug",
-    log = sLog.value,
-    platform = None,
-    debug = true,
-    name = "repo-indexer"
-  )
-}
-
-lazy val buildRepoIndexerRelease = taskKey[File]("")
-buildRepoIndexerRelease := {
-  writeBinary(
-    source = (repoIndexer / Compile / nativeLinkReleaseFast).value,
-    destinationDir = (ThisBuild / baseDirectory).value / "out" / "release",
-    log = sLog.value,
-    platform = None,
-    debug = false,
-    name = "repo-indexer"
-  )
-}
-
 lazy val buildAll = taskKey[File]("")
 buildAll := {
-  buildCLI.value
-  buildRepoIndexer.value
+  (cli / Compile / buildBinaryDebug).value
+  (repoIndexer / Compile / buildBinaryDebug).value
   buildServer.value
 }
 
@@ -456,7 +402,7 @@ logo :=
 
 usefulTasks := Seq(
   UsefulTask(
-    "buildCLI",
+    "cli/buildDebugBinary",
     s"Build ./out/debug/$NAME CLI (search and templating)"
   ),
   UsefulTask(
@@ -464,7 +410,7 @@ usefulTasks := Seq(
     "Build HTTP server at ./out/debug/server/scala-boot-server"
   ),
   UsefulTask(
-    "buildRepoIndexer",
+    "repoIndexer/buildDebugBinary",
     s"Build ./out/debug/repo-indexer CLI (repository indexing)"
   ),
   UsefulTask(

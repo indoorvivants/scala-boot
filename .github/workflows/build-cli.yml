@@ -36,10 +36,6 @@ jobs:
 
       - run: brew install autoconf automake ninja libtool
 
-      - name: HACK publish Tapir
-        run: cd .tapir && sbt "coreNative3/publishLocal; coreJS3/publishLocal; circeJsonNative3/publishLocal; clientCoreNative3/publishLocal; sttpClient4Native3/publishLocal; sttpClient4JS3/publishLocal; circeJsonJS3/publishLocal"
-
-
       - name: Cache vcpkg
         uses: actions/cache@v3
         with:
@@ -50,7 +46,7 @@ jobs:
           key: ${{ matrix.OS }}-sbt-vcpkg
 
       - name: Build the binary
-        run: sbt buildPlatformCLI
+        run: sbt cli/buildBinaryPlatformRelease
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -80,9 +76,6 @@ jobs:
 
       - uses: sbt/setup-sbt@v1
 
-      - name: HACK publish Tapir
-        run: cd .tapir && sbt "coreNative3/publishLocal; circeJsonNative3/publishLocal; clientCoreNative3/publishLocal; sttpClient4Native3/publishLocal"
-
       - name: Cache vcpkg
         uses: actions/cache@v3
         with:
@@ -93,7 +86,7 @@ jobs:
           key: ${{ matrix.OS }}-sbt-vcpkg
 
       - name: Build the binary
-        run: sbt buildPlatformCLI
+        run: sbt cli/buildBinaryPlatformRelease
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -146,9 +139,6 @@ jobs:
       #     choco install llvm --version="$Env:LLVM_VERSION" --allow-downgrade
       #     choco install sbt --version=1.11.5
       #     clang --version
-
-      # - name: HACK publish Tapir
-      #   run: cd .tapir && sbt "coreNative3/publishLocal; circeJsonNative3/publishLocal; clientCoreNative3/publishLocal; sttpClient4Native3/publishLocal"
 
       # - name: Build binary (windows)
       #   run: sbt buildPlatformCLI

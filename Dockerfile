@@ -1,5 +1,7 @@
 FROM keynmol/sn-vcpkg:latest as dev
 
+WORKDIR /workdir
+
 # Install NGINX Unit
 RUN apt-get update && \
     apt-get install -y curl && \
@@ -9,33 +11,6 @@ RUN apt-get update && \
           deb-src [signed-by=/usr/share/keyrings/nginx-keyring.gpg] https://packages.nginx.org/unit/ubuntu/ jammy unit' >> /etc/apt/sources.list.d/unit.list && \
     apt-get update && \
     apt-get install -y unit unit-dev bison flex
-
-WORKDIR /workdir
-
-RUN sbt --sbt-create version
-
-RUN sn-vcpkg bootstrap
-
-COPY vcpkg.json .
-ENV VCPKG_FORCE_SYSTEM_BINARIES=1
-RUN sn-vcpkg install --manifest vcpkg.json
-
-COPY . .
-RUN cd .tapir && git status && git clean -dfx . && \
-    git checkout -- . && sbt "coreNative3/publishLocal; coreJS3/publishLocal; circeJsonNative3/publishLocal; clientCoreNative3/publishLocal; clientCoreJS3/publishLocal; sttpClient4Native3/publishLocal; sttpClient4JS3/publishLocal; circeJsonJS3/publishLocal"
-
-
-# TODO: remove when tapir is published
-RUN sbt buildServerRelease
-
-RUN mkdir empty_dir
-RUN cat /etc/passwd | grep unit > passwd
-RUN cat /etc/group | grep unit > group
-
-RUN chown unit:unit out/release/server/scala-boot-server
-RUN chmod 0777 out/release/server/scala-boot-server
-
-
 RUN if [ "$(uname -m)" = "x86_64" ]; then \
     curl -Lo node-install.tar.xz https://nodejs.org/dist/v22.18.0/node-v22.18.0-linux-x64.tar.xz; \
     else \
@@ -43,6 +18,27 @@ RUN if [ "$(uname -m)" = "x86_64" ]; then \
     fi && \
     tar -xf node-install.tar.xz && rm *.tar.xz && mv node-v22* node-install
 ENV PATH /workdir/node-install/bin:$PATH
+
+# vcpkg stuff
+RUN sn-vcpkg bootstrap
+COPY vcpkg.json .
+ENV VCPKG_FORCE_SYSTEM_BINARIES=1
+RUN sn-vcpkg install --manifest vcpkg.json
+
+# bootstrap SBT as much as possible
+COPY project/build.properties project/build.properties
+COPY project/plugins.sbt project/plugins.sbt
+RUN sbt --sbt-create version update
+
+COPY . .
+
+# build server binary
+RUN sbt buildServerRelease
+RUN mkdir empty_dir
+RUN cat /etc/passwd | grep unit > passwd
+RUN cat /etc/group | grep unit > group
+RUN chown unit:unit out/release/server/scala-boot-server
+RUN chmod 0777 out/release/server/scala-boot-server
 
 RUN sbt buildWebappRelease
 
