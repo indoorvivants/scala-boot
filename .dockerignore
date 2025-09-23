@@ -10,7 +10,7 @@
 *.out
 c-playground
 compile_commands.json
-target
+**/target
 **/sbt-test/**/build.properties
 
 **/target/**
@@ -29,3 +29,9 @@ build
 *.o
 
 Dockerfile
+mod/webapp/node_modules
+out
+.git
+mod/webapp/dist
+.vscode
+.github
