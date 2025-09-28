@@ -6,7 +6,7 @@ import sttp.tapir.json.circe.*
 import io.circe.Codec as CirceCodec
 
 private[scalaboot] inline def SCALABOOT_PRODUCTION =
-  "https://scala-boot.fly.dev"
+  "https://scala-boot.indoorvivants.com"
 
 case class Metadata() derives CirceCodec.AsObject
 
