@@ -38,7 +38,13 @@ case class UpdateRepository(
     stars: Option[Int] = None
 ) derives CirceCodec.AsObject
 
+case class Health(status: String) derives CirceCodec.AsObject
+
 object repos:
+  val health = endpoint
+    .in("api" / "health")
+    .out(jsonBody[Health])
+    .errorOut(stringBody)
 
   val all = endpoint
     .in("api" / "repos" / "all")

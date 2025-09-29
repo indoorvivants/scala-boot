@@ -18,6 +18,8 @@ trait Client:
 
   def all(): List[SavedRepository]
 
+  def health(): Health
+
 end Client
 
 object Client:
@@ -47,6 +49,9 @@ object Client:
           policy = policy
         )
 
+      override def health(): Health =
+        wrap(repos.health.showShort, self.health())
+
       override def search(query: String): List[SearchResult] =
         wrap(repos.search.showShort, self.search(query))
 
@@ -68,6 +73,12 @@ object Client:
       base: Uri,
       token: Option[String] = None
   ) extends Client:
+
+    override def health(): Health =
+      interp
+        .toClientThrowErrors(repos.health, Some(base), backend)
+        .apply(())
+
     def search(query: String): List[SearchResult] =
       interp
         .toClientThrowErrors(repos.search, Some(base), backend)

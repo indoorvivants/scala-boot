@@ -43,13 +43,14 @@ def connection_string() =
 
       val auth = (key: Option[String]) =>
         (apiKeySet, key) match
-          case (None, None | Some(_))      => Right(())
-          case (Some(_), None) => Left("API key missing")
+          case (None, None | Some(_))           => Right(())
+          case (Some(_), None)                  => Left("API key missing")
           case (Some(expected), Some(provided)) =>
             if expected.trim() == provided.trim() then Right(())
             else Left("Provided API key is incorrect")
 
       val handlers = List(
+        repos.health.serverLogic[Id](_ => Right(Health(status = "ok"))),
         repos.all.serverLogic[Id](_ => Right(db.getAllRepos.toList)),
         repos.search.serverLogic[Id] { query =>
           Right(db.search(query).toList)
