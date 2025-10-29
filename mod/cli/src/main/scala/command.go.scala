@@ -30,7 +30,15 @@ def commandGo(config: CLI.Go) =
   val BootstrapResult(cloneDest, makeOrigin) = bootstrap(config.template)
   try
     val discovery = discoverLayout(cloneDest)
-    val props = readProperties(discovery.propsFile)
+    val rawProps = readProperties(discovery.propsFile)
+    val (props, verbatimProp) =
+      (
+        rawProps.copy(
+          rawProps.properties.removed("verbatim"),
+          rawProps.ordering.removed("verbatim")
+        ),
+        rawProps.properties.get("verbatim")
+      )
     scribe.debug(s"Properties: $props")
     val defaults = MakeDefaults(props, MavenFunc.all)
     scribe.debug(s"Defaults: $defaults")
@@ -58,7 +66,7 @@ def commandGo(config: CLI.Go) =
           .map(
             _.split('*').map(java.util.regex.Pattern.quote).mkString("(.*)").r
           )
-      props.properties.get("verbatim") match
+      verbatimProp match
         case Some(Tokenized(Vector(StringTemplateExpr.Lit(value)), source)) =>
           read(value)
         case Some(
