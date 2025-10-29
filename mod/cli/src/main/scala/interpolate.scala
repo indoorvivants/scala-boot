@@ -1,6 +1,7 @@
 package scalaboot
 
 import template.*
+import scala.util.matching.Regex
 
 def fillFile(
     file: os.Path,
@@ -33,7 +34,9 @@ def fillDirectory(
     settings: Settings,
     makeOrigin: os.RelPath => FileOrigin,
     overwrite: Boolean = false,
-    skip: Set[os.Path] = Set.empty
+    allowedPaths: Set[os.RelPath],
+    verbatimPatterns: List[Regex],
+    offset: os.RelPath = os.RelPath.rel
 ): Set[os.Path] =
   scribe.debug("Working on", input.toString, "into", output.toString)
   Err.assert(input.toIO.exists(), s"Directory [$input] doesn't exist")
@@ -41,13 +44,16 @@ def fillDirectory(
 
   val processed = collection.mutable.Set.empty[os.Path]
 
-  os.list(input).filterNot(skip).foreach { path =>
+  os.list(input).foreach { path =>
     val newLast = FillString(tokenizeSource(Source.Str(path.last)), settings)
     scribe.debug(
       s"Filling $path, changing last to $newLast, tokens are ${tokenizeSource(Source.Str(path.last))}"
     )
     if newLast.nonEmpty then
       val rp = path.relativeTo(input) / os.up / os.RelPath(newLast)
+      val fullRelPath = os.RelPath.fromStringSegments(
+        offset.segments.concat(rp.segments).toArray
+      )
       if os.isDir(path) then
         processed ++=
           fillDirectory(
@@ -56,17 +62,27 @@ def fillDirectory(
             settings = settings,
             makeOrigin = makeOrigin,
             overwrite = overwrite,
-            skip = skip
+            offset = offset / rp,
+            allowedPaths = allowedPaths,
+            verbatimPatterns = verbatimPatterns
           )
-      else
-        processed +=
-          fillFile(
-            file = path,
-            origin = makeOrigin(rp),
-            destination = output / rp,
-            settings = settings,
-            overwrite = overwrite
-          )
+      else if allowedPaths.contains(fullRelPath) then
+        if !verbatimPatterns.exists(_.matches(path.last)) then
+          processed +=
+            fillFile(
+              file = path,
+              origin = makeOrigin(rp),
+              destination = output / rp,
+              settings = settings,
+              overwrite = overwrite
+            )
+        else
+          scribe.debug(s"Copying [$path] into [${output / rp}] verbatim")
+          os.copy.over(path, output / rp, createFolders = true)
+          processed +=
+            output / rp
+        end if
+      else scribe.debug(s"Path $path was ignored")
       end if
 
     end if

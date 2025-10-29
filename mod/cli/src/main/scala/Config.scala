@@ -1,8 +1,5 @@
 package scalaboot
 
-// import mainargs.{main, arg, ParserForClass, Flag}
-// import mainargs.TokensReader
-
 import decline_derive.*
 import com.monovore.decline.Argument
 import os.Path

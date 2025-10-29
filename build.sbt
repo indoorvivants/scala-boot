@@ -25,7 +25,7 @@ def projApp(subfolder: String) =
     })
 
 val Versions = new {
-  val Scala = "3.7.2"
+  val Scala = "3.7.3"
 
   val scribe = "3.16.0"
   val osLib = "0.11.3"
@@ -37,7 +37,7 @@ val Versions = new {
   val snunit = "0.10.3"
   val tapir = "1.11.44"
   val munit = "1.1.1"
-  val declineDerive = "0.3.1"
+  val declineDerive = "0.3.2"
   val cue4s = "0.0.9"
   val parsley = "5.0.0-M15"
   val laminar = "17.2.1"
@@ -146,7 +146,7 @@ lazy val cli = projApp("cli")
     ),
     nativeConfig ~= (_.withSourceLevelDebuggingConfig(
       SourceLevelDebuggingConfig.enabled
-    ))
+    ).withIncrementalCompilation(true))
   )
   .settings(configurePlatform())
 
