@@ -33,7 +33,7 @@ jobs:
 
       - uses: sbt/setup-sbt@v1
 
-      - run: brew install autoconf automake ninja libtool
+      - run: brew install autoconf autoconf-archive automake libtool
 
       - name: Cache vcpkg
         uses: actions/cache@v3
@@ -83,6 +83,9 @@ jobs:
             ~/.cache/sbt-vcpkg/vcpkg-install
             ~/.cache/sbt-vcpkg/vcpkg
           key: ${{ matrix.OS }}-sbt-vcpkg
+
+      - name: Vcpkg Dependencies
+        run: sudo apt install autoconf autoconf-archive automake libtool
 
       - name: Build the binary
         run: sbt cli/buildBinaryPlatformRelease
