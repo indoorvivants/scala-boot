@@ -82,7 +82,7 @@ def fillDirectory(
           processed +=
             output / rp
         end if
-      else scribe.debug(s"Path $path was ignored")
+      else scribe.debug(s"Path $fullRelPath was ignored")
       end if
 
     end if

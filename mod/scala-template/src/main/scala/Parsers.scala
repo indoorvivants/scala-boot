@@ -14,7 +14,7 @@ object Parsers:
       .flatMap(s => Array(s.toString, s.toString.toLowerCase()))
       .sortBy(_.length)
       .reverse
-      .map(symbol)
+      .map(s => symbol(s))
       .reduce(_ | _)
       .mapFilter(Formatter.from)
 
@@ -33,7 +33,7 @@ object Parsers:
   val underscoreModifiers =
     (symbol("__") ~> listOfFormats).map(f => List(Modifier.Format(f)))
 
-  val variableName = stringOfMany(letterOrDigit | '_')
+  val variableName = stringOfMany(letterOrDigit)
 
   val variableModifiers = underscoreModifiers | modifiers
 

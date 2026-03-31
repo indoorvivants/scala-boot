@@ -33,7 +33,6 @@ jobs:
 
       - uses: sbt/setup-sbt@v1
 
-
       - run: brew install autoconf automake ninja libtool
 
       - name: Cache vcpkg

@@ -25,20 +25,19 @@ def projApp(subfolder: String) =
     })
 
 val Versions = new {
-  val Scala = "3.7.3"
+  val Scala = "3.8.3"
 
-  val scribe = "3.16.0"
-  val osLib = "0.11.3"
-  val pprint = "0.9.0"
-  val mainargs = "0.7.6"
-  val sttp = "4.0.8"
+  val scribe = "3.18.0"
+  val osLib = "0.11.8"
+  val pprint = "0.9.6"
+  val sttp = "4.0.21"
   val roach = "0.1.0"
   val ujson = "3.3.1"
   val snunit = "0.10.3"
-  val tapir = "1.11.44"
-  val munit = "1.1.1"
-  val declineDerive = "0.3.2"
-  val cue4s = "0.0.9"
+  val tapir = "1.13.14"
+  val munit = "1.2.4"
+  val declineDerive = "0.3.6"
+  val cue4s = "0.0.10"
   val parsley = "5.0.0-M15"
   val laminar = "17.2.1"
 }
@@ -110,7 +109,6 @@ lazy val server = projApp("server")
     libraryDependencies ++= Seq(
       "com.github.lolgab" %%% "snunit-tapir" % Versions.snunit,
       "com.outr" %%% "scribe" % Versions.scribe,
-      "com.lihaoyi" %%% "mainargs" % Versions.mainargs,
       "com.indoorvivants.roach" %%% "core" % Versions.roach,
       "com.indoorvivants.roach" %%% "circe" % Versions.roach
     ),
@@ -119,7 +117,7 @@ lazy val server = projApp("server")
   .settings(configurePlatform())
 
 lazy val cli = projApp("cli")
-  .enablePlugins(NativeBinaryPlugin)
+  .enablePlugins(ForgeNativeBinaryPlugin)
   .dependsOn(
     libgit2Bindings,
     mxmlBindings,
@@ -151,7 +149,7 @@ lazy val cli = projApp("cli")
   .settings(configurePlatform())
 
 lazy val repoIndexer = projApp("repo-indexer")
-  .enablePlugins(NativeBinaryPlugin)
+  .enablePlugins(ForgeNativeBinaryPlugin)
   .dependsOn(httpClient)
   .settings(
     buildBinaryConfig ~= (_.withName("repo-indexer")),

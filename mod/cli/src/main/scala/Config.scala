@@ -7,7 +7,9 @@ import cats.data.ValidatedNel
 import cats.data.Validated
 
 enum CLI derives CommandApplication:
-  case Go(
+  @Help(
+    "Create a project from a given template (e.g. `scala-boot go scala/scala3.g8`)"
+  ) case Go(
       @Positional("template")
       @Help("Github coordinates of the template (e.g. scala/scala3.g8)")
       template: String,
@@ -28,13 +30,16 @@ enum CLI derives CommandApplication:
       @Flag(false)
       verbose: Boolean
   )
-  case Search(
+  @Help(
+    "Interactively search for templates"
+  ) case Search(
       @Positional("query")
       query: String,
       @Help("URI of the Scala Boot server")
       api: Option[String] = None,
       @Help("Interactively select a template to apply")
       @Flag(true)
+      @Short("i")
       interactive: Boolean,
       @Short("a")
       @Help("Show all results instead of the top 5")

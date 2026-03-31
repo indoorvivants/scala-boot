@@ -5,17 +5,19 @@ import scribe.Level
 import os.Path
 import scala.util.matching.Regex
 
-private def discoverLayout(cloneDest: Path): (sources: Path, propsFile: Path) =
+private def discoverLayout(
+    cloneDest: Path
+): (isGiter8: Boolean, sources: Path, propsFile: Path) =
   val g8Sources = cloneDest / "src" / "main" / "g8"
   val g8Props = g8Sources / "default.properties"
   val props = cloneDest / "default.properties"
 
   if os.exists(g8Sources) && os.exists(g8Props) then
     scribe.debug("giter8 layout discovered")
-    (sources = g8Sources, propsFile = g8Props)
+    (isGiter8 = true, sources = g8Sources, propsFile = g8Props)
   else if os.exists(props) then
     scribe.debug("root layout discovered")
-    (sources = cloneDest, propsFile = props)
+    (isGiter8 = false, sources = cloneDest, propsFile = props)
   else
     Err.raise(
       s"Cloned template doesn't look like giter8 layout ([$g8Sources] doesn't exist) or root layout ([$props] doesn't exist)"
@@ -87,9 +89,23 @@ def commandGo(config: CLI.Go) =
       end match
     end verbatim
 
-    val files =
+    val allowedFiles =
       val propsFileRelativePath = discovery.propsFile.relativeTo(cloneDest)
-      listFiles(cloneDest).filterNot(_ == propsFileRelativePath).toSet
+      val allGitFiles =
+        listFiles(cloneDest).filterNot(_ == propsFileRelativePath).toSet
+
+      if discovery.isGiter8 then
+        allGitFiles
+          .filter(_.startsWith(os.RelPath("src/main/g8")))
+          .map(_.relativeTo(os.RelPath("src/main/g8")))
+          .map: path =>
+            os.RelPath(
+              FillString(tokenizeSource(Source.Str(path.toString)), settings)
+            )
+      else allGitFiles
+    end allowedFiles
+
+    scribe.debug(s"Allowed paths: $allowedFiles")
 
     val results = fillDirectory(
       discovery.sources,
@@ -97,7 +113,7 @@ def commandGo(config: CLI.Go) =
       settings,
       overwrite = true,
       makeOrigin = makeOrigin,
-      allowedPaths = files,
+      allowedPaths = allowedFiles,
       verbatimPatterns = verbatim
     )
     println(
